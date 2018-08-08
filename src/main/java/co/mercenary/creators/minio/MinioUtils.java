@@ -52,6 +52,12 @@ public final class MinioUtils
     }
 
     @Nullable
+    public static <T> T NULL()
+    {
+        return null;
+    }
+
+    @Nullable
     @SuppressWarnings("unchecked")
     public static <T> T CAST(@Nullable final Object value)
     {

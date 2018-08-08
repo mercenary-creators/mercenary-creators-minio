@@ -32,6 +32,7 @@ import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioMethod;
 import co.mercenary.creators.minio.MinioOperationException;
+import co.mercenary.creators.minio.MinioUtils;
 
 public interface IMinioBucketOperations
 {
@@ -82,42 +83,42 @@ public interface IMinioBucketOperations
 
     default void putObject(@NonNull final CharSequence name, @NonNull final InputStream input) throws MinioOperationException
     {
-        putObject(name, input, null);
+        putObject(name, input, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final InputStream input, final long size) throws MinioOperationException
     {
-        putObject(name, input, size, null);
+        putObject(name, input, size, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final byte[] input) throws MinioOperationException
     {
-        putObject(name, input, null);
+        putObject(name, input, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final Resource resource) throws MinioOperationException
     {
-        putObject(name, resource, null);
+        putObject(name, resource, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final File file) throws MinioOperationException
     {
-        putObject(name, file, null);
+        putObject(name, file, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final File file, final long size) throws MinioOperationException
     {
-        putObject(name, file, size, null);
+        putObject(name, file, size, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final Path path) throws MinioOperationException
     {
-        putObject(name, path, null);
+        putObject(name, path, MinioUtils.NULL());
     }
 
     default void putObject(@NonNull final CharSequence name, @NonNull final Path path, final long size) throws MinioOperationException
     {
-        putObject(name, path, size, null);
+        putObject(name, path, size, MinioUtils.NULL());
     }
 
     @NonNull
@@ -126,7 +127,7 @@ public interface IMinioBucketOperations
     @NonNull
     default Stream<MinioItem> getItems(final boolean recursive) throws MinioOperationException
     {
-        return getItems(null, recursive);
+        return getItems(MinioUtils.NULL(), recursive);
     }
 
     @NonNull
@@ -173,15 +174,36 @@ public interface IMinioBucketOperations
 
     default boolean copyObject(@NonNull final CharSequence name, @NonNull final CharSequence destbucket) throws MinioOperationException
     {
-        return copyObject(name, destbucket, null, null);
+        return copyObject(name, destbucket, MinioUtils.NULL(), MinioUtils.NULL());
     }
 
     default boolean copyObject(@NonNull final CharSequence name, @NonNull final CharSequence destbucket, @Nullable final CharSequence destobject) throws MinioOperationException
     {
-        return copyObject(name, destbucket, destobject, null);
+        return copyObject(name, destbucket, destobject, MinioUtils.NULL());
     }
 
     boolean copyObject(@NonNull CharSequence name, @NonNull CharSequence destbucket, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
 
     boolean copyObject(@NonNull CharSequence name, @NonNull CharSequence destbucket, @Nullable CharSequence destobject, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
+
+    @NonNull
+    default Stream<MinioUpload> getIncompleteUploads() throws MinioOperationException
+    {
+        return getIncompleteUploads(MinioUtils.NULL(), true);
+    }
+
+    @NonNull
+    default Stream<MinioUpload> getIncompleteUploads(final boolean recursive) throws MinioOperationException
+    {
+        return getIncompleteUploads(MinioUtils.NULL(), recursive);
+    }
+
+    @NonNull
+    default Stream<MinioUpload> getIncompleteUploads(@Nullable final CharSequence prefix) throws MinioOperationException
+    {
+        return getIncompleteUploads(prefix, true);
+    }
+
+    @NonNull
+    Stream<MinioUpload> getIncompleteUploads(@Nullable CharSequence prefix, boolean recursive) throws MinioOperationException;
 }

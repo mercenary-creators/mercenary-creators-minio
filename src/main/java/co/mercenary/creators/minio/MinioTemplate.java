@@ -529,11 +529,11 @@ public class MinioTemplate implements MinioOperations
             {
                 if ((null != conditions) && (false == conditions.isEmpty()))
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(null), conditions.getCopyConditions());
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()), conditions.getCopyConditions());
                 }
                 else
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(null));
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()));
                 }
                 return true;
             }

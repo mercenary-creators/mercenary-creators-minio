@@ -239,6 +239,13 @@ public class MinioBucket extends MinioNamed implements IWithOperations<IMinioBuc
             {
                 return operations().isObject(getName(), name);
             }
+
+            @NonNull
+            @Override
+            public Stream<MinioUpload> getIncompleteUploads(@Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
+            {
+                return operations().getIncompleteUploads(getName(), prefix, recursive);
+            }
         };
     }
 }
