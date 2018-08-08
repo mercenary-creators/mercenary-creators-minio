@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -34,14 +32,8 @@ import java.util.stream.StreamSupport;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.Result;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.NoResponseException;
 
 public final class MinioUtils
 {
@@ -71,7 +63,7 @@ public final class MinioUtils
         {
             return type.cast(value);
         }
-        return null;
+        return NULL();
     }
 
     public static boolean isNull(@Nullable final Object value)
@@ -123,7 +115,7 @@ public final class MinioUtils
         }
         catch (final NullPointerException e)
         {
-            return null;
+            return NULL();
         }
     }
 
@@ -134,7 +126,7 @@ public final class MinioUtils
         {
             return value.toString();
         }
-        return null;
+        return NULL();
     }
 
     @NonNull
@@ -186,7 +178,7 @@ public final class MinioUtils
         {
             return requireNonNull(requireNonNull(result).get());
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final Exception e)
         {
             throw new MinioOperationException(e);
         }
@@ -199,9 +191,9 @@ public final class MinioUtils
         {
             return result.get();
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final Exception e)
         {
-            return null;
+            return NULL();
         }
     }
 

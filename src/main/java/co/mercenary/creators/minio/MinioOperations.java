@@ -247,5 +247,5 @@ public interface MinioOperations
     }
 
     @NonNull
-    Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, boolean recursive) throws MinioOperationException;
+    Stream<MinioUpload> getIncompleteUploads(@NonNull CharSequence bucket, @Nullable CharSequence prefix, boolean recursive) throws MinioOperationException;
 }
