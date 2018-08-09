@@ -50,7 +50,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '0.0.5-SNAPSHOT'
+version = '0.0.6-SNAPSHOT'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -98,6 +98,8 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${JACKSON_DATABIND_VERSION}")
+    compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
+    compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
 }
 
 artifacts {

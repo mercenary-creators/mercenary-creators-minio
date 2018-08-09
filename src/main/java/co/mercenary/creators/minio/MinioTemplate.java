@@ -26,6 +26,7 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -62,25 +63,74 @@ import io.minio.errors.RegionConflictException;
 
 public class MinioTemplate implements MinioOperations
 {
-    @NonNull
-    private final MinioClient m_client;
-
-    public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region) throws MinioOperationException
+    private enum Barrier
     {
-        try
-        {
-            m_client = new MinioClient(MinioUtils.requireToString(server), MinioUtils.getCharSequence(access), MinioUtils.getCharSequence(secret), MinioUtils.getCharSequence(region));
-        }
-        catch (InvalidEndpointException | InvalidPortException e)
-        {
-            throw new MinioOperationException(e);
-        }
+        LOCK;
+    }
+
+    @NonNull
+    private final String                       m_server;
+
+    @Nullable
+    private final String                       m_access;
+
+    @Nullable
+    private final String                       m_secret;
+
+    @Nullable
+    private final String                       m_region;
+
+    @NonNull
+    private final AtomicReference<MinioClient> m_atomic = new AtomicReference<>(MinioUtils.NULL());
+
+    public MinioTemplate(@NonNull final CharSequence server)
+    {
+        this(server, MinioUtils.NULL(), MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret)
+    {
+        this(server, access, secret, MinioUtils.NULL());
+    }
+
+    public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
+    {
+        m_server = MinioUtils.requireToString(server);
+
+        m_access = MinioUtils.getCharSequence(access);
+
+        m_secret = MinioUtils.getCharSequence(secret);
+
+        m_region = MinioUtils.getCharSequence(region);
     }
 
     @NonNull
     protected MinioClient getMinioClient() throws MinioOperationException
     {
-        return m_client;
+        MinioClient client = m_atomic.get();
+
+        if (null == client)
+        {
+            synchronized (Barrier.LOCK)
+            {
+                client = m_atomic.get();
+
+                if (null == client)
+                {
+                    try
+                    {
+                        m_atomic.set(new MinioClient(m_server, m_access, m_secret, m_region));
+
+                        client = m_atomic.get();
+                    }
+                    catch (InvalidEndpointException | InvalidPortException e)
+                    {
+                        throw new MinioOperationException(e);
+                    }
+                }
+            }
+        }
+        return client;
     }
 
     @Override
