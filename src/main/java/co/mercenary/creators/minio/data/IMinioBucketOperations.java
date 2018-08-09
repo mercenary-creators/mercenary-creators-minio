@@ -133,7 +133,7 @@ public interface IMinioBucketOperations
     @NonNull
     default Stream<MinioItem> getItems() throws MinioOperationException
     {
-        return getItems(true);
+        return getItems(false);
     }
 
     @NonNull
@@ -189,7 +189,7 @@ public interface IMinioBucketOperations
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads() throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.NULL(), true);
+        return getIncompleteUploads(MinioUtils.NULL(), false);
     }
 
     @NonNull
@@ -201,7 +201,7 @@ public interface IMinioBucketOperations
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getIncompleteUploads(prefix, true);
+        return getIncompleteUploads(prefix, false);
     }
 
     @NonNull

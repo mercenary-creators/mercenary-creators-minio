@@ -225,13 +225,13 @@ public interface MinioOperations
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getItems(bucket, prefix, true);
+        return getItems(bucket, prefix, false);
     }
 
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        return getIncompleteUploads(bucket, MinioUtils.NULL(), true);
+        return getIncompleteUploads(bucket, MinioUtils.NULL(), false);
     }
 
     @NonNull
@@ -243,7 +243,7 @@ public interface MinioOperations
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getIncompleteUploads(bucket, prefix, true);
+        return getIncompleteUploads(bucket, prefix, false);
     }
 
     @NonNull
