@@ -21,8 +21,8 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.MinioOperationException;
-import co.mercenary.creators.minio.MinioUtils;
+import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.errors.InvalidArgumentException;
 

@@ -14,32 +14,17 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio;
+package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
-public enum MinioMethod
+import co.mercenary.creators.minio.util.MinioUtils;
+
+public interface MinioDataOperations<T>
 {
-    GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
-
     @NonNull
-    private final String m_value;
-
-    private MinioMethod(@NonNull final String value)
+    default T self()
     {
-        m_value = value;
-    }
-
-    @NonNull
-    public String getValue()
-    {
-        return m_value;
-    }
-
-    @NonNull
-    @Override
-    public String toString()
-    {
-        return getValue();
+        return MinioUtils.CAST(this);
     }
 }

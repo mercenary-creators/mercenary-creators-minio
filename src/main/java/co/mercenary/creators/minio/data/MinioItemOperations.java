@@ -26,10 +26,10 @@ import javax.crypto.SecretKey;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import co.mercenary.creators.minio.MinioMethod;
-import co.mercenary.creators.minio.MinioOperationException;
+import co.mercenary.creators.minio.errors.MinioOperationException;
+import io.minio.http.Method;
 
-public interface IMinioItemOperations
+public interface MinioItemOperations extends MinioDataOperations<MinioItem>
 {
     boolean isFile();
 
@@ -57,25 +57,25 @@ public interface IMinioItemOperations
     String getSignedObjectUrl() throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(long seconds) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Long seconds) throws MinioOperationException;
 
     @NonNull
     String getSignedObjectUrl(@NonNull Duration seconds) throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(long time, @NonNull TimeUnit unit) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Long time, @NonNull TimeUnit unit) throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(@NonNull MinioMethod method) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Method method) throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(@NonNull MinioMethod method, long seconds) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Method method, @NonNull Long seconds) throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(@NonNull MinioMethod method, @NonNull Duration seconds) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Method method, @NonNull Duration seconds) throws MinioOperationException;
 
     @NonNull
-    String getSignedObjectUrl(@NonNull MinioMethod method, long time, @NonNull TimeUnit unit) throws MinioOperationException;
+    String getSignedObjectUrl(@NonNull Method method, @NonNull Long time, @NonNull TimeUnit unit) throws MinioOperationException;
 
     boolean copyObject(@NonNull CharSequence bucket) throws MinioOperationException;
 

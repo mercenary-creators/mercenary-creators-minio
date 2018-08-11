@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio;
+package co.mercenary.creators.minio.errors;
 
 import org.springframework.lang.Nullable;
 

@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio;
 
-import org.springframework.lang.NonNull;
+import java.io.Closeable;
 
-@FunctionalInterface
-public interface IWithOperations<T>
+import co.mercenary.creators.minio.data.WithName;
+
+public interface MinioManager extends WithName, Closeable
 {
-    @NonNull
-    T withOperations();
+    boolean isOpen();
+
+    boolean isClosed();
 }

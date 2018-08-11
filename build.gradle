@@ -50,7 +50,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '0.0.6-SNAPSHOT'
+version = '0.0.7-SNAPSHOT'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -100,6 +100,8 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
+    compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
+    compile(group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version: "${JACKSON_DATABIND_VERSION}")
 }
 
 artifacts {
@@ -148,7 +150,15 @@ def String getBuildGITHomeURL() {
 }
 
 def String getBuildGITCommitHash() {
-    getBuildGITHomeURL() + '/commit/'
+    getBuildGITHomeURL() + '/commit/' + Grgit.open(project.file('.')).head().id
+}
+
+def String getBuildGITCommitUser() {
+    Grgit.open(project.file('.')).head().committer.email
+}
+
+def String getBuildGITCommitMessage() {
+    Grgit.open(project.file('.')).head().shortMessage
 }
 
 def String getProjectArtifactID() {

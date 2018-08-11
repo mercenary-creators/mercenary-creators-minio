@@ -19,7 +19,7 @@ package co.mercenary.creators.minio.data;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import co.mercenary.creators.minio.MinioUtils;
+import co.mercenary.creators.minio.util.MinioUtils;
 
 public abstract class MinioCommon extends MinioNamed
 {

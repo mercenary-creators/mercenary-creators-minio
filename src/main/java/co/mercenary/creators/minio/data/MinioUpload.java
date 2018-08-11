@@ -18,7 +18,7 @@ package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.MinioUtils;
+import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MinioUpload extends MinioNamed
 {

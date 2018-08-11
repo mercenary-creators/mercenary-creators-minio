@@ -16,6 +16,7 @@
 
 package co.mercenary.creators.minio;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -35,6 +37,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -45,28 +48,19 @@ import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
+import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
-import io.minio.errors.BucketPolicyTooLargeException;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidArgumentException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEncryptionMetadataException;
 import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
-import io.minio.errors.NoResponseException;
-import io.minio.errors.RegionConflictException;
+import io.minio.errors.MinioException;
+import io.minio.http.Method;
 
-public class MinioTemplate implements MinioOperations
+public class MinioTemplate implements MinioOperations, BeanNameAware
 {
-    private enum Barrier
-    {
-        LOCK;
-    }
+    @NonNull
+    private String                             m_nameof;
 
     @NonNull
     private final String                       m_server;
@@ -79,6 +73,15 @@ public class MinioTemplate implements MinioOperations
 
     @Nullable
     private final String                       m_region;
+
+    @NonNull
+    private final Object                       m_locker = new Object();
+
+    @NonNull
+    private final AtomicBoolean                m_isopen = new AtomicBoolean(false);
+
+    @NonNull
+    private final AtomicBoolean                m_closed = new AtomicBoolean(false);
 
     @NonNull
     private final AtomicReference<MinioClient> m_atomic = new AtomicReference<>(MinioUtils.NULL());
@@ -95,6 +98,8 @@ public class MinioTemplate implements MinioOperations
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
+        m_nameof = MinioUtils.uuid();
+
         m_server = MinioUtils.requireToString(server);
 
         m_access = MinioUtils.getCharSequence(access);
@@ -104,14 +109,40 @@ public class MinioTemplate implements MinioOperations
         m_region = MinioUtils.getCharSequence(region);
     }
 
+    @Override
+    public boolean isOpen()
+    {
+        return m_isopen.get();
+    }
+
+    @Override
+    public boolean isClosed()
+    {
+        return m_closed.get();
+    }
+
+    @Override
+    public void close() throws IOException
+    {
+        m_closed.compareAndSet(false, true);
+
+        m_isopen.compareAndSet(true, false);
+    }
+
     @NonNull
     protected MinioClient getMinioClient() throws MinioOperationException
     {
+        if (isClosed())
+        {
+            m_isopen.set(false);
+
+            throw new MinioOperationException(String.format("%s is closed.", getName()));
+        }
         MinioClient client = m_atomic.get();
 
         if (null == client)
         {
-            synchronized (Barrier.LOCK)
+            synchronized (m_locker)
             {
                 client = m_atomic.get();
 
@@ -120,6 +151,8 @@ public class MinioTemplate implements MinioOperations
                     try
                     {
                         m_atomic.set(new MinioClient(m_server, m_access, m_secret, m_region));
+
+                        m_isopen.set(true);
 
                         client = m_atomic.get();
                     }
@@ -130,7 +163,26 @@ public class MinioTemplate implements MinioOperations
                 }
             }
         }
+        if (isClosed())
+        {
+            m_isopen.set(false);
+
+            throw new MinioOperationException(String.format("%s is closed.", getName()));
+        }
         return client;
+    }
+
+    @NonNull
+    @Override
+    public String getName()
+    {
+        return m_nameof;
+    }
+
+    @Override
+    public void setBeanName(final String name)
+    {
+        m_nameof = MinioUtils.requireToStringOrElse(name, () -> MinioUtils.uuid());
     }
 
     @Override
@@ -140,7 +192,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().bucketExists(MinioUtils.requireToString(bucket));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -157,7 +209,7 @@ public class MinioTemplate implements MinioOperations
 
                 return true;
             }
-            catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
@@ -189,7 +241,7 @@ public class MinioTemplate implements MinioOperations
 
                 return true;
             }
-            catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException | InvalidArgumentException e)
+            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
@@ -207,7 +259,7 @@ public class MinioTemplate implements MinioOperations
             {
                 getMinioClient().makeBucket(MinioUtils.getCharSequence(bucket));
             }
-            catch (InvalidKeyException | InvalidBucketNameException | RegionConflictException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
@@ -223,7 +275,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().listBuckets().stream().map(bucket -> new MinioBucket(bucket.name(), () -> bucket.creationDate(), this));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -233,11 +285,13 @@ public class MinioTemplate implements MinioOperations
     @Override
     public Stream<MinioBucket> getBucketsNamed(@NonNull final Predicate<String> filter) throws MinioOperationException
     {
+        MinioUtils.testAllNonNull(filter);
+
         try
         {
             return getMinioClient().listBuckets().stream().filter(bucket -> filter.test(bucket.name())).map(bucket -> new MinioBucket(bucket.name(), () -> bucket.creationDate(), this));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -251,7 +305,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -265,7 +319,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), skip);
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -279,7 +333,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), skip, leng);
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -293,7 +347,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException | InvalidEncryptionMetadataException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
         {
             throw new MinioOperationException(e);
         }
@@ -307,7 +361,7 @@ public class MinioTemplate implements MinioOperations
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException | InvalidEncryptionMetadataException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
         {
             throw new MinioOperationException(e);
         }
@@ -323,7 +377,7 @@ public class MinioTemplate implements MinioOperations
 
             return new MinioObjectStatus(name, bucket, status.length(), status.contentType(), status.etag(), () -> status.createdTime());
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -332,17 +386,15 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        MinioUtils.requireToString(name);
-
-        MinioUtils.requireNonNull(input);
+        MinioUtils.testAllNonNull(bucket, name, input);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, MinioUtils.requireToStringOrElse(type, MinioUtils.getDefaultContentType()));
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, MinioUtils.fixContentType(type));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -351,17 +403,30 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type) throws MinioOperationException
     {
-        MinioUtils.requireToString(name);
-
-        MinioUtils.requireNonNull(input);
+        MinioUtils.testAllNonNull(bucket, name, input);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.requireToStringOrElse(type, MinioUtils.getDefaultContentType()));
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type));
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @Override
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final CharSequence type) throws MinioOperationException
+    {
+        MinioUtils.testAllNonNull(bucket, name, input);
+
+        try (final ByteArrayInputStream baos = new ByteArrayInputStream(input))
+        {
+            putObject(bucket, name, baos, baos.available(), type);
+        }
+        catch (final IOException e)
         {
             throw new MinioOperationException(e);
         }
@@ -374,41 +439,14 @@ public class MinioTemplate implements MinioOperations
         return MinioUtils.getResultAsStream(getMinioClient().listObjects(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioItem(item.objectName(), bucket, item.size(), !item.isDir(), item.etag(), () -> item.lastModified(), this));
     }
 
-    @NonNull
     @Override
-    public String getBucketPolicy(@NonNull final CharSequence bucket) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Resource input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        try
-        {
-            return getMinioClient().getBucketPolicy(MinioUtils.requireToString(bucket));
-        }
-        catch (InvalidKeyException | InvalidBucketNameException | InvalidObjectPrefixException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | BucketPolicyTooLargeException | IOException | XmlPullParserException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void setBucketPolicy(@NonNull final CharSequence bucket, @NonNull final CharSequence policy) throws MinioOperationException
-    {
-        try
-        {
-            getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.requireToString(policy));
-        }
-        catch (InvalidKeyException | InvalidBucketNameException | InvalidObjectPrefixException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | IOException | XmlPullParserException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Resource resource, @Nullable final CharSequence type) throws MinioOperationException
-    {
-        if (resource.isFile())
+        if (input.isFile())
         {
             try
             {
-                putObject(bucket, name, resource.getFile(), type);
+                putObject(bucket, name, input.getFile(), type);
             }
             catch (final IOException e)
             {
@@ -417,7 +455,7 @@ public class MinioTemplate implements MinioOperations
         }
         else
         {
-            try (final InputStream is = resource.getInputStream())
+            try (final InputStream is = input.getInputStream())
             {
                 putObject(bucket, name, is, type);
             }
@@ -429,11 +467,11 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File file, @Nullable final CharSequence type) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        try (final InputStream is = MinioUtils.getInputStream(file))
+        try (final InputStream is = MinioUtils.getInputStream(input))
         {
-            putObject(bucket, name, is, MinioUtils.getSize(file), type);
+            putObject(bucket, name, is, MinioUtils.getSize(input), type);
         }
         catch (final IOException e)
         {
@@ -442,11 +480,11 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path path, @Nullable final CharSequence type) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        try (final InputStream is = MinioUtils.getInputStream(path))
+        try (final InputStream is = MinioUtils.getInputStream(input))
         {
-            putObject(bucket, name, is, MinioUtils.getSize(path), type);
+            putObject(bucket, name, is, MinioUtils.getSize(input), type);
         }
         catch (final IOException e)
         {
@@ -455,9 +493,9 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File file, final long size, @Nullable final CharSequence type) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input, final long size, @Nullable final CharSequence type) throws MinioOperationException
     {
-        try (final InputStream is = MinioUtils.getInputStream(file))
+        try (final InputStream is = MinioUtils.getInputStream(input))
         {
             putObject(bucket, name, is, size, type);
         }
@@ -468,9 +506,9 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path path, final long size, @Nullable final CharSequence type) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path input, final long size, @Nullable final CharSequence type) throws MinioOperationException
     {
-        try (final InputStream is = MinioUtils.getInputStream(path))
+        try (final InputStream is = MinioUtils.getInputStream(input))
         {
             putObject(bucket, name, is, size, type);
         }
@@ -482,21 +520,23 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public String getSignedObjectUrl(@NonNull final MinioMethod method, @NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
+    public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.testAllNonNull(method, bucket, name);
+
         try
         {
-            if ((method == MinioMethod.GET) || (method == MinioMethod.HEAD))
+            if ((method == Method.GET) || (method == Method.HEAD))
             {
                 return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
             }
-            if ((method == MinioMethod.PUT) || (method == MinioMethod.POST))
+            if ((method == Method.PUT) || (method == Method.POST))
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
             }
             throw new MinioOperationException(String.format("invalid method %s", method));
         }
-        catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidExpiresRangeException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -504,21 +544,23 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public String getSignedObjectUrl(@NonNull final MinioMethod method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, final long seconds) throws MinioOperationException
+    public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Long seconds) throws MinioOperationException
     {
+        MinioUtils.testAllNonNull(method, bucket, name, seconds);
+
         try
         {
-            if ((method == MinioMethod.GET) || (method == MinioMethod.HEAD))
+            if ((method == Method.GET) || (method == Method.HEAD))
             {
                 return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
-            if ((method == MinioMethod.PUT) || (method == MinioMethod.POST))
+            if ((method == Method.PUT) || (method == Method.POST))
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
             throw new MinioOperationException(String.format("invalid method %s", method));
         }
-        catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidExpiresRangeException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -526,21 +568,23 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public String getSignedObjectUrl(@NonNull final MinioMethod method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Duration seconds) throws MinioOperationException
+    public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Duration seconds) throws MinioOperationException
     {
+        MinioUtils.testAllNonNull(method, bucket, name, seconds);
+
         try
         {
-            if ((method == MinioMethod.GET) || (method == MinioMethod.HEAD))
+            if ((method == Method.GET) || (method == Method.HEAD))
             {
                 return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
-            if ((method == MinioMethod.PUT) || (method == MinioMethod.POST))
+            if ((method == Method.PUT) || (method == Method.POST))
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
             throw new MinioOperationException(String.format("invalid method %s", method));
         }
-        catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidExpiresRangeException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -548,30 +592,32 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public String getSignedObjectUrl(@NonNull final MinioMethod method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, final long time, @NonNull final TimeUnit unit) throws MinioOperationException
+    public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Long time, @NonNull final TimeUnit unit) throws MinioOperationException
     {
+        MinioUtils.testAllNonNull(method, bucket, name, time, unit);
+
         try
         {
-            if ((method == MinioMethod.GET) || (method == MinioMethod.HEAD))
+            if ((method == Method.GET) || (method == Method.HEAD))
             {
                 return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(time, unit));
             }
-            if ((method == MinioMethod.PUT) || (method == MinioMethod.POST))
+            if ((method == Method.PUT) || (method == Method.POST))
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(time, unit));
             }
             throw new MinioOperationException(String.format("invalid method %s", method));
         }
-        catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidExpiresRangeException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
     }
 
     @Override
-    public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence destbucket, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
+    public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
     {
-        MinioUtils.requireToString(destbucket);
+        MinioUtils.testAllNonNull(bucket, name, target);
 
         if (isObject(bucket, name))
         {
@@ -579,15 +625,15 @@ public class MinioTemplate implements MinioOperations
             {
                 if ((null != conditions) && (false == conditions.isEmpty()))
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()), conditions.getCopyConditions());
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()), conditions.getCopyConditions());
                 }
                 else
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()));
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()));
                 }
                 return true;
             }
-            catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidArgumentException e)
+            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
@@ -596,9 +642,9 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence destbucket, @Nullable final CharSequence destobject, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
+    public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final CharSequence object, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
     {
-        MinioUtils.requireToString(destbucket);
+        MinioUtils.testAllNonNull(bucket, name, target);
 
         if (isObject(bucket, name))
         {
@@ -606,15 +652,15 @@ public class MinioTemplate implements MinioOperations
             {
                 if ((null != conditions) && (false == conditions.isEmpty()))
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(destobject), conditions.getCopyConditions());
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(object), conditions.getCopyConditions());
                 }
                 else
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(destbucket).getName(), MinioUtils.getCharSequence(destobject));
+                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(object));
                 }
                 return true;
             }
-            catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | InvalidArgumentException e)
+            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
@@ -623,42 +669,34 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final KeyPair skeys) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final KeyPair keys) throws MinioOperationException
     {
-        MinioUtils.requireToString(name);
-
-        MinioUtils.requireNonNull(input);
-
-        MinioUtils.requireNonNull(skeys);
+        MinioUtils.testAllNonNull(bucket, name, input, keys);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.requireToStringOrElse(type, MinioUtils.getDefaultContentType()), skeys);
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type), keys);
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
         {
             throw new MinioOperationException(e);
         }
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final SecretKey ckeys) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final SecretKey keys) throws MinioOperationException
     {
-        MinioUtils.requireToString(name);
-
-        MinioUtils.requireNonNull(input);
-
-        MinioUtils.requireNonNull(ckeys);
+        MinioUtils.testAllNonNull(bucket, name, input, keys);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.requireToStringOrElse(type, MinioUtils.getDefaultContentType()), ckeys);
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type), keys);
         }
-        catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | NoResponseException | ErrorResponseException | InternalException | InvalidArgumentException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
         {
             throw new MinioOperationException(e);
         }
@@ -669,5 +707,54 @@ public class MinioTemplate implements MinioOperations
     public Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
     {
         return MinioUtils.getResultAsStream(getMinioClient().listIncompleteUploads(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioUpload(item.objectName(), bucket));
+    }
+
+    @Override
+    public void setBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Object policy) throws MinioOperationException
+    {
+        MinioUtils.testAllNonNull(bucket, policy);
+
+        try
+        {
+            if (policy instanceof CharSequence)
+            {
+                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.requireToString(MinioUtils.CAST(policy)));
+            }
+            else
+            {
+                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.toJSONString(policy));
+            }
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @NonNull
+    @Override
+    public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> astype) throws MinioOperationException
+    {
+        MinioUtils.testAllNonNull(bucket, astype);
+
+        if ((String.class == astype) || (CharSequence.class == astype))
+        {
+            return MinioUtils.CAST(getBucketPolicy(bucket));
+        }
+        return MinioUtils.toJSONObject(getBucketPolicy(bucket), astype);
+    }
+
+    @NonNull
+    @Override
+    public String getBucketPolicy(@NonNull final CharSequence bucket) throws MinioOperationException
+    {
+        try
+        {
+            return getMinioClient().getBucketPolicy(MinioUtils.requireToString(bucket));
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
     }
 }
