@@ -19,43 +19,44 @@ package co.mercenary.creators.minio.data;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import co.mercenary.creators.minio.util.AbstractNamed;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public abstract class MinioCommon extends MinioNamed
+public abstract class MinioCommon extends AbstractNamed
 {
-    private final long   m_size;
+    private final long   size;
 
     @Nullable
-    private final String m_etag;
+    private final String etag;
 
     @NonNull
-    private final String m_buck;
+    private final String buck;
 
     protected MinioCommon(@NonNull final CharSequence name, @NonNull final CharSequence buck, @Nullable final CharSequence etag, final long size)
     {
         super(name);
 
-        m_buck = MinioUtils.requireToString(buck);
+        this.buck = MinioUtils.requireToString(buck);
 
-        m_etag = MinioUtils.getETagSequence(etag);
+        this.etag = MinioUtils.getETagSequence(etag);
 
-        m_size = size;
+        this.size = size;
     }
 
     public long getSize()
     {
-        return m_size;
+        return size;
     }
 
     @Nullable
     public String getEtag()
     {
-        return m_etag;
+        return etag;
     }
 
     @NonNull
     public String getBucket()
     {
-        return m_buck;
+        return buck;
     }
 }

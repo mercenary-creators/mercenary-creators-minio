@@ -14,12 +14,29 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
-public interface WithOperations<O>
+public abstract class AbstractNamed implements WithName
 {
     @NonNull
-    O withOperations();
+    private String name;
+
+    protected AbstractNamed(@NonNull final CharSequence name)
+    {
+        this.name = MinioUtils.requireToString(name);
+    }
+
+    @NonNull
+    @Override
+    public String getName()
+    {
+        return name;
+    }
+
+    protected void setName(@NonNull final CharSequence name)
+    {
+        this.name = MinioUtils.requireToString(name);
+    }
 }

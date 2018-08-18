@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.util.MinioUtils;
-
-public interface MinioDataOperations<T>
+@FunctionalInterface
+public interface WithOperations<O>
 {
     @NonNull
-    default T self()
-    {
-        return MinioUtils.CAST(this);
-    }
+    O withOperations();
 }

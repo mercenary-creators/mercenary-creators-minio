@@ -18,23 +18,24 @@ package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
+import co.mercenary.creators.minio.util.AbstractNamed;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioUpload extends MinioNamed
+public class MinioUpload extends AbstractNamed
 {
     @NonNull
-    private final String m_buck;
+    private final String buck;
 
     public MinioUpload(@NonNull final CharSequence name, @NonNull final CharSequence buck)
     {
         super(name);
 
-        m_buck = MinioUtils.requireToString(buck);
+        this.buck = MinioUtils.requireToString(buck);
     }
 
     @NonNull
     public String getBucket()
     {
-        return m_buck;
+        return buck;
     }
 }

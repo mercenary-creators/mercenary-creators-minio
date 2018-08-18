@@ -27,29 +27,29 @@ import co.mercenary.creators.minio.util.MinioUtils;
 public class MinioObjectStatus extends MinioCommon
 {
     @Nullable
-    private final Date   m_time;
+    private final Date   time;
 
-    @Nullable
-    private final String m_type;
+    @NonNull
+    private final String type;
 
     public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time)
     {
         super(name, buck, etag, size);
 
-        m_type = MinioUtils.fixContentType(type);
+        this.type = MinioUtils.fixContentType(type);
 
-        m_time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toValueNonNull(time);
     }
 
     @Nullable
     public Date getCreationTime()
     {
-        return m_time;
+        return MinioUtils.COPY(time);
     }
 
-    @Nullable
+    @NonNull
     public String getContentType()
     {
-        return m_type;
+        return type;
     }
 }

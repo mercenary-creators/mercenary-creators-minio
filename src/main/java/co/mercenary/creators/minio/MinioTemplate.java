@@ -21,9 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -31,11 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.io.Resource;
@@ -49,46 +42,45 @@ import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.util.AbstractNamed;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
+import io.minio.ServerSideEncryption;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.MinioException;
 import io.minio.http.Method;
 
-public class MinioTemplate implements MinioOperations, BeanNameAware
+public class MinioTemplate extends AbstractNamed implements MinioOperations, BeanNameAware
 {
     @NonNull
-    private String                             m_nameof;
-
-    @NonNull
-    private final String                       m_server;
+    private final String                       server;
 
     @Nullable
-    private final String                       m_access;
+    private final String                       access;
 
     @Nullable
-    private final String                       m_secret;
+    private final String                       secret;
 
     @Nullable
-    private final String                       m_region;
+    private final String                       region;
 
     @NonNull
-    private final Object                       m_locker = new Object();
+    private final Object                       locker = new Object();
 
     @NonNull
-    private final AtomicBoolean                m_isopen = new AtomicBoolean(false);
+    private final AtomicBoolean                isopen = new AtomicBoolean(false);
 
     @NonNull
-    private final AtomicBoolean                m_closed = new AtomicBoolean(false);
+    private final AtomicBoolean                closed = new AtomicBoolean(false);
 
     @NonNull
-    private final AtomicReference<MinioClient> m_atomic = new AtomicReference<>(MinioUtils.NULL());
+    private final AtomicReference<MinioClient> atomic = new AtomicReference<>(MinioUtils.NULL());
 
     public MinioTemplate(@NonNull final CharSequence server)
     {
-        this(server, MinioUtils.NULL(), MinioUtils.NULL(), MinioUtils.NULL());
+        this(server, MinioUtils.NULL(), MinioUtils.NULL());
     }
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret)
@@ -98,35 +90,35 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
-        m_nameof = MinioUtils.uuid();
+        super(MinioUtils.uuid());
 
-        m_server = MinioUtils.requireToString(server);
+        this.server = MinioUtils.requireToString(server);
 
-        m_access = MinioUtils.getCharSequence(access);
+        this.access = MinioUtils.getCharSequence(access);
 
-        m_secret = MinioUtils.getCharSequence(secret);
+        this.secret = MinioUtils.getCharSequence(secret);
 
-        m_region = MinioUtils.getCharSequence(region);
+        this.region = MinioUtils.getCharSequence(region);
     }
 
     @Override
     public boolean isOpen()
     {
-        return m_isopen.get();
+        return isopen.get();
     }
 
     @Override
     public boolean isClosed()
     {
-        return m_closed.get();
+        return closed.get();
     }
 
     @Override
     public void close() throws IOException
     {
-        m_closed.compareAndSet(false, true);
+        closed.compareAndSet(false, true);
 
-        m_isopen.compareAndSet(true, false);
+        isopen.compareAndSet(true, false);
     }
 
     @NonNull
@@ -134,27 +126,27 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
     {
         if (isClosed())
         {
-            m_isopen.set(false);
+            isopen.set(false);
 
-            throw new MinioOperationException(String.format("%s is closed.", getName()));
+            throw new MinioOperationException(MinioUtils.format("%s is closed.", getName()));
         }
-        MinioClient client = m_atomic.get();
+        MinioClient client = atomic.get();
 
         if (null == client)
         {
-            synchronized (m_locker)
+            synchronized (locker)
             {
-                client = m_atomic.get();
+                client = atomic.get();
 
                 if (null == client)
                 {
                     try
                     {
-                        m_atomic.set(new MinioClient(m_server, m_access, m_secret, m_region));
+                        atomic.set(new MinioClient(server, access, secret, region));
 
-                        m_isopen.set(true);
+                        isopen.set(true);
 
-                        client = m_atomic.get();
+                        client = atomic.get();
                     }
                     catch (InvalidEndpointException | InvalidPortException e)
                     {
@@ -165,24 +157,17 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
         }
         if (isClosed())
         {
-            m_isopen.set(false);
+            isopen.set(false);
 
-            throw new MinioOperationException(String.format("%s is closed.", getName()));
+            throw new MinioOperationException(MinioUtils.format("%s is closed.", getName()));
         }
         return client;
-    }
-
-    @NonNull
-    @Override
-    public String getName()
-    {
-        return m_nameof;
     }
 
     @Override
     public void setBeanName(final String name)
     {
-        m_nameof = MinioUtils.requireToStringOrElse(name, () -> MinioUtils.uuid());
+        setName(MinioUtils.requireToStringOrElse(name, getName()));
     }
 
     @Override
@@ -264,7 +249,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
                 throw new MinioOperationException(e);
             }
         }
-        return getBucket(bucket).orElseThrow(() -> new MinioOperationException(String.format("no bucket %s", bucket)));
+        return getBucket(bucket).orElseThrow(() -> new MinioOperationException(MinioUtils.format("no bucket %s", bucket)));
     }
 
     @NonNull
@@ -341,27 +326,13 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
 
     @NonNull
     @Override
-    public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final KeyPair keys) throws MinioOperationException
+    public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
     {
         try
         {
             return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
         }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @NonNull
-    @Override
-    public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final SecretKey keys) throws MinioOperationException
-    {
-        try
-        {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
-        }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -374,6 +345,22 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
         try
         {
             final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+
+            return new MinioObjectStatus(name, bucket, status.length(), status.contentType(), status.etag(), () -> status.createdTime());
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @NonNull
+    @Override
+    public MinioObjectStatus getObjectStatus(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
+    {
+        try
+        {
+            final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
 
             return new MinioObjectStatus(name, bucket, status.length(), status.contentType(), status.etag(), () -> status.createdTime());
         }
@@ -534,7 +521,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
             }
-            throw new MinioOperationException(String.format("invalid method %s", method));
+            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -558,7 +545,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
-            throw new MinioOperationException(String.format("invalid method %s", method));
+            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -582,7 +569,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
             }
-            throw new MinioOperationException(String.format("invalid method %s", method));
+            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -606,7 +593,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
             {
                 return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(time, unit));
             }
-            throw new MinioOperationException(String.format("invalid method %s", method));
+            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -669,7 +656,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
     }
 
     @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final KeyPair keys) throws MinioOperationException
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @NonNull final ServerSideEncryption keys) throws MinioOperationException
     {
         MinioUtils.testAllNonNull(bucket, name, input, keys);
 
@@ -677,26 +664,9 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type), keys);
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, keys);
         }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type, @NonNull final SecretKey keys) throws MinioOperationException
-    {
-        MinioUtils.testAllNonNull(bucket, name, input, keys);
-
-        final MinioBucket create = createOrGetBucket(bucket);
-
-        try
-        {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type), keys);
-        }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -718,7 +688,7 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
         {
             if (policy instanceof CharSequence)
             {
-                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.requireToString(MinioUtils.CAST(policy)));
+                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), policy.toString());
             }
             else
             {
@@ -733,15 +703,19 @@ public class MinioTemplate implements MinioOperations, BeanNameAware
 
     @NonNull
     @Override
-    public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> astype) throws MinioOperationException
+    public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> type) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, astype);
+        MinioUtils.requireNonNull(type);
 
-        if ((String.class == astype) || (CharSequence.class == astype))
+        final String policy = getBucketPolicy(bucket);
+
+        if ((String.class == type) || (CharSequence.class == type))
         {
-            return MinioUtils.CAST(getBucketPolicy(bucket));
+            final T value = MinioUtils.CAST(policy, type);
+
+            return MinioUtils.requireNonNull(value);
         }
-        return MinioUtils.toJSONObject(getBucketPolicy(bucket), astype);
+        return MinioUtils.toJSONObject(policy, type);
     }
 
     @NonNull

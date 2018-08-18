@@ -19,15 +19,12 @@ package co.mercenary.creators.minio;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.security.KeyPair;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
@@ -40,6 +37,7 @@ import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
+import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
 public interface MinioOperations extends MinioManager
@@ -95,6 +93,9 @@ public interface MinioOperations extends MinioManager
     MinioObjectStatus getObjectStatus(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
     @NonNull
+    MinioObjectStatus getObjectStatus(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull ServerSideEncryption keys) throws MinioOperationException;
+
+    @NonNull
     InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
     @NonNull
@@ -104,10 +105,7 @@ public interface MinioOperations extends MinioManager
     InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, long skip, long leng) throws MinioOperationException;
 
     @NonNull
-    InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull KeyPair keys) throws MinioOperationException;
-
-    @NonNull
-    InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull SecretKey keys) throws MinioOperationException;
+    InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull ServerSideEncryption keys) throws MinioOperationException;
 
     @NonNull
     default String getSignedObjectUrl(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
@@ -151,44 +149,42 @@ public interface MinioOperations extends MinioManager
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull InputStream input, long size, @Nullable CharSequence type) throws MinioOperationException;
 
-    void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull InputStream input, long size, @Nullable CharSequence type, @NonNull KeyPair keys) throws MinioOperationException;
-
-    void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull InputStream input, long size, @Nullable CharSequence type, @NonNull SecretKey keys) throws MinioOperationException;
+    void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull InputStream input, long size, @NonNull ServerSideEncryption keys) throws MinioOperationException;
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL(CharSequence.class));
     }
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL(CharSequence.class));
     }
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, MinioUtils.NULL(CharSequence.class));
     }
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull Resource input, @Nullable CharSequence type) throws MinioOperationException;
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Resource input) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL(CharSequence.class));
     }
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull File input, @Nullable CharSequence type) throws MinioOperationException;
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL(CharSequence.class));
     }
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull File input, long size, @Nullable CharSequence type) throws MinioOperationException;
 
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input, final long size) throws MinioOperationException
     {
-        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, MinioUtils.NULL());
+        putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, MinioUtils.NULL(CharSequence.class));
     }
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull Path input, @Nullable CharSequence type) throws MinioOperationException;
@@ -197,12 +193,12 @@ public interface MinioOperations extends MinioManager
 
     default boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target) throws MinioOperationException
     {
-        return copyObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), MinioUtils.NULL(), MinioUtils.NULL());
+        return copyObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), MinioUtils.NULL(CharSequence.class), MinioUtils.NULL(MinioCopyConditions.class));
     }
 
     default boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final CharSequence object) throws MinioOperationException
     {
-        return copyObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), object, MinioUtils.NULL());
+        return copyObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), object, MinioUtils.NULL(MinioCopyConditions.class));
     }
 
     boolean copyObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull CharSequence target, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
@@ -215,13 +211,13 @@ public interface MinioOperations extends MinioManager
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL());
+        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class));
     }
 
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket, final boolean recursive) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(), recursive);
+        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), recursive);
     }
 
     @NonNull
@@ -239,13 +235,13 @@ public interface MinioOperations extends MinioManager
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(), false);
+        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), false);
     }
 
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, final boolean recursive) throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(), recursive);
+        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), recursive);
     }
 
     @NonNull

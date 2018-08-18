@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
-public interface WithName
+@FunctionalInterface
+public interface WithSelf<T>
 {
     @NonNull
-    String getName();
+    T self();
 }

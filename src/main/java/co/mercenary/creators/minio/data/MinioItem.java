@@ -17,13 +17,10 @@
 package co.mercenary.creators.minio.data;
 
 import java.io.InputStream;
-import java.security.KeyPair;
 import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -31,44 +28,46 @@ import org.springframework.lang.Nullable;
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithOperations;
+import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
 public class MinioItem extends MinioCommon implements WithOperations<MinioItemOperations>
 {
-    private final boolean         m_file;
+    private final boolean         file;
 
     @Nullable
-    private final Date            m_time;
+    private final Date            time;
 
     @NonNull
-    private final MinioOperations m_oper;
+    private final MinioOperations oper;
 
     public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
     {
         super(name, buck, etag, size);
 
-        m_oper = MinioUtils.requireNonNull(oper);
+        this.oper = MinioUtils.requireNonNull(oper);
 
-        m_time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toValueNonNull(time);
 
-        m_file = file;
+        this.file = file;
     }
 
     public boolean isFile()
     {
-        return m_file;
+        return file;
     }
 
     @Nullable
     public Date getLastModified()
     {
-        return m_time;
+        return MinioUtils.COPY(time);
     }
 
     @NonNull
     protected MinioOperations operations()
     {
-        return m_oper;
+        return oper;
     }
 
     @NonNull
@@ -77,10 +76,17 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     {
         return new MinioItemOperations()
         {
+            @NonNull
+            @Override
+            public MinioItem self()
+            {
+                return MinioItem.this;
+            }
+
             @Override
             public boolean isFile()
             {
-                return m_file;
+                return self().isFile();
             }
 
             @NonNull
@@ -88,6 +94,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public MinioObjectStatus getObjectStatus() throws MinioOperationException
             {
                 return operations().getObjectStatus(getBucket(), getName());
+            }
+
+            @NonNull
+            @Override
+            public MinioObjectStatus getObjectStatus(@NonNull final ServerSideEncryption keys) throws MinioOperationException
+            {
+                return operations().getObjectStatus(getBucket(), getName(), MinioUtils.requireNonNull(keys));
             }
 
             @NonNull
@@ -113,14 +126,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
             @NonNull
             @Override
-            public InputStream getObjectInputStream(@NonNull final KeyPair keys) throws MinioOperationException
-            {
-                return operations().getObjectInputStream(getBucket(), getName(), MinioUtils.requireNonNull(keys));
-            }
-
-            @NonNull
-            @Override
-            public InputStream getObjectInputStream(@NonNull final SecretKey keys) throws MinioOperationException
+            public InputStream getObjectInputStream(@NonNull final ServerSideEncryption keys) throws MinioOperationException
             {
                 return operations().getObjectInputStream(getBucket(), getName(), MinioUtils.requireNonNull(keys));
             }

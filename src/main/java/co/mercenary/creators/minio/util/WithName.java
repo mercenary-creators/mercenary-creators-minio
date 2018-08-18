@@ -14,33 +14,13 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.util.MinioUtils;
-
-public abstract class MinioNamed implements WithName
+@FunctionalInterface
+public interface WithName
 {
     @NonNull
-    private final String m_name;
-
-    protected MinioNamed(@NonNull final CharSequence name)
-    {
-        m_name = MinioUtils.requireToString(name);
-    }
-
-    @NonNull
-    @Override
-    public String getName()
-    {
-        return m_name;
-    }
-
-    @NonNull
-    @Override
-    public String toString()
-    {
-        return getName();
-    }
+    String getName();
 }

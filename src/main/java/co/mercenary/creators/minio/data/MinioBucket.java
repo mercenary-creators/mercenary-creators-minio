@@ -19,14 +19,11 @@ package co.mercenary.creators.minio.data;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.security.KeyPair;
 import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
@@ -34,36 +31,39 @@ import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.util.AbstractNamed;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithOperations;
+import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
-public class MinioBucket extends MinioNamed implements WithOperations<MinioBucketOperations>
+public class MinioBucket extends AbstractNamed implements WithOperations<MinioBucketOperations>
 {
     @Nullable
-    private final Date            m_time;
+    private final Date            time;
 
     @NonNull
-    private final MinioOperations m_oper;
+    private final MinioOperations oper;
 
     public MinioBucket(@NonNull final CharSequence name, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
     {
         super(name);
 
-        m_oper = MinioUtils.requireNonNull(oper);
+        this.oper = MinioUtils.requireNonNull(oper);
 
-        m_time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toValueNonNull(time);
     }
 
     @Nullable
     public Date getCreationTime()
     {
-        return m_time;
+        return MinioUtils.COPY(time);
     }
 
     @NonNull
     protected MinioOperations operations()
     {
-        return m_oper;
+        return oper;
     }
 
     @NonNull
@@ -72,6 +72,13 @@ public class MinioBucket extends MinioNamed implements WithOperations<MinioBucke
     {
         return new MinioBucketOperations()
         {
+            @NonNull
+            @Override
+            public MinioBucket self()
+            {
+                return MinioBucket.this;
+            }
+
             @Override
             public boolean deleteBucket() throws MinioOperationException
             {
@@ -113,6 +120,13 @@ public class MinioBucket extends MinioNamed implements WithOperations<MinioBucke
 
             @NonNull
             @Override
+            public MinioObjectStatus getObjectStatus(@NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
+            {
+                return operations().getObjectStatus(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
+            }
+
+            @NonNull
+            @Override
             public InputStream getObjectInputStream(@NonNull final CharSequence name) throws MinioOperationException
             {
                 return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name));
@@ -134,14 +148,7 @@ public class MinioBucket extends MinioNamed implements WithOperations<MinioBucke
 
             @NonNull
             @Override
-            public InputStream getObjectInputStream(@NonNull final CharSequence name, @NonNull final KeyPair keys) throws MinioOperationException
-            {
-                return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
-            }
-
-            @NonNull
-            @Override
-            public InputStream getObjectInputStream(@NonNull final CharSequence name, @NonNull final SecretKey keys) throws MinioOperationException
+            public InputStream getObjectInputStream(@NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
             {
                 return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
             }
@@ -253,6 +260,7 @@ public class MinioBucket extends MinioNamed implements WithOperations<MinioBucke
             {
                 return operations().getIncompleteUploads(getName(), prefix, recursive);
             }
+
         };
     }
 }

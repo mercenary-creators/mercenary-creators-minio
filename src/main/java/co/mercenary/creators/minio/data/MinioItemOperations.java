@@ -17,19 +17,18 @@
 package co.mercenary.creators.minio.data;
 
 import java.io.InputStream;
-import java.security.KeyPair;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.util.WithSelf;
+import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
-public interface MinioItemOperations extends MinioDataOperations<MinioItem>
+public interface MinioItemOperations extends WithSelf<MinioItem>
 {
     boolean isFile();
 
@@ -37,6 +36,9 @@ public interface MinioItemOperations extends MinioDataOperations<MinioItem>
 
     @NonNull
     MinioObjectStatus getObjectStatus() throws MinioOperationException;
+
+    @NonNull
+    MinioObjectStatus getObjectStatus(@NonNull ServerSideEncryption keys) throws MinioOperationException;
 
     @NonNull
     InputStream getObjectInputStream() throws MinioOperationException;
@@ -48,10 +50,7 @@ public interface MinioItemOperations extends MinioDataOperations<MinioItem>
     InputStream getObjectInputStream(long skip, long leng) throws MinioOperationException;
 
     @NonNull
-    InputStream getObjectInputStream(@NonNull KeyPair keys) throws MinioOperationException;
-
-    @NonNull
-    InputStream getObjectInputStream(@NonNull SecretKey keys) throws MinioOperationException;
+    InputStream getObjectInputStream(@NonNull ServerSideEncryption keys) throws MinioOperationException;
 
     @NonNull
     String getSignedObjectUrl() throws MinioOperationException;

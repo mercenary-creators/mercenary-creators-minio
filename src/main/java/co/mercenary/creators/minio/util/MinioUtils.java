@@ -34,7 +34,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -77,10 +77,22 @@ public final class MinioUtils
     }
 
     @Nullable
+    public static <T> T NULL(@NonNull final Class<T> type)
+    {
+        return NULL();
+    }
+
+    @Nullable
     @SuppressWarnings("unchecked")
     public static <T> T CAST(@Nullable final Object value)
     {
         return ((T) value);
+    }
+
+    @NonNull
+    public static <T> T CAST(@NonNull final Object value, @NonNull final Class<T> type)
+    {
+        return type.cast(value);
     }
 
     @Nullable
@@ -89,6 +101,16 @@ public final class MinioUtils
         if ((null != value) && (ClassUtils.isAssignableValue(type, value)))
         {
             return type.cast(value);
+        }
+        return NULL();
+    }
+
+    @Nullable
+    public static Date COPY(@Nullable final Date date)
+    {
+        if (null != date)
+        {
+            return CAST(date.clone());
         }
         return NULL();
     }
@@ -124,21 +146,33 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <T> T requireNonNull(@Nullable final T value)
+    public static <T> T requireNonNull(final T value)
     {
-        return Objects.requireNonNull(value);
+        if (null == value)
+        {
+            throw new NullPointerException();
+        }
+        return value;
     }
 
     @NonNull
-    public static <T> T requireNonNull(@Nullable final T value, @NonNull final String reason)
+    public static <T> T requireNonNull(final T value, @NonNull final String reason)
     {
-        return Objects.requireNonNull(value, reason);
+        if (null == value)
+        {
+            throw new NullPointerException(reason);
+        }
+        return value;
     }
 
     @NonNull
-    public static <T> T requireNonNull(@Nullable final T value, @NonNull final Supplier<String> reason)
+    public static <T> T requireNonNull(final T value, @NonNull final Supplier<String> reason)
     {
-        return Objects.requireNonNull(value, reason);
+        if (null == value)
+        {
+            throw new NullPointerException(reason.get());
+        }
+        return value;
     }
 
     @Nullable
@@ -165,6 +199,12 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static String format(@NonNull final CharSequence format, @NonNull final Object... args)
+    {
+        return String.format(format.toString(), args);
+    }
+
+    @NonNull
     public static byte[] getBytes(@NonNull final CharSequence value)
     {
         return value.toString().getBytes(StandardCharsets.UTF_8);
@@ -177,19 +217,23 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String requireToString(@Nullable final CharSequence value)
+    public static String requireToString(final CharSequence value)
     {
-        return requireNonNull(getCharSequence(value));
+        if (null == value)
+        {
+            throw new NullPointerException();
+        }
+        return value.toString();
     }
 
     @NonNull
-    public static String requireToStringOrElse(@Nullable final CharSequence value, @NonNull final String otherwise)
+    public static String requireToStringOrElse(final CharSequence value, @NonNull final String otherwise)
     {
         return requireNonNullOrElse(getCharSequence(value), otherwise);
     }
 
     @NonNull
-    public static String requireToStringOrElse(@Nullable final CharSequence value, @NonNull final Supplier<String> otherwise)
+    public static String requireToStringOrElse(final CharSequence value, @NonNull final Supplier<String> otherwise)
     {
         return requireNonNullOrElse(getCharSequence(value), otherwise);
     }
@@ -209,7 +253,7 @@ public final class MinioUtils
     @NonNull
     public static String fixContentType(@Nullable final CharSequence value)
     {
-        return requireToStringOrElse(value, xgetDefaultContentType());
+        return requireToStringOrElse(value, getDefaultContentType());
     }
 
     @Nullable
@@ -245,7 +289,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String xgetDefaultContentType()
+    public static String getDefaultContentType()
     {
         return "application/octet-stream";
     }
@@ -279,9 +323,9 @@ public final class MinioUtils
 
         if ((time < MINIMUM_EXPIRY_TIME) || (time > MAXIMUM_EXPIRY_TIME))
         {
-            throw new MinioOperationException(String.format("bad duration %s", time));
+            throw new MinioOperationException(format("bad duration %s", time));
         }
-        return new Integer(time.intValue());
+        return time.intValue();
     }
 
     @NonNull
@@ -299,19 +343,19 @@ public final class MinioUtils
     @NonNull
     public static String toJSONString(@NonNull final Object value) throws MinioOperationException
     {
-        return JSONObjectMapper.instance().toJSONString(requireNonNull(value));
+        return new JSONObjectMapper().toJSONString(requireNonNull(value));
     }
 
     @NonNull
     public static <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioOperationException
     {
-        return JSONObjectMapper.instance().toJSONObject(requireNonNull(value), requireNonNull(type));
+        return new JSONObjectMapper().toJSONObject(requireNonNull(value), requireNonNull(type));
     }
 
     @NonNull
     public static <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioOperationException
     {
-        return JSONObjectMapper.instance().toJSONObject(requireNonNull(value), requireNonNull(type));
+        return new JSONObjectMapper().toJSONObject(requireNonNull(value), requireNonNull(type));
     }
 
     public static class JSONObjectMapper extends ObjectMapper
@@ -319,16 +363,7 @@ public final class MinioUtils
         private static final long              serialVersionUID = 7742077499646363644L;
 
         @NonNull
-        private static final JSONObjectMapper  JSONOBJECTMAPPER = new JSONObjectMapper();
-
-        @NonNull
         private static final ArrayList<Module> EXTENDED_MODULES = toList(new JodaModule(), new ParameterNamesModule(), new Jdk8Module(), new JavaTimeModule());
-
-        @NonNull
-        public static JSONObjectMapper instance()
-        {
-            return JSONOBJECTMAPPER;
-        }
 
         public JSONObjectMapper()
         {

@@ -18,7 +18,7 @@ package co.mercenary.creators.minio;
 
 import java.io.Closeable;
 
-import co.mercenary.creators.minio.data.WithName;
+import co.mercenary.creators.minio.util.WithName;
 
 public interface MinioManager extends WithName, Closeable
 {

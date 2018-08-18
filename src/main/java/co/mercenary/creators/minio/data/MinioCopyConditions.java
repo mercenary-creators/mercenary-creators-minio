@@ -29,7 +29,7 @@ import io.minio.errors.InvalidArgumentException;
 public class MinioCopyConditions
 {
     @NonNull
-    private final CopyConditions m_cond;
+    private final CopyConditions cond;
 
     public MinioCopyConditions()
     {
@@ -38,13 +38,13 @@ public class MinioCopyConditions
 
     public MinioCopyConditions(@NonNull final CopyConditions cond)
     {
-        m_cond = MinioUtils.requireNonNull(cond);
+        this.cond = MinioUtils.requireNonNull(cond);
     }
 
     @NonNull
     public CopyConditions getCopyConditions()
     {
-        return m_cond;
+        return cond;
     }
 
     @NonNull
