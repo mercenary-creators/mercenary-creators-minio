@@ -222,7 +222,7 @@ public final class MinioUtils
     {
         final String chars = getCharSequence(value);
 
-        if (isNonNull(chars))
+        if (null != chars)
         {
             return chars;
         }
@@ -234,7 +234,7 @@ public final class MinioUtils
     {
         final String chars = getCharSequence(value);
 
-        if (isNonNull(chars))
+        if (null != chars)
         {
             return chars;
         }
@@ -246,7 +246,7 @@ public final class MinioUtils
     {
         final String chars = getCharSequence(value);
 
-        if (isNonNull(chars))
+        if (null != chars)
         {
             return chars;
         }
