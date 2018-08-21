@@ -43,8 +43,9 @@ http://docs.themodernway.com/docs/reports/mercenary-creators-minio/cve/dependenc
 
 SonarQube URL:
 
-![alt SonarQube](https://sonarcloud.io/api/project_badges/measure?project=co.mercenary-creators%3Amercenary-creators-minio&metric=alert_status "SonarQube")
+https://sonarcloud.io/dashboard?id=co.mercenary-creators%3Amercenary-creators-minio
 
+![alt SonarQube](https://sonarcloud.io/api/project_badges/measure?project=co.mercenary-creators%3Amercenary-creators-minio&metric=alert_status "SonarQube")
 
 License:
 
