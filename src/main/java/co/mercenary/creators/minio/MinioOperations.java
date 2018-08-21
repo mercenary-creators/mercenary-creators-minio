@@ -43,6 +43,9 @@ import io.minio.http.Method;
 public interface MinioOperations extends MinioManager
 {
     @NonNull
+    String getServerUrl();
+
+    @NonNull
     Stream<MinioBucket> getBuckets() throws MinioOperationException;
 
     @NonNull

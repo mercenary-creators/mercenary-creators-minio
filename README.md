@@ -12,13 +12,13 @@ Maven:
 <dependency>
   <groupId>co.mercenary-creators</groupId>
   <artifactId>mercenary-creators-minio</artifactId>
-  <version>0.0.9-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 Gradle:
 ```
 dependencies {
-    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '0.0.9-SNAPSHOT')
+    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '0.1.0-SNAPSHOT')
 }
 ```
 Javadoc URL:
@@ -40,6 +40,10 @@ http://docs.themodernway.com/docs/reports/mercenary-creators-minio/findbugs/main
 CVE Dependency Check URL:
 
 http://docs.themodernway.com/docs/reports/mercenary-creators-minio/cve/dependency-check-report.html
+
+SonarQube URL:
+
+https://sonarcloud.io/api/project_badges/measure?project=co.mercenary-creators%3Amercenary-creators-minio&metric=alert_status
 
 License:
 

@@ -55,28 +55,22 @@ import io.minio.http.Method;
 public class MinioTemplate extends AbstractNamed implements MinioOperations, BeanNameAware
 {
     @NonNull
-    private final String                       server;
+    private final String                       server_url;
 
     @Nullable
-    private final String                       access;
+    private final String                       access_key;
 
     @Nullable
-    private final String                       secret;
-
-    @Nullable
-    private final String                       region;
+    private final String                       secret_key;
 
     @NonNull
-    private final Object                       locker = new Object();
+    private final AtomicBoolean                was_opened = new AtomicBoolean(false);
 
     @NonNull
-    private final AtomicBoolean                isopen = new AtomicBoolean(false);
+    private final AtomicBoolean                was_closed = new AtomicBoolean(false);
 
     @NonNull
-    private final AtomicBoolean                closed = new AtomicBoolean(false);
-
-    @NonNull
-    private final AtomicReference<MinioClient> atomic = new AtomicReference<>(MinioUtils.NULL());
+    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>(MinioUtils.NULL());
 
     public MinioTemplate(@NonNull final CharSequence server)
     {
@@ -85,40 +79,52 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret)
     {
-        this(server, access, secret, MinioUtils.NULL());
-    }
-
-    public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
-    {
         super(MinioUtils.uuid());
 
-        this.server = MinioUtils.requireToString(server);
+        this.server_url = MinioUtils.requireToString(server);
 
-        this.access = MinioUtils.getCharSequence(access);
+        this.access_key = MinioUtils.getCharSequence(access);
 
-        this.secret = MinioUtils.getCharSequence(secret);
-
-        this.region = MinioUtils.getCharSequence(region);
+        this.secret_key = MinioUtils.getCharSequence(secret);
     }
 
     @Override
     public boolean isOpen()
     {
-        return isopen.get();
+        return was_opened.get();
     }
 
     @Override
     public boolean isClosed()
     {
-        return closed.get();
+        return was_closed.get();
     }
 
     @Override
     public void close() throws IOException
     {
-        closed.compareAndSet(false, true);
+        was_closed.compareAndSet(false, true);
 
-        isopen.compareAndSet(true, false);
+        was_opened.compareAndSet(true, false);
+    }
+
+    @NonNull
+    @Override
+    public String getServerUrl()
+    {
+        return server_url;
+    }
+
+    @Nullable
+    protected String getAccessKey()
+    {
+        return access_key;
+    }
+
+    @Nullable
+    protected String getSecretKey()
+    {
+        return secret_key;
     }
 
     @NonNull
@@ -126,27 +132,27 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     {
         if (isClosed())
         {
-            isopen.set(false);
+            was_opened.set(false);
 
             throw new MinioOperationException(MinioUtils.format("%s is closed.", getName()));
         }
-        MinioClient client = atomic.get();
+        MinioClient client = atomic_ref.get();
 
         if (null == client)
         {
-            synchronized (locker)
+            synchronized (this)
             {
-                client = atomic.get();
+                client = atomic_ref.get();
 
                 if (null == client)
                 {
                     try
                     {
-                        atomic.set(new MinioClient(server, access, secret, region));
+                        atomic_ref.set(new MinioClient(getServerUrl(), getAccessKey(), getSecretKey()));
 
-                        isopen.set(true);
+                        was_opened.set(true);
 
-                        client = atomic.get();
+                        client = atomic_ref.get();
                     }
                     catch (InvalidEndpointException | InvalidPortException e)
                     {
@@ -157,7 +163,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         }
         if (isClosed())
         {
-            isopen.set(false);
+            was_opened.set(false);
 
             throw new MinioOperationException(MinioUtils.format("%s is closed.", getName()));
         }

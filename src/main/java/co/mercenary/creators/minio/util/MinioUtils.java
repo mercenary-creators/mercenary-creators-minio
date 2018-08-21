@@ -90,9 +90,10 @@ public final class MinioUtils
     }
 
     @NonNull
+    @SuppressWarnings("unchecked")
     public static <T> T CAST(@NonNull final Object value, @NonNull final Class<T> type)
     {
-        return type.cast(value);
+        return ((T) requireNonNull(value));
     }
 
     @Nullable
@@ -219,23 +220,37 @@ public final class MinioUtils
     @NonNull
     public static String requireToString(final CharSequence value)
     {
-        if (null == value)
+        final String chars = getCharSequence(value);
+
+        if (isNonNull(chars))
         {
-            throw new NullPointerException();
+            return chars;
         }
-        return value.toString();
+        throw new NullPointerException();
     }
 
     @NonNull
     public static String requireToStringOrElse(final CharSequence value, @NonNull final String otherwise)
     {
-        return requireNonNullOrElse(getCharSequence(value), otherwise);
+        final String chars = getCharSequence(value);
+
+        if (isNonNull(chars))
+        {
+            return chars;
+        }
+        return otherwise;
     }
 
     @NonNull
     public static String requireToStringOrElse(final CharSequence value, @NonNull final Supplier<String> otherwise)
     {
-        return requireNonNullOrElse(getCharSequence(value), otherwise);
+        final String chars = getCharSequence(value);
+
+        if (isNonNull(chars))
+        {
+            return chars;
+        }
+        return requireNonNull(otherwise.get());
     }
 
     @Nullable
