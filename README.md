@@ -45,6 +45,7 @@ SonarQube URL:
 
 ![alt SonarQube](https://sonarcloud.io/api/project_badges/measure?project=co.mercenary-creators%3Amercenary-creators-minio&metric=alert_status "SonarQube")
 
+
 License:
 
 Copyright (c) 2018, Mercenary Creators Company. All rights reserved.
