@@ -12,13 +12,13 @@ Maven:
 <dependency>
   <groupId>co.mercenary-creators</groupId>
   <artifactId>mercenary-creators-minio</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0-RELEASE</version>
 </dependency>
 ```
 Gradle:
 ```
 dependencies {
-    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '0.1.0-SNAPSHOT')
+    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '1.0.0-RELEASE')
 }
 ```
 Javadoc URL:
