@@ -52,7 +52,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import io.minio.Result;
@@ -378,7 +377,7 @@ public final class MinioUtils
         private static final long              serialVersionUID = 7742077499646363644L;
 
         @NonNull
-        private static final ArrayList<Module> EXTENDED_MODULES = toList(new JodaModule(), new ParameterNamesModule(), new Jdk8Module(), new JavaTimeModule());
+        private static final ArrayList<Module> EXTENDED_MODULES = toList(new JodaModule(), new Jdk8Module(), new JavaTimeModule());
 
         public JSONObjectMapper()
         {
