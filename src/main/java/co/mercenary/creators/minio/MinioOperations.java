@@ -26,9 +26,12 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
@@ -37,14 +40,14 @@ import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithDescription;
+import co.mercenary.creators.minio.util.WithName;
+import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
-public interface MinioOperations extends MinioManager
+public interface MinioOperations extends WithName, WithDescription, WithServerData
 {
-    @NonNull
-    String getServerUrl();
-
     @NonNull
     Stream<MinioBucket> getBuckets() throws MinioOperationException;
 
@@ -66,11 +69,29 @@ public interface MinioOperations extends MinioManager
     }
 
     @NonNull
+    default Stream<MinioBucket> getBucketsMatch(@NonNull final CharSequence regex) throws MinioOperationException
+    {
+        return getBucketsMatch(regex, new AntPathMatcher());
+    }
+
+    @NonNull
+    default Stream<MinioBucket> getBucketsMatch(@NonNull final CharSequence regex, @NonNull final PathMatcher match) throws MinioOperationException
+    {
+        final String value = MinioUtils.requireToString(regex);
+
+        if (match.isPattern(value))
+        {
+            return getBucketsNamed(named -> match.match(value, named));
+        }
+        return getBucketsNamed(Pattern.compile(MinioUtils.requireToString(regex)));
+    }
+
+    @NonNull
     default Optional<MinioBucket> getBucket(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        final String match = MinioUtils.requireToString(bucket);
+        final String value = MinioUtils.requireToString(bucket);
 
-        return getBucketsNamed(named -> match.equals(named)).findFirst();
+        return getBucketsNamed(named -> value.equals(named)).findFirst();
     }
 
     boolean isBucket(@NonNull CharSequence bucket) throws MinioOperationException;
@@ -109,6 +130,30 @@ public interface MinioOperations extends MinioManager
 
     @NonNull
     InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull ServerSideEncryption keys) throws MinioOperationException;
+
+    @NonNull
+    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
+    {
+        return new InputStreamResource(getObjectInputStream(bucket, name));
+    }
+
+    @NonNull
+    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip) throws MinioOperationException
+    {
+        return new InputStreamResource(getObjectInputStream(bucket, name, skip));
+    }
+
+    @NonNull
+    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip, final long leng) throws MinioOperationException
+    {
+        return new InputStreamResource(getObjectInputStream(bucket, name, skip, leng));
+    }
+
+    @NonNull
+    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
+    {
+        return new InputStreamResource(getObjectInputStream(bucket, name, keys));
+    }
 
     @NonNull
     default String getSignedObjectUrl(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException

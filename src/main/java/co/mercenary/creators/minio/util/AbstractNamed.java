@@ -18,7 +18,7 @@ package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
-public abstract class AbstractNamed implements WithName
+public abstract class AbstractNamed implements WithName, WithDescription
 {
     @NonNull
     private String name;
@@ -38,5 +38,39 @@ public abstract class AbstractNamed implements WithName
     protected void setName(@NonNull final CharSequence name)
     {
         this.name = MinioUtils.requireToString(name);
+    }
+
+    @NonNull
+    @Override
+    public String toDescription()
+    {
+        return MinioUtils.format("class=(%s), name=(%s).", getClass().getCanonicalName(), getName());
+    }
+
+    @NonNull
+    @Override
+    public String toString()
+    {
+        return toDescription();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (other instanceof AbstractNamed)
+        {
+            return toString().equals(other.toString());
+        }
+        return false;
     }
 }

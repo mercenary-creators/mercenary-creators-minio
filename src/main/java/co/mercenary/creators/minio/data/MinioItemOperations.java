@@ -18,21 +18,27 @@ package co.mercenary.creators.minio.data;
 
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.resource.MinioInputStreamResource;
 import co.mercenary.creators.minio.util.WithSelf;
+import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
-public interface MinioItemOperations extends WithSelf<MinioItem>
+public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
 {
     boolean isFile();
 
     boolean deleteObject() throws MinioOperationException;
+
+    @NonNull
+    Optional<MinioItem> getItemRelative(@NonNull CharSequence path) throws MinioOperationException;
 
     @NonNull
     MinioObjectStatus getObjectStatus() throws MinioOperationException;
@@ -51,6 +57,30 @@ public interface MinioItemOperations extends WithSelf<MinioItem>
 
     @NonNull
     InputStream getObjectInputStream(@NonNull ServerSideEncryption keys) throws MinioOperationException;
+
+    @NonNull
+    default MinioInputStreamResource getObjectInputStreamResource() throws MinioOperationException
+    {
+        return new MinioInputStreamResource(getObjectInputStream());
+    }
+
+    @NonNull
+    default MinioInputStreamResource getObjectInputStreamResource(final long skip) throws MinioOperationException
+    {
+        return new MinioInputStreamResource(getObjectInputStream(skip));
+    }
+
+    @NonNull
+    default MinioInputStreamResource getObjectInputStreamResource(final long skip, final long leng) throws MinioOperationException
+    {
+        return new MinioInputStreamResource(getObjectInputStream(skip, leng));
+    }
+
+    @NonNull
+    default MinioInputStreamResource getObjectInputStreamResource(@NonNull final ServerSideEncryption keys) throws MinioOperationException
+    {
+        return new MinioInputStreamResource(getObjectInputStream(keys));
+    }
 
     @NonNull
     String getSignedObjectUrl() throws MinioOperationException;

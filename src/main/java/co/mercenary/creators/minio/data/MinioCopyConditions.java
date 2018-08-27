@@ -21,7 +21,7 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.errors.InvalidArgumentException;
@@ -48,7 +48,7 @@ public class MinioCopyConditions
     }
 
     @NonNull
-    public MinioCopyConditions setModified(@NonNull final DateTime date) throws MinioOperationException
+    public MinioCopyConditions setModified(@NonNull final DateTime date) throws MinioDataException
     {
         try
         {
@@ -56,25 +56,25 @@ public class MinioCopyConditions
         }
         catch (final InvalidArgumentException e)
         {
-            throw new MinioOperationException(e);
+            throw new MinioDataException(e);
         }
         return this;
     }
 
     @NonNull
-    public MinioCopyConditions setModified(@NonNull final Date date) throws MinioOperationException
+    public MinioCopyConditions setModified(@NonNull final Date date) throws MinioDataException
     {
         return setModified(new DateTime(date.getTime()));
     }
 
     @NonNull
-    public MinioCopyConditions setModified(@NonNull final Long date) throws MinioOperationException
+    public MinioCopyConditions setModified(@NonNull final Long date) throws MinioDataException
     {
         return setModified(new DateTime(date.longValue()));
     }
 
     @NonNull
-    public MinioCopyConditions setUnmodified(@NonNull final DateTime date) throws MinioOperationException
+    public MinioCopyConditions setUnmodified(@NonNull final DateTime date) throws MinioDataException
     {
         try
         {
@@ -82,25 +82,25 @@ public class MinioCopyConditions
         }
         catch (final InvalidArgumentException e)
         {
-            throw new MinioOperationException(e);
+            throw new MinioDataException(e);
         }
         return this;
     }
 
     @NonNull
-    public MinioCopyConditions setUnmodified(@NonNull final Date date) throws MinioOperationException
+    public MinioCopyConditions setUnmodified(@NonNull final Date date) throws MinioDataException
     {
         return setUnmodified(new DateTime(date.getTime()));
     }
 
     @NonNull
-    public MinioCopyConditions setUnmodified(@NonNull final Long date) throws MinioOperationException
+    public MinioCopyConditions setUnmodified(@NonNull final Long date) throws MinioDataException
     {
         return setUnmodified(new DateTime(date.longValue()));
     }
 
     @NonNull
-    public MinioCopyConditions setMatchETag(@NonNull final CharSequence etag) throws MinioOperationException
+    public MinioCopyConditions setMatchETag(@NonNull final CharSequence etag) throws MinioDataException
     {
         try
         {
@@ -108,13 +108,13 @@ public class MinioCopyConditions
         }
         catch (final InvalidArgumentException e)
         {
-            throw new MinioOperationException(e);
+            throw new MinioDataException(e);
         }
         return this;
     }
 
     @NonNull
-    public MinioCopyConditions setMatchETagNone(@NonNull final CharSequence etag) throws MinioOperationException
+    public MinioCopyConditions setMatchETagNone(@NonNull final CharSequence etag) throws MinioDataException
     {
         try
         {
@@ -122,16 +122,22 @@ public class MinioCopyConditions
         }
         catch (final InvalidArgumentException e)
         {
-            throw new MinioOperationException(e);
+            throw new MinioDataException(e);
         }
         return this;
     }
 
     @NonNull
-    public MinioCopyConditions setReplaceMetadataDirective() throws MinioOperationException
+    public MinioCopyConditions setReplaceMetadataDirective() throws MinioDataException
     {
-        getCopyConditions().setReplaceMetadataDirective();
-
+        try
+        {
+            getCopyConditions().setReplaceMetadataDirective();
+        }
+        catch (final Throwable e)
+        {
+            throw new MinioDataException(e);
+        }
         return this;
     }
 

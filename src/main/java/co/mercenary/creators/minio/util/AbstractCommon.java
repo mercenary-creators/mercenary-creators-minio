@@ -14,57 +14,38 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.data;
+package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
-import co.mercenary.creators.minio.util.AbstractCommon;
-import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.errors.MinioDataException;
 
-public abstract class MinioCommon extends AbstractCommon
+public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
 {
-    private final long   size;
-
-    @Nullable
-    private final String etag;
-
-    @NonNull
-    private final String buck;
-
-    protected MinioCommon(@NonNull final CharSequence name, @NonNull final CharSequence buck, @Nullable final CharSequence etag, final long size)
+    protected AbstractCommon(@NonNull final CharSequence name)
     {
         super(name);
-
-        this.size = size;
-
-        this.buck = MinioUtils.requireToString(buck);
-
-        this.etag = MinioUtils.getETagSequence(etag);
-    }
-
-    public long getSize()
-    {
-        return size;
-    }
-
-    @Nullable
-    public String getEtag()
-    {
-        return etag;
-    }
-
-    @NonNull
-    public String getBucket()
-    {
-        return buck;
     }
 
     @NonNull
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s), etag=(%s), size=(%s).", getClass().getCanonicalName(), getName(), getBucket(), getEtag(), getSize());
+        return MinioUtils.format("class=(%s), name=(%s).", getClass().getCanonicalName(), getName());
+    }
+
+    @NonNull
+    @Override
+    public String toString()
+    {
+        try
+        {
+            return toJSONString();
+        }
+        catch (final MinioDataException e)
+        {
+            return toDescription();
+        }
     }
 
     @Override
@@ -80,10 +61,17 @@ public abstract class MinioCommon extends AbstractCommon
         {
             return true;
         }
-        if (other instanceof MinioCommon)
+        if (other instanceof AbstractCommon)
         {
             return toString().equals(other.toString());
         }
         return false;
+    }
+
+    @NonNull
+    @Override
+    public String toJSONString(final boolean pretty) throws MinioDataException
+    {
+        return MinioUtils.toJSONString(this, pretty);
     }
 }

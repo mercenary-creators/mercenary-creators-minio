@@ -16,13 +16,6 @@
 
 package co.mercenary.creators.minio.util;
 
-import static com.fasterxml.jackson.core.JsonGenerator.Feature.AUTO_CLOSE_TARGET;
-import static com.fasterxml.jackson.core.JsonGenerator.Feature.ESCAPE_NON_ASCII;
-import static com.fasterxml.jackson.core.JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN;
-import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS;
-import static com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,39 +24,61 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.errors.MinioDataException;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 
 public final class MinioUtils
 {
     @NonNull
-    public static final Long MINIMUM_EXPIRY_TIME = 1L;
+    public static final Long                    MINIMUM_EXPIRY_TIME = 1L;
 
     @NonNull
-    public static final Long MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
+    public static final Long                    MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
+
+    @NonNull
+    public static final String                  EMPTY_STRING_VALUED = "";
+
+    @NonNull
+    public static final String                  SPACE_STRING_VALUED = " ";
+
+    @NonNull
+    public static final String                  PATH_SEPARATOR_CHAR = "/";
+
+    @NonNull
+    public static final String                  QUOTE_STRING_VALUED = "\"";
+
+    @NonNull
+    public static final String                  NULLS_STRING_VALUED = "null";
+
+    @NonNull
+    public static final String                  DEFAULT_REGION_EAST = "us-east-1";
+
+    @NonNull
+    public static final ThreadLocal<DateFormat> DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
 
     private MinioUtils()
     {
@@ -103,6 +118,12 @@ public final class MinioUtils
             return type.cast(value);
         }
         return NULL();
+    }
+
+    @NonNull
+    public static Log LOGS(@NonNull final Class<?> type)
+    {
+        return LogFactory.getLog(requireNonNull(type));
     }
 
     @Nullable
@@ -199,6 +220,42 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static <T> Optional<T> toOptional(@Nullable final T value)
+    {
+        if (null == value)
+        {
+            return Optional.empty();
+        }
+        return Optional.of(value);
+    }
+
+    @NonNull
+    public static TimeZone getDefaultTimeZone()
+    {
+        return TimeZone.getTimeZone("UTC");
+    }
+
+    @NonNull
+    public static SimpleDateFormat getDefaultDateFormat()
+    {
+        final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS z");
+
+        format.setTimeZone(getDefaultTimeZone());
+
+        return format;
+    }
+
+    @Nullable
+    public static String format(@Nullable final Date date)
+    {
+        if (null != date)
+        {
+            return DEFAULT_DATE_FORMAT.get().format(date);
+        }
+        return NULL();
+    }
+
+    @NonNull
     public static String format(@NonNull final CharSequence format, @NonNull final Object... args)
     {
         return String.format(format.toString(), args);
@@ -217,6 +274,12 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static String UUID()
+    {
+        return uuid().toUpperCase();
+    }
+
+    @NonNull
     public static String requireToString(final CharSequence value)
     {
         final String chars = getCharSequence(value);
@@ -229,7 +292,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String requireToStringOrElse(final CharSequence value, @NonNull final String otherwise)
+    public static String toStringOrElse(final CharSequence value, @NonNull final String otherwise)
     {
         final String chars = getCharSequence(value);
 
@@ -241,7 +304,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String requireToStringOrElse(final CharSequence value, @NonNull final Supplier<String> otherwise)
+    public static String toStringOrElse(final CharSequence value, @NonNull final Supplier<String> otherwise)
     {
         final String chars = getCharSequence(value);
 
@@ -257,9 +320,9 @@ public final class MinioUtils
     {
         final String string = getCharSequence(value);
 
-        if ((null != string) && (string.indexOf('"') >= 0))
+        if (null != string)
         {
-            return string.replaceAll("\"", "");
+            return string.replace(QUOTE_STRING_VALUED, EMPTY_STRING_VALUED);
         }
         return string;
     }
@@ -267,7 +330,58 @@ public final class MinioUtils
     @NonNull
     public static String fixContentType(@Nullable final CharSequence value)
     {
-        return requireToStringOrElse(value, getDefaultContentType());
+        return toStringOrElse(value, getDefaultContentType());
+    }
+
+    @NonNull
+    public static String fixRegionString(@Nullable final CharSequence value, @NonNull final String otherwise)
+    {
+        if ((null == value) || (value.length() < 1))
+        {
+            return otherwise;
+        }
+        final String string = requireToString(value).trim();
+
+        if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
+        {
+            return otherwise;
+        }
+        return string;
+    }
+
+    @Nullable
+    public static String fixRegionString(@Nullable final CharSequence value)
+    {
+        if ((null == value) || (value.length() < 1))
+        {
+            return NULL();
+        }
+        final String string = requireToString(value).trim();
+
+        if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
+        {
+            return NULL();
+        }
+        return string;
+    }
+
+    @Nullable
+    public static String failIfNullBytePresent(@Nullable final CharSequence value)
+    {
+        if (null != value)
+        {
+            final int size = value.length();
+
+            for (int i = 0; i < size; i++)
+            {
+                if (value.charAt(i) == 0)
+                {
+                    throw new IllegalArgumentException("null byte present in string, there are no known legitimate use cases for such data, but several injection attacks may use it.");
+                }
+            }
+            return value.toString();
+        }
+        return NULL();
     }
 
     @Nullable
@@ -297,15 +411,41 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String getJSONContentType()
+    public static <T> ArrayList<T> toList(@NonNull final Stream<T> source)
     {
-        return "application/json";
+        return new ArrayList<>(source.collect(Collectors.toList()));
     }
 
     @NonNull
     public static String getDefaultContentType()
     {
         return "application/octet-stream";
+    }
+
+    @Nullable
+    public static String repeat(@Nullable final CharSequence string, final int times)
+    {
+        if (null == string)
+        {
+            return NULL();
+        }
+        if (times < 2)
+        {
+            return string.toString();
+        }
+        final int count = string.length();
+
+        if (count < 1)
+        {
+            return string.toString();
+        }
+        final StringBuilder builder = new StringBuilder(count * times);
+
+        for (int i = 0; i < times; i++)
+        {
+            builder.append(string);
+        }
+        return builder.toString();
     }
 
     @NonNull
@@ -331,114 +471,56 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static Integer getDuration(@NonNull final Long time) throws MinioOperationException
+    public static Integer getDuration(@NonNull final Long time)
     {
         requireNonNull(time);
 
         if ((time < MINIMUM_EXPIRY_TIME) || (time > MAXIMUM_EXPIRY_TIME))
         {
-            throw new MinioOperationException(format("bad duration %s", time));
+            throw new IllegalArgumentException(format("bad duration %s", time));
         }
         return time.intValue();
     }
 
     @NonNull
-    public static Integer getDuration(@NonNull final Duration time) throws MinioOperationException
+    public static Integer getDuration(@NonNull final Duration time)
     {
         return getDuration(time.getSeconds());
     }
 
     @NonNull
-    public static Integer getDuration(@NonNull final Long time, @NonNull final TimeUnit unit) throws MinioOperationException
+    public static Integer getDuration(@NonNull final Long time, @NonNull final TimeUnit unit)
     {
         return getDuration(unit.toSeconds(time.longValue()));
     }
 
     @NonNull
-    public static String toJSONString(@NonNull final Object value) throws MinioOperationException
+    public static String toJSONString(@NonNull final Object value) throws MinioDataException
     {
-        return new JSONObjectMapper().toJSONString(requireNonNull(value));
+        return toJSONString(requireNonNull(value), true);
     }
 
     @NonNull
-    public static <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioOperationException
+    public static String toJSONString(@NonNull final Object value, final boolean pretty) throws MinioDataException
     {
-        return new JSONObjectMapper().toJSONObject(requireNonNull(value), requireNonNull(type));
+        return new JSONObjectMapper(pretty).toJSONString(requireNonNull(value));
     }
 
     @NonNull
-    public static <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioOperationException
+    public static <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
     {
-        return new JSONObjectMapper().toJSONObject(requireNonNull(value), requireNonNull(type));
+        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
     }
 
-    public static class JSONObjectMapper extends ObjectMapper
+    @NonNull
+    public static <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioDataException
     {
-        private static final long              serialVersionUID = 7742077499646363644L;
+        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
+    }
 
-        @NonNull
-        private static final ArrayList<Module> EXTENDED_MODULES = toList(new JodaModule(), new Jdk8Module(), new JavaTimeModule());
-
-        public JSONObjectMapper()
-        {
-            registerModules(EXTENDED_MODULES).enable(ALLOW_COMMENTS).enable(ESCAPE_NON_ASCII).disable(AUTO_CLOSE_SOURCE).disable(AUTO_CLOSE_TARGET).disable(FAIL_ON_UNKNOWN_PROPERTIES).enable(WRITE_BIGDECIMAL_AS_PLAIN);
-        }
-
-        protected JSONObjectMapper(@NonNull final JSONObjectMapper parent)
-        {
-            super(requireNonNull(parent));
-        }
-
-        @NonNull
-        public String toJSONString(@NonNull final Object value) throws MinioOperationException
-        {
-            try
-            {
-                return requireNonNull(writeValueAsString(requireNonNull(value)));
-            }
-            catch (final JsonProcessingException e)
-            {
-                throw new MinioOperationException(e);
-            }
-        }
-
-        @NonNull
-        public <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioOperationException
-        {
-            requireNonNull(value);
-
-            try
-            {
-                return requireNonNull(readerFor(requireNonNull(type)).readValue(value.toString()));
-            }
-            catch (final IOException e)
-            {
-                throw new MinioOperationException(e);
-            }
-        }
-
-        @NonNull
-        public <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioOperationException
-        {
-            requireNonNull(value);
-
-            try
-            {
-                return requireNonNull(readerFor(requireNonNull(type)).readValue(value));
-            }
-            catch (final IOException e)
-            {
-                throw new MinioOperationException(e);
-            }
-        }
-
-        @NonNull
-        @Override
-        public JSONObjectMapper copy()
-        {
-            _checkInvalidCopy(JSONObjectMapper.class);
-
-            return new JSONObjectMapper(this);
-        }
+    @NonNull
+    public static <T> T toJSONObject(@NonNull final Resource value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
     }
 }

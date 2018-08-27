@@ -31,27 +31,34 @@ import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.util.AbstractNamed;
+import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
-public class MinioBucket extends AbstractNamed implements WithOperations<MinioBucketOperations>
+public class MinioBucket extends AbstractCommon implements WithOperations<MinioBucketOperations>
 {
     @Nullable
-    private final Date            time;
+    private final Date                  time;
 
     @NonNull
-    private final MinioOperations oper;
+    private final MinioBucketOperations oper;
 
     public MinioBucket(@NonNull final CharSequence name, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
     {
         super(name);
 
-        this.oper = MinioUtils.requireNonNull(oper);
-
         this.time = MinioUtils.toValueNonNull(time);
+
+        this.oper = buildWithOperations(this, oper);
+    }
+
+    @NonNull
+    @Override
+    public MinioBucketOperations withOperations()
+    {
+        return oper;
     }
 
     @Nullable
@@ -61,206 +68,241 @@ public class MinioBucket extends AbstractNamed implements WithOperations<MinioBu
     }
 
     @NonNull
-    protected MinioOperations operations()
+    @Override
+    public String toDescription()
     {
-        return oper;
+        return MinioUtils.format("class=(%s), name=(%s), creationTime=(%s).", getClass().getCanonicalName(), getName(), MinioUtils.format(time));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (other instanceof MinioBucket)
+        {
+            return toString().equals(other.toString());
+        }
+        return false;
     }
 
     @NonNull
-    @Override
-    public MinioBucketOperations withOperations()
+    protected static MinioBucketOperations buildWithOperations(@NonNull final MinioBucket self, @NonNull final MinioOperations oper)
     {
+        MinioUtils.testAllNonNull(self, oper);
+
         return new MinioBucketOperations()
         {
             @NonNull
             @Override
             public MinioBucket self()
             {
-                return MinioBucket.this;
+                return self;
+            }
+
+            @NonNull
+            @Override
+            public String getServer()
+            {
+                return oper.getServer();
+            }
+
+            @NonNull
+            @Override
+            public String getRegion()
+            {
+                return oper.getRegion();
             }
 
             @Override
             public boolean deleteBucket() throws MinioOperationException
             {
-                return operations().deleteBucket(getName());
+                return oper.deleteBucket(self().getName());
             }
 
             @Override
             public boolean deleteObject(@NonNull final CharSequence name) throws MinioOperationException
             {
-                return operations().deleteObject(getName(), MinioUtils.requireNonNull(name));
+                return oper.deleteObject(self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull
             @Override
             public String getBucketPolicy() throws MinioOperationException
             {
-                return operations().getBucketPolicy(getName());
+                return oper.getBucketPolicy(self().getName());
             }
 
             @NonNull
             @Override
-            public <T> T getBucketPolicy(@NonNull final Class<T> astype) throws MinioOperationException
+            public <T> T getBucketPolicy(@NonNull final Class<T> type) throws MinioOperationException
             {
-                return operations().getBucketPolicy(getName(), MinioUtils.requireNonNull(astype));
+                return oper.getBucketPolicy(self().getName(), MinioUtils.requireNonNull(type));
             }
 
             @Override
             public void setBucketPolicy(@NonNull final Object policy) throws MinioOperationException
             {
-                operations().setBucketPolicy(getName(), MinioUtils.requireNonNull(policy));
+                oper.setBucketPolicy(self().getName(), MinioUtils.requireNonNull(policy));
             }
 
             @NonNull
             @Override
             public MinioObjectStatus getObjectStatus(@NonNull final CharSequence name) throws MinioOperationException
             {
-                return operations().getObjectStatus(getName(), MinioUtils.requireNonNull(name));
+                return oper.getObjectStatus(self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull
             @Override
             public MinioObjectStatus getObjectStatus(@NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
             {
-                return operations().getObjectStatus(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
+                return oper.getObjectStatus(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
             }
 
             @NonNull
             @Override
             public InputStream getObjectInputStream(@NonNull final CharSequence name) throws MinioOperationException
             {
-                return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name));
+                return oper.getObjectInputStream(self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull
             @Override
             public InputStream getObjectInputStream(@NonNull final CharSequence name, final long skip) throws MinioOperationException
             {
-                return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name), skip);
+                return oper.getObjectInputStream(self().getName(), MinioUtils.requireNonNull(name), skip);
             }
 
             @NonNull
             @Override
             public InputStream getObjectInputStream(@NonNull final CharSequence name, final long skip, final long leng) throws MinioOperationException
             {
-                return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name), skip, leng);
+                return oper.getObjectInputStream(self().getName(), MinioUtils.requireNonNull(name), skip, leng);
             }
 
             @NonNull
             @Override
             public InputStream getObjectInputStream(@NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
             {
-                return operations().getObjectInputStream(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
+                return oper.getObjectInputStream(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(keys));
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final InputStream input, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final Resource input, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final File input, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final File input, final long size, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final Path input, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
             }
 
             @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final Path input, final long size, @Nullable final CharSequence type) throws MinioOperationException
             {
-                operations().putObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
+                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
             }
 
             @NonNull
             @Override
             public Stream<MinioItem> getItems(@Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
             {
-                return operations().getItems(getName(), prefix, recursive);
+                return oper.getItems(self().getName(), prefix, recursive);
             }
 
             @NonNull
             @Override
             public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence name) throws MinioOperationException
             {
-                return operations().getSignedObjectUrl(MinioUtils.requireNonNull(method), getName(), MinioUtils.requireNonNull(name));
+                return oper.getSignedObjectUrl(MinioUtils.requireNonNull(method), self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull
             @Override
             public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence name, @NonNull final Long seconds) throws MinioOperationException
             {
-                return operations().getSignedObjectUrl(MinioUtils.requireNonNull(method), getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(seconds));
+                return oper.getSignedObjectUrl(MinioUtils.requireNonNull(method), self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(seconds));
             }
 
             @NonNull
             @Override
             public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence name, @NonNull final Duration seconds) throws MinioOperationException
             {
-                return operations().getSignedObjectUrl(MinioUtils.requireNonNull(method), getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(seconds));
+                return oper.getSignedObjectUrl(MinioUtils.requireNonNull(method), self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(seconds));
             }
 
             @NonNull
             @Override
             public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence name, @NonNull final Long time, @NonNull final TimeUnit unit) throws MinioOperationException
             {
-                return operations().getSignedObjectUrl(MinioUtils.requireNonNull(method), getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(time), MinioUtils.requireNonNull(unit));
+                return oper.getSignedObjectUrl(MinioUtils.requireNonNull(method), self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(time), MinioUtils.requireNonNull(unit));
             }
 
             @Override
             public boolean copyObject(@NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
             {
-                return operations().copyObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), conditions);
+                return oper.copyObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), conditions);
             }
 
             @Override
             public boolean copyObject(@NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final CharSequence object, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
             {
-                return operations().copyObject(getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), object, conditions);
+                return oper.copyObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(target), object, conditions);
             }
 
             @Override
             public boolean isObject(@NonNull final CharSequence name) throws MinioOperationException
             {
-                return operations().isObject(getName(), MinioUtils.requireNonNull(name));
+                return oper.isObject(self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull
             @Override
             public Stream<MinioUpload> getIncompleteUploads(@Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
             {
-                return operations().getIncompleteUploads(getName(), prefix, recursive);
+                return oper.getIncompleteUploads(self().getName(), prefix, recursive);
             }
-
         };
     }
 }

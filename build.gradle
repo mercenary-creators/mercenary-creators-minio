@@ -50,7 +50,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '1.0.1-RELEASE'
+version = '1.0.2-RELEASE'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -78,6 +78,33 @@ task javadocJar(type: Jar, dependsOn: doJavaDocs) {
 }
 
 eclipse { classpath { downloadJavadoc = true } }
+
+task codeCoverage { doLast { println ':codeCoverage-done' } }
+
+codeCoverage.dependsOn jacocoTestReport
+
+jacocoTestReport {
+    reports {
+        csv {
+            enabled true
+            destination project.file("${buildDir}/reports/jacoco/coverage-${getBuildModuleVersion()}.csv")
+        }
+        xml.enabled false
+        html.destination project.file("${buildDir}/reports/coverage")
+    }
+}
+
+jacocoTestReport.dependsOn test
+
+test {
+    minHeapSize = '2048m'
+    maxHeapSize = '2048m'
+    testLogging.showStandardStreams = true
+    jacoco {
+        append = false
+        destinationFile = project.file("${buildDir}/jacoco/testing.exec")
+    }
+}
 
 checkstyle {
     toolVersion = '7.7'
@@ -120,13 +147,14 @@ dependencyCheck {
 
 task checkCodeQuality { doLast { println ':checkCodeQuality-done' } }
 
-checkCodeQuality.dependsOn checkstyleMain,pmdMain,findbugsMain,dependencyCheckAnalyze
+checkCodeQuality.dependsOn codeCoverage,checkstyleMain,pmdMain,findbugsMain,dependencyCheckAnalyze
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    compile(group: 'commons-logging', name: 'commons-logging', version: '1.2')
     compile(group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6')
     compile(group: 'com.google.guava', name: 'guava', version: '26.0-jre')
     springCorePackages().each { String name ->
@@ -143,6 +171,8 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
+    testCompile(group: 'org.springframework', name: 'spring-test', version: "${SPRING_CORE_VERSION}")
+    testCompile(group: 'junit', name: 'junit', version: '4.12')
 }
 
 artifacts {
@@ -272,7 +302,9 @@ def List<String> getJavaDocLinks() {
 
 static List<String> springCorePackages() {
     [
-            'spring-core',
-            'spring-beans'
+        'spring-core',
+        'spring-beans',
+        'spring-context',
+        'spring-context-support'
     ]
 }

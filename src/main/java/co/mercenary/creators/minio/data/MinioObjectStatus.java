@@ -52,4 +52,31 @@ public class MinioObjectStatus extends MinioCommon
     {
         return type;
     }
+
+    @NonNull
+    @Override
+    public String toDescription()
+    {
+        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getClass().getCanonicalName(), getName(), getBucket(), getEtag(), getSize(), getContentType(), MinioUtils.format(time));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (other instanceof MinioObjectStatus)
+        {
+            return toString().equals(other.toString());
+        }
+        return false;
+    }
 }
