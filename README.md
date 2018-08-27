@@ -25,6 +25,14 @@ Javadoc URL:
 
 http://docs.themodernway.com/docs/javadoc/mercenary-creators-minio/
 
+Tests URL:
+
+http://docs.themodernway.com/docs/reports/mercenary-creators-minio/tests/test/
+
+Code Coverage URL:
+
+http://docs.themodernway.com/docs/reports/mercenary-creators-minio/coverage/
+
 Check Style URL:
 
 http://docs.themodernway.com/docs/reports/mercenary-creators-minio/checkstyle/main.html
