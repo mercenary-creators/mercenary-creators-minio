@@ -18,10 +18,10 @@ package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.util.AbstractNamed;
+import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioUpload extends AbstractNamed
+public class MinioUpload extends AbstractCommon
 {
     @NonNull
     private final String buck;
@@ -37,5 +37,32 @@ public class MinioUpload extends AbstractNamed
     public String getBucket()
     {
         return buck;
+    }
+
+    @NonNull
+    @Override
+    public String toDescription()
+    {
+        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s).", getClass().getCanonicalName(), getName(), getBucket());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (other instanceof MinioUpload)
+        {
+            return toString().equals(other.toString());
+        }
+        return false;
     }
 }
