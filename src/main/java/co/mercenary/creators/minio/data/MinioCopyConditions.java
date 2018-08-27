@@ -134,7 +134,7 @@ public class MinioCopyConditions
         {
             getCopyConditions().setReplaceMetadataDirective();
         }
-        catch (final Throwable e)
+        catch (final Exception e)
         {
             throw new MinioDataException(e);
         }
