@@ -3,6 +3,32 @@ Mercenary Creators Minio
 
 ![<MERC>](http://docs.themodernway.com/merc5.png)
 
+RATIONALE:
+
+
+__Although I am grateful for the work done on the standard minio java client library, it has several problems:__
+
+__It is not well suited for Spring. I have attempted to correct some of the issues by breaking up the API to the client through a set of interfaces for operations, and then a MinioTemplate bean.__
+
+__The MinioClient class throws too many exceptions out of each method, some are as high as 9+ exception types! I am re-working the exception hierarchy to make it more meaningful.__
+
+__The classes in minio data are badly suited for JSON/Jackson serialization. I have created wrapper classes for each ( Bucket, Item, ObjecStat, etc ). Furthermore, in some cases, String values of dates
+in these objects can be null, resulting in a NPE when asking for a Date ( lastModified(), etc. ).__
+
+__The wrapper classes ( MinioBucket, MinioItem ) have a method called withOperations(), where you now
+get an API suited for that class. e.g. MinioBucket bucket.withOperations().getItems() gives you a
+Java 8 Stream of MinioItem's.__
+
+__The library uses Spring nullability annotations everywhere.__
+
+__The library may consume and create Spring Resource classes.__
+
+__I have updated all transitive dependencies to the newest versions.__
+
+__I have also created a Spring Boot Autoconfiguration module available at:__
+
+https://github.com/mercenary-creators/mercenary-creators-minio-autoconfigure
+
 Downloading artifacts
 
 RELEASE:
