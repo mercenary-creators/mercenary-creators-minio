@@ -21,18 +21,22 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
-import org.junit.Assert;
+import org.apache.commons.logging.LogFactory;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.errors.MinioDataException;
 
-public abstract class AbstractMinioTests extends AbstractJUnit4SpringContextTests
+@ExtendWith(SpringExtension.class)
+public abstract class AbstractMinioTests
 {
+    protected final Log   logger = LogFactory.getLog(getClass());
+
     @Nullable
     @Autowired
     private MinioTemplate minioTemplate;
@@ -47,12 +51,6 @@ public abstract class AbstractMinioTests extends AbstractJUnit4SpringContextTest
     protected Log getLogger()
     {
         return logger;
-    }
-
-    @Nullable
-    protected ApplicationContext getApplicationContext()
-    {
-        return applicationContext;
     }
 
     protected void info(@NonNull final Supplier<String> message)
@@ -164,18 +162,18 @@ public abstract class AbstractMinioTests extends AbstractJUnit4SpringContextTest
         }
     }
 
-    protected void assertEquals(@Nullable final CharSequence message, @Nullable final Object expected, @Nullable final Object actual)
+    protected void assertEquals(@Nullable final Object expected, @Nullable final Object actual, @NonNull final Supplier<String> message)
     {
-        Assert.assertEquals(MinioUtils.getCharSequence(message), expected, actual);
+        Assertions.assertEquals(expected, actual, message);
     }
 
-    protected void assertTrue(@Nullable final CharSequence message, final boolean condition)
+    protected void assertTrue(final boolean condition, @NonNull final Supplier<String> message)
     {
-        Assert.assertTrue(MinioUtils.getCharSequence(message), condition);
+        Assertions.assertTrue(condition, message);
     }
 
-    protected void assertFalse(@Nullable final CharSequence message, final boolean condition)
+    protected void assertFalse(final boolean condition, @NonNull final Supplier<String> message)
     {
-        Assert.assertFalse(MinioUtils.getCharSequence(message), condition);
+        Assertions.assertFalse(condition, message);
     }
 }

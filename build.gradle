@@ -50,7 +50,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '1.0.2-RELEASE'
+version = '1.0.3-RELEASE'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -172,7 +172,8 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
     testCompile(group: 'org.springframework', name: 'spring-test', version: "${SPRING_CORE_VERSION}")
-    testCompile(group: 'junit', name: 'junit', version: '4.12')
+ 	testCompile(group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.2.0')
+    testRuntime(group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.2.0')
 }
 
 artifacts {

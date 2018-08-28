@@ -18,7 +18,7 @@ package co.mercenary.creators.minio.test.play;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 
 import co.mercenary.creators.minio.data.MinioBucket;
@@ -35,6 +35,6 @@ public class PlayTests extends AbstractMinioTests
 
         list.forEach(item -> info(() -> toJSONString(item)));
 
-        assertFalse("minioTemplate isEmpty", list.isEmpty());
+        assertFalse(list.isEmpty(), () -> "bucket isEmpty.");
     }
 }
