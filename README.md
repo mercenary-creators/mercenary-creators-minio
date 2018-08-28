@@ -1,7 +1,7 @@
 Mercenary Creators Minio
 ======
 
-![<TMW>](http://docs.themodernway.com/tmw4.jpg)
+![<MERC>](http://docs.themodernway.com/merc5.png)
 
 Downloading artifacts
 
