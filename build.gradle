@@ -100,6 +100,7 @@ test {
     minHeapSize = '2048m'
     maxHeapSize = '2048m'
     testLogging.showStandardStreams = true
+    useJUnitPlatform()
     jacoco {
         append = false
         destinationFile = project.file("${buildDir}/jacoco/testing.exec")
