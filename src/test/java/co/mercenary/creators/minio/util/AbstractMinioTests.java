@@ -20,22 +20,19 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.errors.MinioDataException;
 
-@ExtendWith(SpringExtension.class)
 public abstract class AbstractMinioTests
 {
-    protected final Log   logger = LogFactory.getLog(getClass());
+    @NonNull
+    private final Logger  logger = LoggingOps.getLogger(getClass());
 
     @Nullable
     @Autowired
@@ -48,16 +45,28 @@ public abstract class AbstractMinioTests
     }
 
     @NonNull
-    protected Log getLogger()
+    protected Logger getLogger()
     {
         return logger;
+    }
+
+    @NonNull
+    protected Supplier<String> isEmptyMessage(@NonNull final String message)
+    {
+        return isEmptyMessage(() -> message);
+    }
+
+    @NonNull
+    protected Supplier<String> isEmptyMessage(@NonNull final Supplier<String> message)
+    {
+        return () -> message.get() + " is empty.";
     }
 
     protected void info(@NonNull final Supplier<String> message)
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(message.get());
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get());
         }
     }
 
@@ -65,7 +74,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(message.get(), cause);
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get(), cause);
         }
     }
 
@@ -73,7 +82,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(message.get());
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get());
         }
     }
 
@@ -81,7 +90,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(message.get(), cause);
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get(), cause);
         }
     }
 
@@ -89,7 +98,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(message.get());
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get());
         }
     }
 
@@ -97,7 +106,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(message.get(), cause);
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get(), cause);
         }
     }
 
@@ -105,7 +114,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(message.get());
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get());
         }
     }
 
@@ -113,7 +122,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(message.get(), cause);
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get(), cause);
         }
     }
 

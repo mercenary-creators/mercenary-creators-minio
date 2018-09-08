@@ -28,8 +28,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.resource.MinioInputStreamResource;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithSelf;
 import co.mercenary.creators.minio.util.WithServerData;
@@ -44,13 +44,13 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
 
     boolean deleteObject(@NonNull CharSequence name) throws MinioOperationException;
 
-    void setBucketPolicy(@NonNull Object policy) throws MinioOperationException;
+    void setBucketPolicy(@NonNull Object policy) throws MinioOperationException, MinioDataException;
 
     @NonNull
     String getBucketPolicy() throws MinioOperationException;
 
     @NonNull
-    <T> T getBucketPolicy(@NonNull Class<T> type) throws MinioOperationException;
+    <T> T getBucketPolicy(@NonNull Class<T> type) throws MinioOperationException, MinioDataException;
 
     @NonNull
     MinioObjectStatus getObjectStatus(@NonNull CharSequence name) throws MinioOperationException;
@@ -69,30 +69,6 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
 
     @NonNull
     InputStream getObjectInputStream(@NonNull CharSequence name, @NonNull ServerSideEncryption keys) throws MinioOperationException;
-
-    @NonNull
-    default MinioInputStreamResource getObjectInputStreamResource(@NonNull final CharSequence name) throws MinioOperationException
-    {
-        return new MinioInputStreamResource(getObjectInputStream(name));
-    }
-
-    @NonNull
-    default MinioInputStreamResource getObjectInputStreamResource(@NonNull final CharSequence name, final long skip) throws MinioOperationException
-    {
-        return new MinioInputStreamResource(getObjectInputStream(name, skip));
-    }
-
-    @NonNull
-    default MinioInputStreamResource getObjectInputStreamResource(@NonNull final CharSequence name, final long skip, final long leng) throws MinioOperationException
-    {
-        return new MinioInputStreamResource(getObjectInputStream(name, skip, leng));
-    }
-
-    @NonNull
-    default MinioInputStreamResource getObjectInputStreamResource(@NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
-    {
-        return new MinioInputStreamResource(getObjectInputStream(name, keys));
-    }
 
     void putObject(@NonNull CharSequence name, @NonNull File input, @Nullable CharSequence type) throws MinioOperationException;
 
@@ -162,7 +138,7 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
     @NonNull
     default Stream<MinioItem> getItems() throws MinioOperationException
     {
-        return getItems(false);
+        return getItems(true);
     }
 
     @NonNull

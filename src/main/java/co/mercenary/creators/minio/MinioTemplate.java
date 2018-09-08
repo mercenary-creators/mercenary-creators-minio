@@ -35,6 +35,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.xmlpull.v1.XmlPullParserException;
 
+import co.mercenary.creators.minio.content.MinioContentTypeProbe;
+import co.mercenary.creators.minio.content.MinioContentTypeProbeAdapter;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
@@ -65,7 +67,10 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     private final String                       aws_region;
 
     @NonNull
-    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>();
+    private MinioContentTypeProbe              type_probe = new MinioContentTypeProbeAdapter();
+
+    @NonNull
+    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>(MinioUtils.NULL());
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
@@ -132,6 +137,18 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
             }
         }
         return client;
+    }
+
+    public void setContentTypeProbe(@Nullable final MinioContentTypeProbe type_probe)
+    {
+        this.type_probe = MinioUtils.requireNonNullOrElse(type_probe, () -> new MinioContentTypeProbeAdapter());
+    }
+
+    @NonNull
+    @Override
+    public MinioContentTypeProbe getContentTypeProbe()
+    {
+        return MinioUtils.requireNonNullOrElse(type_probe, () -> new MinioContentTypeProbeAdapter());
     }
 
     @Override
@@ -680,11 +697,11 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
     {
-        return MinioUtils.getResultAsStream(getMinioClient().listIncompleteUploads(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioUpload(item.objectName(), bucket));
+        return MinioUtils.getResultAsStream(getMinioClient().listIncompleteUploads(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioUpload(item.objectName(), bucket, this));
     }
 
     @Override
-    public void setBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Object policy) throws MinioOperationException
+    public void setBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Object policy) throws MinioOperationException, MinioDataException
     {
         MinioUtils.testAllNonNull(bucket, policy);
 
@@ -699,7 +716,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
                 getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.toJSONString(policy));
             }
         }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException | MinioDataException e)
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
@@ -707,7 +724,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
     @NonNull
     @Override
-    public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> type) throws MinioOperationException
+    public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> type) throws MinioOperationException, MinioDataException
     {
         MinioUtils.requireNonNull(type);
 
@@ -719,14 +736,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
             return MinioUtils.requireNonNull(value);
         }
-        try
-        {
-            return MinioUtils.toJSONObject(policy, type);
-        }
-        catch (final MinioDataException e)
-        {
-            throw new MinioOperationException(e);
-        }
+        return MinioUtils.toJSONObject(policy, type);
     }
 
     @NonNull
@@ -742,4 +752,20 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
             throw new MinioOperationException(e);
         }
     }
+
+    @Override
+    public boolean removeUpload(final CharSequence bucket, final CharSequence name) throws MinioOperationException
+    {
+        try
+        {
+            getMinioClient().removeIncompleteUpload(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+
+            return true;
+        }
+        catch (final MinioException | NoSuchAlgorithmException | IOException | XmlPullParserException | InvalidKeyException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
 }

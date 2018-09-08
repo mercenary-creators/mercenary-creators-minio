@@ -16,36 +16,31 @@
 
 package co.mercenary.creators.minio.resource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
 import java.util.Optional;
 
-import org.springframework.core.io.AbstractResource;
+import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioResource extends AbstractResource
+public class MinioResource extends AbstractMinioResourceWith<MinioOperations>
 {
     @NonNull
-    private final String          bucket;
+    private final String bucket;
 
     @NonNull
-    private final String          object;
+    private final String object;
 
-    @NonNull
-    private final MinioOperations miniop;
-
-    public MinioResource(@NonNull final MinioOperations miniops, @NonNull final CharSequence bucket, @NonNull final CharSequence object)
+    public MinioResource(@NonNull final MinioOperations minops, @NonNull final CharSequence bucket, @NonNull final CharSequence object)
     {
-        this.miniop = MinioUtils.requireNonNull(miniops);
+        super(minops, "MinioResource server=(%s), object=(%s), bucket=(%s).", object, bucket);
 
         this.bucket = MinioUtils.requireToString(bucket);
 
@@ -53,17 +48,11 @@ public class MinioResource extends AbstractResource
     }
 
     @Override
-    public boolean isFile()
-    {
-        return false;
-    }
-
-    @Override
     public boolean exists()
     {
         try
         {
-            return miniop.isObject(bucket, object);
+            return self().isObject(bucket, object);
         }
         catch (final MinioOperationException e)
         {
@@ -77,7 +66,7 @@ public class MinioResource extends AbstractResource
     {
         try
         {
-            return new URL(miniop.getSignedObjectUrl(bucket, object));
+            return new URL(self().getSignedObjectUrl(bucket, object));
         }
         catch (final MinioOperationException e)
         {
@@ -85,33 +74,12 @@ public class MinioResource extends AbstractResource
         }
     }
 
-    @NonNull
-    @Override
-    public String getDescription()
-    {
-        return MinioUtils.format("MinioResource server=(%s), object=(%s), bucket=(%s)", miniop.getServer(), object, bucket);
-    }
-
-    @NonNull
-    @Override
-    public String getFilename() throws IllegalStateException
-    {
-        return object;
-    }
-
-    @Nullable
-    @Override
-    public File getFile() throws IOException
-    {
-        throw new UnsupportedOperationException("MinioResource can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
-    }
-
     @Override
     public long contentLength() throws IOException
     {
         try
         {
-            return miniop.getObjectStatus(bucket, object).getSize();
+            return self().getObjectStatus(bucket, object).getSize();
         }
         catch (final MinioOperationException e)
         {
@@ -124,7 +92,7 @@ public class MinioResource extends AbstractResource
     {
         try
         {
-            final Optional<MinioItem> item = miniop.getItem(bucket, object);
+            final Optional<MinioItem> item = self().getItem(bucket, object);
 
             if (item.isPresent())
             {
@@ -149,7 +117,7 @@ public class MinioResource extends AbstractResource
     {
         try
         {
-            return miniop.getObjectInputStream(bucket, object);
+            return self().getObjectInputStream(bucket, object);
         }
         catch (final MinioOperationException e)
         {
@@ -159,35 +127,27 @@ public class MinioResource extends AbstractResource
 
     @NonNull
     @Override
-    public MinioResource createRelative(@NonNull final String path) throws IOException
+    public Resource createRelative(@NonNull final String path) throws IOException
     {
-        return new MinioResource(miniop, bucket, MinioResourceUtils.getPathRelative(object, path));
+        return new MinioResource(self(), bucket, MinioResourceUtils.getPathRelative(object, path));
     }
 
     @Override
     public boolean equals(final Object other)
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other instanceof MinioResource)
-        {
-            return toString().equals(MinioUtils.CAST(other, MinioResource.class).toString());
-        }
-        return false;
+        return super.equals(other);
     }
 
     @Override
     public int hashCode()
     {
-        return getDescription().hashCode();
+        return super.hashCode();
     }
 
     @NonNull
     @Override
     public String toString()
     {
-        return getDescription();
+        return super.toString();
     }
 }

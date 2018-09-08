@@ -26,18 +26,19 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
+import co.mercenary.creators.minio.content.MinioContentTypeProbe;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
+import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithDescription;
@@ -48,6 +49,9 @@ import io.minio.http.Method;
 
 public interface MinioOperations extends WithName, WithDescription, WithServerData
 {
+    @NonNull
+    MinioContentTypeProbe getContentTypeProbe();
+
     @NonNull
     Stream<MinioBucket> getBuckets() throws MinioOperationException;
 
@@ -60,12 +64,6 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
         MinioUtils.testAllNonNull(regex);
 
         return getBucketsNamed(named -> regex.matcher(named).matches());
-    }
-
-    @NonNull
-    default Stream<MinioBucket> getBucketsNamed(@NonNull final CharSequence regex) throws MinioOperationException
-    {
-        return getBucketsNamed(Pattern.compile(MinioUtils.requireToString(regex)));
     }
 
     @NonNull
@@ -83,7 +81,7 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
         {
             return getBucketsNamed(named -> match.match(value, named));
         }
-        return getBucketsNamed(Pattern.compile(MinioUtils.requireToString(regex)));
+        return Stream.empty();
     }
 
     @NonNull
@@ -102,13 +100,13 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
 
     boolean deleteObject(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
-    void setBucketPolicy(@NonNull CharSequence bucket, @NonNull Object policy) throws MinioOperationException;
+    void setBucketPolicy(@NonNull CharSequence bucket, @NonNull Object policy) throws MinioOperationException, MinioDataException;
 
     @NonNull
     String getBucketPolicy(@NonNull CharSequence bucket) throws MinioOperationException;
 
     @NonNull
-    <T> T getBucketPolicy(@NonNull CharSequence bucket, @NonNull Class<T> astype) throws MinioOperationException;
+    <T> T getBucketPolicy(@NonNull CharSequence bucket, @NonNull Class<T> type) throws MinioOperationException, MinioDataException;
 
     @NonNull
     MinioBucket createOrGetBucket(@NonNull CharSequence bucket) throws MinioOperationException;
@@ -130,30 +128,6 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
 
     @NonNull
     InputStream getObjectInputStream(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull ServerSideEncryption keys) throws MinioOperationException;
-
-    @NonNull
-    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
-    {
-        return new InputStreamResource(getObjectInputStream(bucket, name));
-    }
-
-    @NonNull
-    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip) throws MinioOperationException
-    {
-        return new InputStreamResource(getObjectInputStream(bucket, name, skip));
-    }
-
-    @NonNull
-    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip, final long leng) throws MinioOperationException
-    {
-        return new InputStreamResource(getObjectInputStream(bucket, name, skip, leng));
-    }
-
-    @NonNull
-    default Resource getObjectInputStreamResource(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
-    {
-        return new InputStreamResource(getObjectInputStream(bucket, name, keys));
-    }
 
     @NonNull
     default String getSignedObjectUrl(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
@@ -277,7 +251,7 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), prefix, false);
+        return getItems(MinioUtils.requireNonNull(bucket), prefix, true);
     }
 
     @NonNull
@@ -300,4 +274,6 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
 
     @NonNull
     Stream<MinioUpload> getIncompleteUploads(@NonNull CharSequence bucket, @Nullable CharSequence prefix, boolean recursive) throws MinioOperationException;
+
+    boolean removeUpload(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 }

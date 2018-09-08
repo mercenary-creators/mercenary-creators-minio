@@ -26,12 +26,12 @@ import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 @SpringJUnitConfig(locations = "/test-config.xml")
-public class HasBucketsTest extends AbstractMinioTests
+public class HasBucketsNamedPredicate extends AbstractMinioTests
 {
     @Test
     public void test() throws MinioOperationException
     {
-        final List<MinioBucket> list = toList(getMinioTemplate().getBuckets());
+        final List<MinioBucket> list = toList(getMinioTemplate().getBucketsNamed(value -> value.equals("root")));
 
         list.forEach(value -> info(() -> toJSONString(value)));
 

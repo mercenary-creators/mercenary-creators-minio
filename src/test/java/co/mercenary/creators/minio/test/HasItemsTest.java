@@ -19,13 +19,13 @@ package co.mercenary.creators.minio.test;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@ContextConfiguration("/test-config.xml")
+@SpringJUnitConfig(locations = "/test-config.xml")
 public class HasItemsTest extends AbstractMinioTests
 {
     @Test
@@ -35,6 +35,6 @@ public class HasItemsTest extends AbstractMinioTests
 
         list.forEach(item -> info(() -> toJSONString(item)));
 
-        assertFalse(list.isEmpty(), () -> "items is empty.");
+        assertFalse(list.isEmpty(), isEmptyMessage("items"));
     }
 }

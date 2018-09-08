@@ -36,9 +36,9 @@ public class MinioObjectStatus extends MinioCommon
     {
         super(name, buck, etag, size);
 
-        this.type = MinioUtils.fixContentType(type);
-
         this.time = MinioUtils.toValueNonNull(time);
+
+        this.type = MinioUtils.fixContentType(type, name);
     }
 
     @Nullable

@@ -18,8 +18,6 @@ package co.mercenary.creators.minio.resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.core.io.AbstractResource;
 import org.springframework.lang.NonNull;
@@ -27,67 +25,58 @@ import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioInputStreamResource extends AbstractResource
+public abstract class AbstractMinioResource extends AbstractResource
 {
     @NonNull
-    private static final String DESCRP = "MinioInputStreamResource loaded through InputStream";
+    private final String description;
 
-    @NonNull
-    private final String        descrp;
-
-    @NonNull
-    private final InputStream   stream;
-
-    @NonNull
-    private final AtomicBoolean isread = new AtomicBoolean(false);
-
-    public MinioInputStreamResource(@NonNull final InputStream stream)
+    protected AbstractMinioResource(@NonNull final CharSequence description)
     {
-        this(stream, DESCRP);
+        this.description = MinioUtils.requireToString(description);
     }
 
-    public MinioInputStreamResource(@NonNull final InputStream stream, @Nullable final CharSequence descrp)
+    protected AbstractMinioResource(@NonNull final CharSequence format, @NonNull final Object... args)
     {
-        this.stream = MinioUtils.requireNonNull(stream);
-
-        this.descrp = MinioUtils.toStringOrElse(descrp, DESCRP);
+        this(MinioUtils.format(format, args));
     }
 
     @Override
-    public boolean exists()
+    public boolean isFile()
     {
-        return true;
+        return false;
     }
 
     @Override
     public boolean isOpen()
     {
+        return false;
+    }
+
+    @Override
+    public boolean isReadable()
+    {
         return true;
     }
 
-    @NonNull
+    @Nullable
     @Override
-    public String getDescription()
+    public String getFilename()
     {
-        return descrp;
+        return MinioUtils.NULL();
     }
 
     @Nullable
     @Override
     public File getFile() throws IOException
     {
-        throw new UnsupportedOperationException("MinioInputStreamResource can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
+        throw new UnsupportedOperationException(getClass().getSimpleName() + " can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
     }
 
     @NonNull
     @Override
-    public InputStream getInputStream() throws IOException
+    public String getDescription()
     {
-        if (isread.getAndSet(true))
-        {
-            throw new IOException(getDescription());
-        }
-        return stream;
+        return description;
     }
 
     @Override
@@ -97,9 +86,9 @@ public class MinioInputStreamResource extends AbstractResource
         {
             return true;
         }
-        if (other instanceof MinioInputStreamResource)
+        if (other instanceof AbstractMinioResource)
         {
-            return stream.equals(MinioUtils.CAST(other, MinioInputStreamResource.class).stream);
+            return ((AbstractMinioResource) other).getDescription().equals(getDescription());
         }
         return false;
     }
@@ -107,7 +96,7 @@ public class MinioInputStreamResource extends AbstractResource
     @Override
     public int hashCode()
     {
-        return stream.hashCode();
+        return getDescription().hashCode();
     }
 
     @NonNull

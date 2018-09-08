@@ -16,25 +16,23 @@
 
 package co.mercenary.creators.minio.test;
 
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.data.MinioBucket;
+import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 @SpringJUnitConfig(locations = "/test-config.xml")
-public class HasBucketsTest extends AbstractMinioTests
+public class HasItemStatTest extends AbstractMinioTests
 {
     @Test
     public void test() throws MinioOperationException
     {
-        final List<MinioBucket> list = toList(getMinioTemplate().getBuckets());
+        final MinioObjectStatus stat = getMinioTemplate().getObjectStatus("root", "MinioProperties.java");
 
-        list.forEach(value -> info(() -> toJSONString(value)));
+        info(() -> toJSONString(stat));
 
-        assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
+        assertEquals(stat.getContentType(), "text/x-java-source", () -> "not text/x-java-source");
     }
 }

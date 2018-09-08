@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -334,6 +335,16 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static String fixContentType(@Nullable final CharSequence value, @Nullable final CharSequence name)
+    {
+        if (toStringOrElse(name, EMPTY_STRING_VALUED).endsWith(".json"))
+        {
+            return getJSONContentType();
+        }
+        return toStringOrElse(value, getDefaultContentType());
+    }
+
+    @NonNull
     public static String fixRegionString(@Nullable final CharSequence value, @NonNull final String otherwise)
     {
         if ((null == value) || (value.length() < 1))
@@ -417,17 +428,41 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static String getYAMLContentType()
+    {
+        return "text/x-yaml";
+    }
+
+    @NonNull
+    public static String getJAVAContentType()
+    {
+        return "text/x-java-source";
+    }
+
+    @NonNull
+    public static String getJSONContentType()
+    {
+        return "application/json";
+    }
+
+    @NonNull
+    public static String getPROPContentType()
+    {
+        return "text/x-java-properties";
+    }
+
+    @NonNull
     public static String getDefaultContentType()
     {
         return "application/octet-stream";
     }
 
-    @Nullable
+    @NonNull
     public static String repeat(@Nullable final CharSequence string, final int times)
     {
         if (null == string)
         {
-            return NULL();
+            return EMPTY_STRING_VALUED;
         }
         if (times < 2)
         {
@@ -457,17 +492,29 @@ public final class MinioUtils
     @NonNull
     public static InputStream getInputStream(@NonNull final Path path) throws IOException
     {
-        return Files.newInputStream(requireNonNull(path));
+        requireNonNull(path);
+
+        if ((Files.isReadable(path)) && (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)))
+        {
+            return Files.newInputStream(path);
+        }
+        throw new IOException(path.toString());
     }
 
     public static long getSize(@NonNull final File file) throws IOException
     {
-        return file.length();
+        return getSize(file.toPath());
     }
 
     public static long getSize(@NonNull final Path path) throws IOException
     {
-        return Files.size(requireNonNull(path));
+        requireNonNull(path);
+
+        if ((Files.isReadable(path)) && (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)))
+        {
+            return Files.size(path);
+        }
+        throw new IOException(path.toString());
     }
 
     @NonNull
@@ -503,7 +550,7 @@ public final class MinioUtils
     @NonNull
     public static String toJSONString(@NonNull final Object value, final boolean pretty) throws MinioDataException
     {
-        return new JSONObjectMapper(pretty).toJSONString(requireNonNull(value));
+        return new JSONObjectMapper(pretty).copy().toJSONString(requireNonNull(value));
     }
 
     @NonNull

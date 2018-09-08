@@ -18,25 +18,37 @@ package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
+import co.mercenary.creators.minio.MinioOperations;
+import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MinioUpload extends AbstractCommon
 {
     @NonNull
-    private final String buck;
+    private final String          buck;
 
-    public MinioUpload(@NonNull final CharSequence name, @NonNull final CharSequence buck)
+    @NonNull
+    private final MinioOperations oper;
+
+    public MinioUpload(@NonNull final CharSequence name, @NonNull final CharSequence buck, @NonNull final MinioOperations opers)
     {
         super(name);
 
         this.buck = MinioUtils.requireToString(buck);
+
+        this.oper = MinioUtils.requireNonNull(opers);
     }
 
     @NonNull
     public String getBucket()
     {
         return buck;
+    }
+
+    public boolean removeUpload() throws MinioOperationException
+    {
+        return oper.removeUpload(getBucket(), getName());
     }
 
     @NonNull

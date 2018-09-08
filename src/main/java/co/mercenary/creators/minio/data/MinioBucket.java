@@ -30,6 +30,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioOperations;
+import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
@@ -143,13 +144,13 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
 
             @NonNull
             @Override
-            public <T> T getBucketPolicy(@NonNull final Class<T> type) throws MinioOperationException
+            public <T> T getBucketPolicy(@NonNull final Class<T> type) throws MinioOperationException, MinioDataException
             {
                 return oper.getBucketPolicy(self().getName(), MinioUtils.requireNonNull(type));
             }
 
             @Override
-            public void setBucketPolicy(@NonNull final Object policy) throws MinioOperationException
+            public void setBucketPolicy(@NonNull final Object policy) throws MinioOperationException, MinioDataException
             {
                 oper.setBucketPolicy(self().getName(), MinioUtils.requireNonNull(policy));
             }

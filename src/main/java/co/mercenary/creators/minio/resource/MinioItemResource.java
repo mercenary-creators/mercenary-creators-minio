@@ -16,40 +16,33 @@
 
 package co.mercenary.creators.minio.resource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
 
-import org.springframework.core.io.AbstractResource;
+import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioItemResource extends AbstractResource
+public class MinioItemResource extends AbstractMinioResourceWith<MinioItem>
 {
-    @NonNull
-    private final MinioItem item;
-
     public MinioItemResource(@NonNull final MinioItem item)
     {
-        this.item = MinioUtils.requireNonNull(item);
+        this(item, item.toDescription());
     }
 
-    @Override
-    public boolean isFile()
+    public MinioItemResource(@NonNull final MinioItem item, @NonNull final CharSequence description)
     {
-        return false;
+        super(item, description);
     }
 
     @Override
     public boolean exists()
     {
-        return item.isFile();
+        return self().isFile();
     }
 
     @NonNull
@@ -58,7 +51,7 @@ public class MinioItemResource extends AbstractResource
     {
         try
         {
-            return new URL(item.withOperations().getSignedObjectUrl());
+            return new URL(self().withOperations().getSignedObjectUrl());
         }
         catch (final MinioOperationException e)
         {
@@ -66,37 +59,16 @@ public class MinioItemResource extends AbstractResource
         }
     }
 
-    @NonNull
-    @Override
-    public String getDescription()
-    {
-        return item.toDescription();
-    }
-
-    @NonNull
-    @Override
-    public String getFilename() throws IllegalStateException
-    {
-        return item.getName();
-    }
-
-    @Nullable
-    @Override
-    public File getFile() throws IOException
-    {
-        throw new UnsupportedOperationException("MinioItemResource can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
-    }
-
     @Override
     public long contentLength() throws IOException
     {
-        return item.getSize();
+        return self().getSize();
     }
 
     @Override
     public long lastModified() throws IOException
     {
-        final Date date = item.getLastModified();
+        final Date date = self().getLastModified();
 
         if (null != date)
         {
@@ -111,7 +83,7 @@ public class MinioItemResource extends AbstractResource
     {
         try
         {
-            return item.withOperations().getObjectInputStream();
+            return self().withOperations().getObjectInputStream();
         }
         catch (final MinioOperationException e)
         {
@@ -121,11 +93,11 @@ public class MinioItemResource extends AbstractResource
 
     @NonNull
     @Override
-    public MinioItemResource createRelative(@NonNull final String path) throws IOException
+    public Resource createRelative(@NonNull final String path) throws IOException
     {
         try
         {
-            return item.withOperations().getItemRelative(path).map(self -> new MinioItemResource(self)).orElseThrow(() -> new IOException(path + " not found."));
+            return self().withOperations().getItemRelative(path).map(self -> new MinioItemResource(self)).orElseThrow(() -> new IOException(path + " not found."));
         }
         catch (final MinioOperationException e)
         {
@@ -136,27 +108,19 @@ public class MinioItemResource extends AbstractResource
     @Override
     public boolean equals(final Object other)
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other instanceof MinioItemResource)
-        {
-            return toString().equals(MinioUtils.CAST(other, MinioItemResource.class).toString());
-        }
-        return false;
+        return super.equals(other);
     }
 
     @Override
     public int hashCode()
     {
-        return getDescription().hashCode();
+        return super.hashCode();
     }
 
     @NonNull
     @Override
     public String toString()
     {
-        return getDescription();
+        return super.toString();
     }
 }

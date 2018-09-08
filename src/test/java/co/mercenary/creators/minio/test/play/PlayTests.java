@@ -19,13 +19,13 @@ package co.mercenary.creators.minio.test.play;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@ContextConfiguration("/play-config.xml")
+@SpringJUnitConfig(locations = "/play-config.xml")
 public class PlayTests extends AbstractMinioTests
 {
     @Test
@@ -33,8 +33,8 @@ public class PlayTests extends AbstractMinioTests
     {
         final List<MinioBucket> list = toList(getMinioTemplate().getBuckets());
 
-        list.forEach(item -> info(() -> toJSONString(item)));
+        list.forEach(value -> info(() -> toJSONString(value)));
 
-        assertFalse(list.isEmpty(), () -> "bucket isEmpty.");
+        assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
     }
 }
