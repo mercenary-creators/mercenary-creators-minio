@@ -43,12 +43,6 @@ public class MinioConfigurableMimeFileTypeMap extends ConfigurableMimeFileTypeMa
         }
     }
 
-    @Override
-    public synchronized void afterPropertiesSet()
-    {
-        super.afterPropertiesSet();
-    }
-
     @NonNull
     @Override
     protected synchronized FileTypeMap createFileTypeMap(@Nullable final Resource location, @Nullable final String[] mappings) throws IOException
