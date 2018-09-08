@@ -165,7 +165,7 @@ dependencies {
         compile(group: 'org.springframework', name: name, version: "${SPRING_CORE_VERSION}")
     }
     compile(group: 'com.google.http-client', name: 'google-http-client-xml', version: '1.25.0')
-    compile(group: 'io.minio', name: 'minio', version: '5.0.0')
+    compile(group: 'io.minio', name: 'minio', version: '5.0.1')
     compile(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0')
     compile(group: 'com.squareup.okio', name: 'okio', version: '1.15.0')
     compile(group: 'joda-time', name: 'joda-time', version: '2.10')
