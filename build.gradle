@@ -53,7 +53,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '1.0.3-RELEASE'
+version = '1.0.4-RELEASE'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
