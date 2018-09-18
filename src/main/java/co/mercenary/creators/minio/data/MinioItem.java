@@ -23,12 +23,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.resource.MinioResourceUtils;
+import co.mercenary.creators.minio.resource.MinioItemResource;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
 import io.minio.ServerSideEncryption;
@@ -42,13 +43,18 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     private final Date                time;
 
     @NonNull
+    private final String              type;
+
+    @NonNull
     private final MinioItemOperations oper;
 
-    public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
+    public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
     {
         super(name, buck, etag, size);
 
         this.file = file;
+
+        this.type = MinioUtils.fixContentType(type);
 
         this.time = MinioUtils.toValueNonNull(time);
 
@@ -71,7 +77,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     @Override
     public String getName()
     {
-        return MinioResourceUtils.fixPathString(super.getName());
+        return MinioUtils.fixPathString(super.getName());
     }
 
     @Nullable
@@ -81,10 +87,16 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     }
 
     @NonNull
+    public String getContentType()
+    {
+        return type;
+    }
+
+    @NonNull
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s), etag=(%s), size=(%s), file=(%s), lastModified=(%s).", getClass().getCanonicalName(), getName(), getBucket(), getEtag(), getSize(), isFile(), MinioUtils.format(time));
+        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), file=(%s), contentType=(%s), lastModified=(%s).", getName(), getBucket(), getEtag(), getSize(), isFile(), getContentType(), MinioUtils.format(time));
     }
 
     @Override
@@ -139,6 +151,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public boolean isFile()
             {
                 return self().isFile();
+            }
+
+            @NonNull
+            @Override
+            public Resource getItemResource() throws MinioOperationException
+            {
+                return new MinioItemResource(self());
             }
 
             @NonNull
@@ -273,7 +292,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             @Override
             public Optional<MinioItem> getItemRelative(@NonNull final CharSequence path) throws MinioOperationException
             {
-                return oper.getItem(self().getBucket(), MinioResourceUtils.getPathRelative(self().getName(), path));
+                return oper.getItem(self().getBucket(), MinioUtils.getPathRelative(self().getName(), path));
             }
         };
     }

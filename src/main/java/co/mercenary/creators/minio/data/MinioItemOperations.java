@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
@@ -35,6 +36,9 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     boolean isFile();
 
     boolean deleteObject() throws MinioOperationException;
+
+    @NonNull
+    Resource getItemResource() throws MinioOperationException;
 
     @NonNull
     Optional<MinioItem> getItemRelative(@NonNull CharSequence path) throws MinioOperationException;

@@ -37,5 +37,7 @@
 		<constructor-arg value="${minio.secret-key}" />
 		<constructor-arg value="${minio.aws-region}" />
 	</bean>
+	
+	<context:annotation-config />
 
 </beans>

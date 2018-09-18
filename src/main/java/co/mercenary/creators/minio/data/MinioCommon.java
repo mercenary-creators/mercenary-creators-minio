@@ -64,7 +64,7 @@ public abstract class MinioCommon extends AbstractCommon
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s), etag=(%s), size=(%s).", getClass().getCanonicalName(), getName(), getBucket(), getEtag(), getSize());
+        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s).", getName(), getBucket(), getEtag(), getSize());
     }
 
     @Override

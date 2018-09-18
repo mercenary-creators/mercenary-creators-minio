@@ -31,6 +31,8 @@
         <property name="ignoreUnresolvablePlaceholders" value="true" />
 	</bean>
 	
+	<bean id="minioContentTypeProbe" class="co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter" />
+	
 	<bean id="minioTemplate" class="co.mercenary.creators.minio.MinioTemplate">
 		<constructor-arg value="${minio.server-url}" />
 		<constructor-arg value="${minio.access-key}" />

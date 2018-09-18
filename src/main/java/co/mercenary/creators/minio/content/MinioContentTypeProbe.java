@@ -56,6 +56,30 @@ public interface MinioContentTypeProbe
         return getContentType(name, () -> MinioUtils.NULL());
     }
 
+    @NonNull
+    default String getContentType(@Nullable final CharSequence type, @Nullable final CharSequence name)
+    {
+        final String valu = MinioUtils.toStringOrElse(type, MinioUtils.EMPTY_STRING_VALUED).trim();
+
+        final String path = MinioUtils.fixPathString(MinioUtils.toStringOrElse(name, MinioUtils.EMPTY_STRING_VALUED).trim());
+
+        if (((valu.length() < 1) || (valu.equals(MinioUtils.getDefaultContentType()))) && (path.length() < 1))
+        {
+            return MinioUtils.getDefaultContentType();
+        }
+        final String find = getContentType(path);
+
+        if ((find == null) || (find.length() < 1))
+        {
+            return MinioUtils.getDefaultContentType();
+        }
+        if ((find.equals(MinioUtils.getDefaultContentType())) && (valu.length() > 0))
+        {
+            return valu;
+        }
+        return find;
+    }
+
     @Nullable
     default String getContentType(@Nullable final InputStream input)
     {

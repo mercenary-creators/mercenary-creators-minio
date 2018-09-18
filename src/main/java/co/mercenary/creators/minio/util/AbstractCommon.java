@@ -31,7 +31,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s).", getClass().getCanonicalName(), getName());
+        return MinioUtils.format("name=(%s).", getName());
     }
 
     @NonNull

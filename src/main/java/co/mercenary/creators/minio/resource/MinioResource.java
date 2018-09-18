@@ -129,7 +129,7 @@ public class MinioResource extends AbstractMinioResourceWith<MinioOperations>
     @Override
     public Resource createRelative(@NonNull final String path) throws IOException
     {
-        return new MinioResource(self(), bucket, MinioResourceUtils.getPathRelative(object, path));
+        return new MinioResource(self(), bucket, MinioUtils.getPathRelative(object, path));
     }
 
     @Override

@@ -72,7 +72,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), creationTime=(%s).", getClass().getCanonicalName(), getName(), MinioUtils.format(time));
+        return MinioUtils.format("name=(%s), creationTime=(%s).", getName(), MinioUtils.format(time));
     }
 
     @Override

@@ -25,7 +25,7 @@
 	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
-                <value>file:/opt/development/properties/mercenary-creators-minio/minio-test.properties</value>
+                <value>file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties</value>
             </list>
         </property>
         <property name="ignoreUnresolvablePlaceholders" value="true" />

@@ -18,7 +18,6 @@ package co.mercenary.creators.minio.resource;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
 
 import co.mercenary.creators.minio.util.MinioUtils;
 
@@ -29,18 +28,6 @@ public final class MinioResourceUtils
 
     private MinioResourceUtils()
     {
-    }
-
-    @NonNull
-    public static String fixPathString(@NonNull final CharSequence path)
-    {
-        return StringUtils.cleanPath(path.toString());
-    }
-
-    @NonNull
-    public static String getPathRelative(@NonNull final CharSequence base, @NonNull final CharSequence path)
-    {
-        return fixPathString(fixPathString(base) + MinioUtils.PATH_SEPARATOR_CHAR + MinioUtils.requireToString(path));
     }
 
     public static boolean isMinioResourceProtocol(@Nullable final CharSequence location)

@@ -44,6 +44,12 @@ public class MinioConfigurableMimeFileTypeMap extends ConfigurableMimeFileTypeMa
     }
 
     @NonNull
+    public FileTypeMap toFileTypeMap()
+    {
+        return getFileTypeMap();
+    }
+
+    @NonNull
     @Override
     protected synchronized FileTypeMap createFileTypeMap(@Nullable final Resource location, @Nullable final String[] mappings) throws IOException
     {

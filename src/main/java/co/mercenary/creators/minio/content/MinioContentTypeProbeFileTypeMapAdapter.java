@@ -29,6 +29,11 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
     @NonNull
     private final FileTypeMap fmap;
 
+    public MinioContentTypeProbeFileTypeMapAdapter()
+    {
+        this(new MinioConfigurableMimeFileTypeMap().toFileTypeMap());
+    }
+
     public MinioContentTypeProbeFileTypeMapAdapter(@NonNull final FileTypeMap fmap)
     {
         this.fmap = MinioUtils.requireNonNull(fmap);
@@ -41,6 +46,12 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
         if ((null == name) || (name.length() < 1))
         {
             return MinioUtils.NULL();
+        }
+        final String type = MinioUtils.getContentTypeCommon(name);
+
+        if (null != type)
+        {
+            return type;
         }
         final String valu = fmap.getContentType(name.toString());
 
@@ -58,5 +69,17 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
         {
             MinioUtils.CAST(fmap, InitializingBean.class).afterPropertiesSet();
         }
+    }
+
+    @NonNull
+    public static MinioContentTypeProbe instance()
+    {
+        return Factory.INSTANCE;
+    }
+
+    private static final class Factory
+    {
+        @NonNull
+        private static final MinioContentTypeProbeFileTypeMapAdapter INSTANCE = new MinioContentTypeProbeFileTypeMapAdapter();
     }
 }

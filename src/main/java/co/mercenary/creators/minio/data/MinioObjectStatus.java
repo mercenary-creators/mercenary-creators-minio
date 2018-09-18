@@ -38,7 +38,7 @@ public class MinioObjectStatus extends MinioCommon
 
         this.time = MinioUtils.toValueNonNull(time);
 
-        this.type = MinioUtils.fixContentType(type, name);
+        this.type = MinioUtils.fixContentType(type);
     }
 
     @Nullable
@@ -57,7 +57,7 @@ public class MinioObjectStatus extends MinioCommon
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getClass().getCanonicalName(), getName(), getBucket(), getEtag(), getSize(), getContentType(), MinioUtils.format(time));
+        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getName(), getBucket(), getEtag(), getSize(), getContentType(), MinioUtils.format(time));
     }
 
     @Override

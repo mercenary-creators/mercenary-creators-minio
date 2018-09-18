@@ -44,7 +44,7 @@ public abstract class AbstractNamed implements WithName, WithDescription
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s).", getClass().getCanonicalName(), getName());
+        return MinioUtils.format("name=(%s).", getName());
     }
 
     @NonNull

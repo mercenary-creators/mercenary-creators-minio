@@ -30,13 +30,14 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.xmlpull.v1.XmlPullParserException;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
-import co.mercenary.creators.minio.content.MinioContentTypeProbeAdapter;
+import co.mercenary.creators.minio.content.MinioContentTypeProbeFileTypeMapAdapter;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
@@ -66,8 +67,9 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Nullable
     private final String                       aws_region;
 
-    @NonNull
-    private MinioContentTypeProbe              type_probe = new MinioContentTypeProbeAdapter();
+    @Nullable
+    @Autowired(required = false)
+    private MinioContentTypeProbe              type_probe;
 
     @NonNull
     private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>(MinioUtils.NULL());
@@ -82,7 +84,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
         this.secret_key = MinioUtils.getCharSequence(secret);
 
-        this.aws_region = MinioUtils.fixRegionString(region);
+        this.aws_region = MinioUtils.fixRegionString(region, MinioUtils.DEFAULT_REGION_EAST);
     }
 
     @NonNull
@@ -126,7 +128,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
                         try
                         {
-                            return new MinioClient(getServerUrl(), getAccessKey(), getSecretKey(), MinioUtils.fixRegionString(getAwsRegion()));
+                            return new MinioClient(getServerUrl(), getAccessKey(), getSecretKey(), MinioUtils.fixRegionString(getAwsRegion(), MinioUtils.isAmazonEndpoint(getServerUrl())));
                         }
                         catch (final MinioException e)
                         {
@@ -141,14 +143,14 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
     public void setContentTypeProbe(@Nullable final MinioContentTypeProbe type_probe)
     {
-        this.type_probe = MinioUtils.requireNonNullOrElse(type_probe, () -> new MinioContentTypeProbeAdapter());
+        this.type_probe = MinioUtils.requireNonNullOrElse(type_probe, MinioContentTypeProbeFileTypeMapAdapter::instance);
     }
 
     @NonNull
     @Override
     public MinioContentTypeProbe getContentTypeProbe()
     {
-        return MinioUtils.requireNonNullOrElse(type_probe, () -> new MinioContentTypeProbeAdapter());
+        return MinioUtils.requireNonNullOrElse(type_probe, MinioContentTypeProbeFileTypeMapAdapter::instance);
     }
 
     @Override
@@ -175,7 +177,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), server=(%s), region=(%s).", getClass().getCanonicalName(), getName(), getServer(), getRegion());
+        return MinioUtils.format("name=(%s), server=(%s), region=(%s).", getName(), getServer(), getRegion());
     }
 
     @NonNull
@@ -381,7 +383,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         {
             final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
 
-            return new MinioObjectStatus(name, bucket, status.length(), status.contentType(), status.etag(), () -> status.createdTime());
+            return new MinioObjectStatus(name, bucket, status.length(), getContentTypeProbe().getContentType(status.contentType(), name), status.etag(), () -> status.createdTime());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -397,7 +399,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         {
             final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
 
-            return new MinioObjectStatus(name, bucket, status.length(), status.contentType(), status.etag(), () -> status.createdTime());
+            return new MinioObjectStatus(name, bucket, status.length(), getContentTypeProbe().getContentType(status.contentType(), name), status.etag(), () -> status.createdTime());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -458,7 +460,9 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public Stream<MinioItem> getItems(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
     {
-        return MinioUtils.getResultAsStream(getMinioClient().listObjects(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioItem(item.objectName(), bucket, item.objectSize(), !item.isDir(), item.etag(), () -> item.lastModified(), this));
+        final MinioContentTypeProbe probe = getContentTypeProbe();
+
+        return MinioUtils.getResultAsStream(getMinioClient().listObjects(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioItem(item.objectName(), bucket, item.objectSize(), !item.isDir(), item.etag(), probe.getContentType(item.objectName()), () -> item.lastModified(), this));
     }
 
     @Override
@@ -767,5 +771,4 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
             throw new MinioOperationException(e);
         }
     }
-
 }

@@ -12,7 +12,7 @@ __It is not well suited for Spring. I have attempted to correct some of the issu
 
 __The MinioClient class throws too many exceptions out of each method, some are as high as 9+ exception types! I am re-working the exception hierarchy to make it more meaningful.__
 
-__The classes in minio data are badly suited for JSON/Jackson serialization. I have created wrapper classes for each ( Bucket, Item, ObjecStat, etc ). Furthermore, in some cases, String values of dates
+__The classes in minio data are badly suited for JSON/Jackson serialization. I have created wrapper classes for each ( Bucket, Item, ObjectStat, etc ). Furthermore, in some cases, String values of dates
 in these objects can be null, resulting in a NPE when asking for a Date ( lastModified(), etc. ).__
 
 __The wrapper classes ( MinioBucket, MinioItem ) have a method called withOperations(), where you now
@@ -38,13 +38,13 @@ Maven:
 <dependency>
   <groupId>co.mercenary-creators</groupId>
   <artifactId>mercenary-creators-minio</artifactId>
-  <version>1.0.4-RELEASE</version>
+  <version>1.0.5-RELEASE</version>
 </dependency>
 ```
 Gradle:
 ```
 dependencies {
-    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '1.0.4-RELEASE')
+    compile(group: 'co.mercenary-creators', name: 'mercenary-creators-minio', version: '1.0.5-RELEASE')
 }
 ```
 Javadoc URL:

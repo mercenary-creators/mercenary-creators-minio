@@ -39,12 +39,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
@@ -76,6 +75,9 @@ public final class MinioUtils
 
     @NonNull
     public static final String                  DEFAULT_REGION_EAST = "us-east-1";
+
+    @NonNull
+    public static final String                  AMAZON_S3_END_POINT = "s3.amazonaws.com";
 
     @NonNull
     public static final ThreadLocal<DateFormat> DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
@@ -118,12 +120,6 @@ public final class MinioUtils
             return type.cast(value);
         }
         return NULL();
-    }
-
-    @NonNull
-    public static Log LOGS(@NonNull final Class<?> type)
-    {
-        return LogFactory.getLog(requireNonNull(type));
     }
 
     @Nullable
@@ -328,19 +324,37 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static String fixPathString(@NonNull final CharSequence path)
+    {
+        return StringUtils.cleanPath(path.toString());
+    }
+
+    @NonNull
+    public static String getPathRelative(@NonNull final CharSequence base, @NonNull final CharSequence path)
+    {
+        return fixPathString(fixPathString(base) + PATH_SEPARATOR_CHAR + requireToString(path));
+    }
+
+    @NonNull
     public static String fixContentType(@Nullable final CharSequence value)
     {
         return toStringOrElse(value, getDefaultContentType());
     }
 
-    @NonNull
-    public static String fixContentType(@Nullable final CharSequence value, @Nullable final CharSequence name)
+    @Nullable
+    public static String fixRegionString(@Nullable final CharSequence value, final boolean amazon)
     {
-        if (toStringOrElse(name, EMPTY_STRING_VALUED).endsWith(".json"))
+        if ((null == value) || (value.length() < 1))
         {
-            return getJSONContentType();
+            return amazon ? DEFAULT_REGION_EAST : NULL();
         }
-        return toStringOrElse(value, getDefaultContentType());
+        final String string = requireToString(value).trim();
+
+        if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
+        {
+            return amazon ? DEFAULT_REGION_EAST : NULL();
+        }
+        return string;
     }
 
     @NonNull
@@ -373,6 +387,11 @@ public final class MinioUtils
             return NULL();
         }
         return string;
+    }
+
+    public static boolean isAmazonEndpoint(@NonNull final String endpoint)
+    {
+        return endpoint.toLowerCase().indexOf(AMAZON_S3_END_POINT) >= 0;
     }
 
     @Nullable
@@ -454,6 +473,33 @@ public final class MinioUtils
     public static String getDefaultContentType()
     {
         return "application/octet-stream";
+    }
+
+    @Nullable
+    public static String getContentTypeCommon(@Nullable final CharSequence name)
+    {
+        final String path = getCharSequence(name);
+
+        if ((path != null) && (path.length() > 4))
+        {
+            if (path.endsWith(".json"))
+            {
+                return getJSONContentType();
+            }
+            if (path.endsWith(".java"))
+            {
+                return getJAVAContentType();
+            }
+            if (path.endsWith(".properties"))
+            {
+                return getPROPContentType();
+            }
+            if (path.endsWith(".yml") || path.endsWith(".yaml"))
+            {
+                return getYAMLContentType();
+            }
+        }
+        return NULL();
     }
 
     @NonNull

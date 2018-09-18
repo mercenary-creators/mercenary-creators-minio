@@ -55,7 +55,7 @@ public class MinioUpload extends AbstractCommon
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("class=(%s), name=(%s), bucket=(%s).", getClass().getCanonicalName(), getName(), getBucket());
+        return MinioUtils.format("name=(%s), bucket=(%s).", getName(), getBucket());
     }
 
     @Override

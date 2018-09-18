@@ -8,6 +8,9 @@
 	<enableImports><![CDATA[true]]></enableImports>
 	<configs>
 		<config>src/test/resources/test-config.xml</config>
+		<config>src/test/resources/play-config.xml</config>
+		<config>src/test/resources/tika-config.xml</config>
+		<config>src/test/resources/aws3-config.xml</config>
 	</configs>
 	<autoconfigs>
 	</autoconfigs>
