@@ -18,7 +18,6 @@ package co.mercenary.creators.minio.content.tika;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 
 import org.apache.tika.Tika;
@@ -26,7 +25,6 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.language.translate.Translator;
 import org.apache.tika.parser.Parser;
-import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
@@ -64,16 +62,6 @@ public class MinioContentTypeProbeTikaReadAdapter extends MinioContentTypeProbeT
         super(detector, parser, translator);
     }
 
-    public MinioContentTypeProbeTikaReadAdapter(@NonNull final Resource resource)
-    {
-        super(resource);
-    }
-
-    public MinioContentTypeProbeTikaReadAdapter(@NonNull final InputStream input)
-    {
-        super(input);
-    }
-
     @Nullable
     @Override
     public String getContentType(@Nullable final Path path)
@@ -108,11 +96,5 @@ public class MinioContentTypeProbeTikaReadAdapter extends MinioContentTypeProbeT
         {
             return getContentType(file.getName());
         }
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
-        super.afterPropertiesSet();
     }
 }

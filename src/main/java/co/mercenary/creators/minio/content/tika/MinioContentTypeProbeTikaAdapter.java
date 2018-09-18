@@ -22,17 +22,13 @@ import java.io.InputStream;
 import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
-import org.apache.tika.exception.TikaException;
 import org.apache.tika.language.translate.Translator;
 import org.apache.tika.parser.Parser;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.xml.sax.SAXException;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
-import co.mercenary.creators.minio.errors.MinioRuntimeException;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, InitializingBean
@@ -68,30 +64,6 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, 
     public MinioContentTypeProbeTikaAdapter(@NonNull final Detector detector, @NonNull final Parser parser, @NonNull final Translator translator)
     {
         this.tika = new Tika(MinioUtils.requireNonNull(detector), MinioUtils.requireNonNull(parser), MinioUtils.requireNonNull(translator));
-    }
-
-    public MinioContentTypeProbeTikaAdapter(@NonNull final Resource resource)
-    {
-        try (InputStream input = resource.getInputStream())
-        {
-            this.tika = new Tika(new TikaConfig(input));
-        }
-        catch (IOException | TikaException | SAXException e)
-        {
-            throw new MinioRuntimeException(e);
-        }
-    }
-
-    public MinioContentTypeProbeTikaAdapter(@NonNull final InputStream input)
-    {
-        try
-        {
-            this.tika = new Tika(new TikaConfig(MinioUtils.requireNonNull(input)));
-        }
-        catch (TikaException | IOException | SAXException e)
-        {
-            throw new MinioRuntimeException(e);
-        }
     }
 
     @Nullable
@@ -150,5 +122,6 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, 
     @Override
     public void afterPropertiesSet() throws Exception
     {
+        // no implementation.
     }
 }
