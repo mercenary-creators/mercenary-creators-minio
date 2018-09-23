@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -564,7 +563,7 @@ public final class MinioUtils
     {
         requireNonNull(path);
 
-        return ((Files.exists(path, LinkOption.NOFOLLOW_LINKS)) && (Files.isReadable(path)) && (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) && (false == Files.isHidden(path))));
+        return ((path.toFile().exists()) && (Files.isReadable(path)) && (path.toFile().isFile()) && (false == Files.isHidden(path)));
     }
 
     @NonNull
