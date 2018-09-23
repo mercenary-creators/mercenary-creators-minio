@@ -14,28 +14,34 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test
+package co.mercenary.creators.minio.util;
 
-import co.mercenary.creators.minio.test.util.AbstractKotlinMinioTests
-import org.junit.jupiter.api.Test
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
-@SpringJUnitConfig(locations = ["/test-config.xml"])
-class BucketsTest : AbstractKotlinMinioTests() {
-    @Test
-    fun test() {
-        var size  = 0
-        sequence(minio().buckets).forEach {
-            size++
-            info {
-                it.toString()
-            }
-        }
-        info {
-            size.toString()
-        }
-        assertTrue(size > 0) {
-            size.toString()
-        }
+@JsonIgnoreType
+public abstract class AbstractTicker implements ITicker
+{
+    private volatile long time;
+
+    protected AbstractTicker()
+    {
+        this.time = nanos();
+    }
+
+    protected AbstractTicker(final long time)
+    {
+        this.time = time;
+    }
+
+    @Override
+    public synchronized void reset()
+    {
+        time = clock();
+    }
+
+    @Override
+    public long start()
+    {
+        return time;
     }
 }

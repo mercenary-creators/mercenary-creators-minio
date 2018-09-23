@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/mercenary-creators-minio.iml" filepath="$PROJECT_DIR$/mercenary-creators-minio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mercenary-creators-minio_main.iml" filepath="$PROJECT_DIR$/.idea/modules/mercenary-creators-minio_main.iml" group="mercenary-creators-minio" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mercenary-creators-minio_test.iml" filepath="$PROJECT_DIR$/.idea/modules/mercenary-creators-minio_test.iml" group="mercenary-creators-minio" />
+    </modules>
+  </component>
+</project>
