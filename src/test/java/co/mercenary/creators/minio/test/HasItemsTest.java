@@ -31,7 +31,7 @@ public class HasItemsTest extends AbstractMinioTests
     @Test
     public void test() throws MinioOperationException
     {
-        final List<MinioItem> list = toList(getMinioTemplate().getItems("root"));
+        final List<MinioItem> list = toList(getMinioTemplate().getItems("root", false));
 
         list.forEach(item -> info(() -> toJSONString(item)));
 

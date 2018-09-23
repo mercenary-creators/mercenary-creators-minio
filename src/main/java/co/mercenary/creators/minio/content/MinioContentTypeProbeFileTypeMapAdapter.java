@@ -22,8 +22,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.util.MinioUtils;
 
+@JsonIgnoreType
 public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentTypeProbe, InitializingBean
 {
     @NonNull

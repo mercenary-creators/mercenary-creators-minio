@@ -44,22 +44,26 @@ public final class LoggingOps
     {
     }
 
-    public static Marker getMarker(final String name)
+    @NonNull
+    public static Marker getMarker(@NonNull final String name)
     {
         return MarkerFactory.getMarker(MinioUtils.requireNonNull(name));
     }
 
-    public static Marker getMarker(final Package pack)
+    @NonNull
+    public static Marker getMarker(@NonNull final Package pack)
     {
         return MarkerFactory.getMarker(pack.getName() + ".MARKER");
     }
 
-    public static Logger getLogger(final String name)
+    @NonNull
+    public static Logger getLogger(@NonNull final String name)
     {
         return LoggerFactory.getLogger(MinioUtils.requireNonNull(name));
     }
 
-    public static Logger getLogger(final Class<?> type)
+    @NonNull
+    public static Logger getLogger(@NonNull final Class<?> type)
     {
         return LoggerFactory.getLogger(MinioUtils.requireNonNull(type));
     }
@@ -142,49 +146,56 @@ public final class LoggingOps
         }
     }
 
-    public static Level getLevel(final String name)
+    @NonNull
+    public static Level getLevel(@NonNull final String name)
     {
         return classic(name).getLevel();
     }
 
-    public static Level getLevel(final Logger logger)
+    @NonNull
+    public static Level getLevel(@NonNull final Logger logger)
     {
         return getLevel(logger.getName());
     }
 
+    @NonNull
     public static Level getLevel()
     {
         return getLevel(Logger.ROOT_LOGGER_NAME);
     }
 
-    public static void setLevel(final String level)
+    public static void setLevel(@NonNull final String level)
     {
         setLevel(Level.toLevel(level, Level.INFO));
     }
 
-    public static void setLevel(final Level level)
+    public static void setLevel(@NonNull final Level level)
     {
         classic(Logger.ROOT_LOGGER_NAME).setLevel(level);
     }
 
-    public static Logger setLevel(final Logger logger, final Level level)
+    @NonNull
+    public static Logger setLevel(@NonNull final Logger logger, @NonNull final Level level)
     {
         classic(logger.getName()).setLevel(level);
 
         return logger;
     }
 
-    public static Logger setLevel(final Logger logger, final String level)
+    @NonNull
+    public static Logger setLevel(@NonNull final Logger logger, @NonNull final String level)
     {
         return setLevel(logger, Level.toLevel(level, Level.INFO));
     }
 
+    @NonNull
     public static LoggerContext context()
     {
         return ((LoggerContext) LoggerFactory.getILoggerFactory());
     }
 
-    private static ch.qos.logback.classic.Logger classic(final String name)
+    @NonNull
+    private static ch.qos.logback.classic.Logger classic(@NonNull final String name)
     {
         if (name.equalsIgnoreCase(Logger.ROOT_LOGGER_NAME))
         {

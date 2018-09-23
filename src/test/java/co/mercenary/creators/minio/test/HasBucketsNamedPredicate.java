@@ -31,7 +31,9 @@ public class HasBucketsNamedPredicate extends AbstractMinioTests
     @Test
     public void test() throws MinioOperationException
     {
-        final List<MinioBucket> list = toList(getMinioTemplate().getBucketsNamed(value -> value.equals("root")));
+        final List<String> look = toList("root", "content");
+
+        final List<MinioBucket> list = toList(getMinioTemplate().getBucketsNamed(value -> look.contains(value)));
 
         list.forEach(value -> info(() -> toJSONString(value)));
 

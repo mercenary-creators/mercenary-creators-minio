@@ -25,14 +25,20 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.WithSelf;
 import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
+@JsonIgnoreType
 public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
 {
+    @NonNull
+    WithServerData getServerData();
+
     boolean isFile();
 
     boolean deleteObject() throws MinioOperationException;

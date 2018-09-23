@@ -60,7 +60,7 @@ public final class MinioResourceUtils
 
             if ((index < 0) || (index == MINIO_RESOURCE_PROTOCOL.length()))
             {
-                throw new IllegalArgumentException("the location :'" + value + "' does not contain a valid bucket name");
+                throw new IllegalArgumentException("the location :'" + value + "' does not contain a valid bucket name.");
             }
             return value.substring(MINIO_RESOURCE_PROTOCOL.length(), index);
         }
@@ -78,7 +78,7 @@ public final class MinioResourceUtils
 
             if ((index < 0) || (index == MINIO_RESOURCE_PROTOCOL.length()))
             {
-                throw new IllegalArgumentException("the location :'" + value + "' does not contain a valid bucket name");
+                throw new IllegalArgumentException("the location :'" + value + "' does not contain a valid bucket name.");
             }
             if (value.endsWith(MinioUtils.PATH_SEPARATOR_CHAR))
             {

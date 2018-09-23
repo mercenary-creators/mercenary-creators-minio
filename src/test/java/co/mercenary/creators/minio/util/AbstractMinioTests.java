@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.errors.MinioDataException;
 
@@ -40,6 +41,11 @@ public abstract class AbstractMinioTests
 
     @Nullable
     protected MinioTemplate getMinioTemplate()
+    {
+        return minioTemplate;
+    }
+
+    protected MinioOperations getMinioOperations()
     {
         return minioTemplate;
     }
@@ -62,67 +68,67 @@ public abstract class AbstractMinioTests
         return () -> message.get() + " is empty.";
     }
 
-    protected void info(@NonNull final Supplier<String> message)
+    protected void info(@NonNull final Supplier<?> message)
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get());
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString());
         }
     }
 
-    protected void info(@NonNull final Supplier<String> message, @NonNull final Throwable cause)
+    protected void info(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get(), cause);
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
         }
     }
 
-    protected void warn(@NonNull final Supplier<String> message)
+    protected void warn(@NonNull final Supplier<?> message)
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get());
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString());
         }
     }
 
-    protected void warn(@NonNull final Supplier<String> message, @NonNull final Throwable cause)
+    protected void warn(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get(), cause);
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
         }
     }
 
-    protected void debug(@NonNull final Supplier<String> message)
+    protected void debug(@NonNull final Supplier<?> message)
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get());
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString());
         }
     }
 
-    protected void debug(@NonNull final Supplier<String> message, @NonNull final Throwable cause)
+    protected void debug(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get(), cause);
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
         }
     }
 
-    protected void error(@NonNull final Supplier<String> message)
+    protected void error(@NonNull final Supplier<?> message)
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get());
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString());
         }
     }
 
-    protected void error(@NonNull final Supplier<String> message, @NonNull final Throwable cause)
+    protected void error(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get(), cause);
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
         }
     }
 
@@ -171,18 +177,18 @@ public abstract class AbstractMinioTests
         }
     }
 
-    protected void assertEquals(@Nullable final Object expected, @Nullable final Object actual, @NonNull final Supplier<String> message)
+    protected void assertEquals(@Nullable final Object expected, @Nullable final Object actual, @NonNull final Supplier<?> message)
     {
-        Assertions.assertEquals(expected, actual, message);
+        Assertions.assertEquals(expected, actual, () -> message.get().toString());
     }
 
-    protected void assertTrue(final boolean condition, @NonNull final Supplier<String> message)
+    protected void assertTrue(final boolean condition, @NonNull final Supplier<?> message)
     {
-        Assertions.assertTrue(condition, message);
+        Assertions.assertTrue(condition, () -> message.get().toString());
     }
 
-    protected void assertFalse(final boolean condition, @NonNull final Supplier<String> message)
+    protected void assertFalse(final boolean condition, @NonNull final Supplier<?> message)
     {
-        Assertions.assertFalse(condition, message);
+        Assertions.assertFalse(condition, () -> message.get().toString());
     }
 }

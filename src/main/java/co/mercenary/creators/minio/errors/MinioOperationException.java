@@ -18,9 +18,14 @@ package co.mercenary.creators.minio.errors;
 
 import org.springframework.lang.Nullable;
 
-public class MinioOperationException extends Exception
+public class MinioOperationException extends MinioFrameworkException
 {
     private static final long serialVersionUID = 7603068084674028380L;
+
+    public MinioOperationException()
+    {
+        super();
+    }
 
     public MinioOperationException(@Nullable final String message)
     {
@@ -35,5 +40,10 @@ public class MinioOperationException extends Exception
     public MinioOperationException(@Nullable final String message, @Nullable final Throwable cause)
     {
         super(message, cause);
+    }
+
+    public MinioOperationException(@Nullable final String message, @Nullable final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace)
+    {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

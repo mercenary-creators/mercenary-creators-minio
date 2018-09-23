@@ -36,23 +36,29 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.xmlpull.v1.XmlPullParserException;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
 import co.mercenary.creators.minio.content.MinioContentTypeProbeFileTypeMapAdapter;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
+import co.mercenary.creators.minio.data.MinioServerData;
 import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractNamed;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 import io.minio.http.Method;
 
+@JsonIgnoreType
 public class MinioTemplate extends AbstractNamed implements MinioOperations, BeanNameAware
 {
     @NonNull
@@ -94,12 +100,14 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     }
 
     @Nullable
+    @JsonIgnore
     protected String getAccessKey()
     {
         return access_key;
     }
 
     @Nullable
+    @JsonIgnore
     protected String getSecretKey()
     {
         return secret_key;
@@ -112,7 +120,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     }
 
     @NonNull
-    protected MinioClient getMinioClient() throws MinioOperationException
+    protected MinioClient getMinioClient()
     {
         MinioClient client = atomic_ref.get();
 
@@ -171,6 +179,13 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     public String getRegion()
     {
         return MinioUtils.fixRegionString(getAwsRegion(), MinioUtils.DEFAULT_REGION_EAST);
+    }
+
+    @NonNull
+    @Override
+    public WithServerData getServerData()
+    {
+        return new MinioServerData(getServer(), getRegion());
     }
 
     @NonNull

@@ -17,6 +17,7 @@
 package co.mercenary.creators.minio.data;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.lang.NonNull;
@@ -26,25 +27,25 @@ import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MinioObjectStatus extends MinioCommon
 {
-    @Nullable
-    private final Date   time;
+    @NonNull
+    private final String         type;
 
     @NonNull
-    private final String type;
+    private final Optional<Date> time;
 
     public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time)
     {
         super(name, buck, etag, size);
 
-        this.time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toMaybeNonNull(time);
 
         this.type = MinioUtils.fixContentType(type);
     }
 
-    @Nullable
-    public Date getCreationTime()
+    @NonNull
+    public Optional<Date> getCreationTime()
     {
-        return MinioUtils.COPY(time);
+        return time.map(date -> new Date(date.getTime()));
     }
 
     @NonNull

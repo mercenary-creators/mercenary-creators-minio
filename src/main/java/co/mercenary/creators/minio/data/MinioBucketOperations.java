@@ -28,6 +28,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
@@ -36,8 +38,12 @@ import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
+@JsonIgnoreType
 public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServerData
 {
+    @NonNull
+    WithServerData getServerData();
+
     boolean deleteBucket() throws MinioOperationException;
 
     boolean isObject(@NonNull CharSequence name) throws MinioOperationException;

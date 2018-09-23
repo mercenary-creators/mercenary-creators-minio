@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: io.minio:minio:5.0.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.minio/minio/5.0.1/951b64a847e43e468e3c1abf55d57af3f68ed9ab/minio-5.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.minio/minio/5.0.1/7993a2b77003c635895c1711b3d2165805ebb690/minio-5.0.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.minio/minio/5.0.1/50c9dfc6632f65abddf19fc1c8a55df98cdb2d0e/minio-5.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

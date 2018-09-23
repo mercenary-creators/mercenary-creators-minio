@@ -25,12 +25,15 @@ import java.util.Optional;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MinioResource extends AbstractMinioResourceWith<MinioOperations>
+@JsonIgnoreType
+public class MinioResource extends AbstractMinioResource<MinioOperations>
 {
     @NonNull
     private final String bucket;
@@ -40,7 +43,7 @@ public class MinioResource extends AbstractMinioResourceWith<MinioOperations>
 
     public MinioResource(@NonNull final MinioOperations minops, @NonNull final CharSequence bucket, @NonNull final CharSequence object)
     {
-        super(minops, "MinioResource server=(%s), object=(%s), bucket=(%s).", object, bucket);
+        super(minops, "server=(%s), object=(%s), bucket=(%s).", minops.getServer(), object, bucket);
 
         this.bucket = MinioUtils.requireToString(bucket);
 
@@ -96,11 +99,11 @@ public class MinioResource extends AbstractMinioResourceWith<MinioOperations>
 
             if (item.isPresent())
             {
-                final Date date = item.get().getLastModified();
+                final Optional<Date> date = item.get().getLastModified();
 
-                if (null != date)
+                if (date.isPresent())
                 {
-                    return date.getTime();
+                    return date.get().getTime();
                 }
             }
             throw new IOException(getDescription() + " not found.");

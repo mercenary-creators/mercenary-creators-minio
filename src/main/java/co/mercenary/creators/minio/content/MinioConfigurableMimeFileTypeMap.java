@@ -27,7 +27,10 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.mail.javamail.ConfigurableMimeFileTypeMap;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 @NotThreadSafe
+@JsonIgnoreType
 public class MinioConfigurableMimeFileTypeMap extends ConfigurableMimeFileTypeMap implements InitializingBean
 {
     public MinioConfigurableMimeFileTypeMap()

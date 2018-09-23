@@ -22,6 +22,11 @@ public class MinioRuntimeException extends RuntimeException
 {
     private static final long serialVersionUID = 8019999200370194991L;
 
+    public MinioRuntimeException()
+    {
+        super();
+    }
+
     public MinioRuntimeException(@Nullable final String message)
     {
         super(message);
@@ -35,5 +40,10 @@ public class MinioRuntimeException extends RuntimeException
     public MinioRuntimeException(@Nullable final String message, @Nullable final Throwable cause)
     {
         super(message, cause);
+    }
+
+    public MinioRuntimeException(@Nullable final String message, @Nullable final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace)
+    {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

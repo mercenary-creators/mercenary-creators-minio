@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -35,13 +36,14 @@ import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
+import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
 public class MinioBucket extends AbstractCommon implements WithOperations<MinioBucketOperations>
 {
-    @Nullable
-    private final Date                  time;
+    @NonNull
+    private final Optional<Date>        time;
 
     @NonNull
     private final MinioBucketOperations oper;
@@ -50,7 +52,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
     {
         super(name);
 
-        this.time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toMaybeNonNull(time);
 
         this.oper = buildWithOperations(this, oper);
     }
@@ -62,10 +64,10 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
         return oper;
     }
 
-    @Nullable
-    public Date getCreationTime()
+    @NonNull
+    public Optional<Date> getCreationTime()
     {
-        return MinioUtils.COPY(time);
+        return time.map(date -> new Date(date.getTime()));
     }
 
     @NonNull
@@ -121,6 +123,13 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             public String getRegion()
             {
                 return oper.getRegion();
+            }
+
+            @NonNull
+            @Override
+            public WithServerData getServerData()
+            {
+                return oper.getServerData();
             }
 
             @Override

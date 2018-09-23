@@ -17,27 +17,46 @@
 package co.mercenary.creators.minio.resource;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 
 import org.springframework.core.io.AbstractResource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import co.mercenary.creators.minio.util.MinioUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
-public abstract class AbstractMinioResource extends AbstractResource
+import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithSelf;
+
+@JsonIgnoreType
+public abstract class AbstractMinioResource<T> extends AbstractResource implements WithSelf<T>
 {
     @NonNull
-    private final String description;
+    private final T      with;
 
-    protected AbstractMinioResource(@NonNull final CharSequence description)
+    @NonNull
+    private final String desc;
+
+    protected AbstractMinioResource(@NonNull final T with, @NonNull final CharSequence desc)
     {
-        this.description = MinioUtils.requireToString(description);
+        this.with = MinioUtils.requireNonNull(with);
+
+        this.desc = MinioUtils.requireNonNull(desc.toString());
     }
 
-    protected AbstractMinioResource(@NonNull final CharSequence format, @NonNull final Object... args)
+    protected AbstractMinioResource(@NonNull final T with, @NonNull final CharSequence format, @NonNull final Object... args)
     {
-        this(MinioUtils.format(format, args));
+        this(with, MinioUtils.format(format, args));
+    }
+
+    @NonNull
+    @Override
+    public T self()
+    {
+        return with;
     }
 
     @Override
@@ -67,16 +86,30 @@ public abstract class AbstractMinioResource extends AbstractResource
 
     @Nullable
     @Override
+    public URL getURL() throws IOException
+    {
+        throw new FileNotFoundException(getDescription() + " can not be resolved to a URL.");
+    }
+
+    @Nullable
+    @Override
+    public URI getURI() throws IOException
+    {
+        return super.getURI();
+    }
+
+    @Nullable
+    @Override
     public File getFile() throws IOException
     {
-        throw new UnsupportedOperationException(getClass().getSimpleName() + " can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
+        throw new FileNotFoundException(getDescription() + " can not be resolved to java.io.File objects. Use getInputStream() to retrieve the contents of the object!");
     }
 
     @NonNull
     @Override
     public String getDescription()
     {
-        return description;
+        return desc;
     }
 
     @Override
@@ -88,7 +121,12 @@ public abstract class AbstractMinioResource extends AbstractResource
         }
         if (other instanceof AbstractMinioResource)
         {
-            return ((AbstractMinioResource) other).getDescription().equals(getDescription());
+            final AbstractMinioResource<?> temp = MinioUtils.CAST(other, AbstractMinioResource.class);
+
+            if (getDescription().equals(temp.getDescription()))
+            {
+                return self().equals(temp.self());
+            }
         }
         return false;
     }

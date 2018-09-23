@@ -32,6 +32,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
@@ -47,8 +49,12 @@ import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
+@JsonIgnoreType
 public interface MinioOperations extends WithName, WithDescription, WithServerData
 {
+    @NonNull
+    WithServerData getServerData();
+
     @NonNull
     MinioContentTypeProbe getContentTypeProbe();
 

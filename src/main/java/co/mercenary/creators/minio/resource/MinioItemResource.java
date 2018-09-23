@@ -20,14 +20,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
+import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 
-public class MinioItemResource extends AbstractMinioResourceWith<MinioItem>
+@JsonIgnoreType
+public class MinioItemResource extends AbstractMinioResource<MinioItem>
 {
     public MinioItemResource(@NonNull final MinioItem item)
     {
@@ -68,11 +72,11 @@ public class MinioItemResource extends AbstractMinioResourceWith<MinioItem>
     @Override
     public long lastModified() throws IOException
     {
-        final Date date = self().getLastModified();
+        final Optional<Date> date = self().getLastModified();
 
-        if (null != date)
+        if (date.isPresent())
         {
-            return date.getTime();
+            return date.get().getTime();
         }
         throw new IOException(getDescription() + " not found.");
     }
@@ -97,7 +101,7 @@ public class MinioItemResource extends AbstractMinioResourceWith<MinioItem>
     {
         try
         {
-            return self().withOperations().getItemRelative(path).map(self -> new MinioItemResource(self)).orElseThrow(() -> new IOException(path + " not found."));
+            return self().withOperations().getItemRelative(path).map(item -> new MinioItemResource(item)).orElseThrow(() -> new IOException(path + " not found."));
         }
         catch (final MinioOperationException e)
         {

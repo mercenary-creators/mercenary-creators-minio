@@ -21,15 +21,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -42,7 +47,9 @@ import java.util.stream.StreamSupport;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -53,34 +60,43 @@ import io.minio.errors.MinioException;
 public final class MinioUtils
 {
     @NonNull
-    public static final Long                    MINIMUM_EXPIRY_TIME = 1L;
+    public static final Long                      MINIMUM_EXPIRY_TIME = 1L;
 
     @NonNull
-    public static final Long                    MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
+    public static final Long                      MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
 
     @NonNull
-    public static final String                  EMPTY_STRING_VALUED = "";
+    public static final String                    EMPTY_STRING_VALUED = "";
 
     @NonNull
-    public static final String                  SPACE_STRING_VALUED = " ";
+    public static final String                    SPACE_STRING_VALUED = " ";
 
     @NonNull
-    public static final String                  PATH_SEPARATOR_CHAR = "/";
+    public static final String                    PATH_SEPARATOR_CHAR = "/";
 
     @NonNull
-    public static final String                  QUOTE_STRING_VALUED = "\"";
+    public static final String                    QUOTE_STRING_VALUED = "\"";
 
     @NonNull
-    public static final String                  NULLS_STRING_VALUED = "null";
+    public static final String                    NULLS_STRING_VALUED = "null";
 
     @NonNull
-    public static final String                  DEFAULT_REGION_EAST = "us-east-1";
+    public static final String                    DEFAULT_REGION_EAST = "us-east-1";
 
     @NonNull
-    public static final String                  AMAZON_S3_END_POINT = "s3.amazonaws.com";
+    public static final String                    AMAZON_S3_END_POINT = "s3.amazonaws.com";
 
     @NonNull
-    public static final ThreadLocal<DateFormat> DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
+    public static final TimeZone                  MINIO_TIME_ZONE_UTC = TimeZone.getTimeZone("UTC");
+
+    @NonNull
+    public static final PathMatcher               GLOBAL_PATH_MATCHER = new AntPathMatcher(PATH_SEPARATOR_CHAR);
+
+    @NonNull
+    public static final ThreadLocal<DateFormat>   DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
+
+    @NonNull
+    public static final ThreadLocal<NumberFormat> DECIMAL_FORMAT_TO_3 = ThreadLocal.withInitial(() -> new DecimalFormat("#.000"));
 
     private MinioUtils()
     {
@@ -118,16 +134,6 @@ public final class MinioUtils
         if ((null != value) && (ClassUtils.isAssignableValue(type, value)))
         {
             return type.cast(value);
-        }
-        return NULL();
-    }
-
-    @Nullable
-    public static Date COPY(@Nullable final Date date)
-    {
-        if (null != date)
-        {
-            return CAST(date.clone());
         }
         return NULL();
     }
@@ -205,6 +211,12 @@ public final class MinioUtils
         }
     }
 
+    @NonNull
+    public static <T> Optional<T> toMaybeNonNull(@NonNull final Supplier<T> supplier)
+    {
+        return toOptional(toValueNonNull(supplier));
+    }
+
     @Nullable
     public static String getCharSequence(@Nullable final CharSequence value)
     {
@@ -228,11 +240,11 @@ public final class MinioUtils
     @NonNull
     public static TimeZone getDefaultTimeZone()
     {
-        return TimeZone.getTimeZone("UTC");
+        return MINIO_TIME_ZONE_UTC;
     }
 
     @NonNull
-    public static SimpleDateFormat getDefaultDateFormat()
+    public static DateFormat getDefaultDateFormat()
     {
         final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS z");
 
@@ -242,11 +254,11 @@ public final class MinioUtils
     }
 
     @Nullable
-    public static String format(@Nullable final Date date)
+    public static String format(@NonNull final Optional<Date> date)
     {
-        if (null != date)
+        if (date.isPresent())
         {
-            return DEFAULT_DATE_FORMAT.get().format(date);
+            return DEFAULT_DATE_FORMAT.get().format(date.get());
         }
         return NULL();
     }
@@ -332,7 +344,7 @@ public final class MinioUtils
     @NonNull
     public static String getPathRelative(@NonNull final CharSequence base, @NonNull final CharSequence path)
     {
-        return fixPathString(fixPathString(base) + PATH_SEPARATOR_CHAR + requireToString(path));
+        return fixPathString(StringUtils.applyRelativePath(requireToString(base), requireToString(path)));
     }
 
     @NonNull
@@ -445,6 +457,16 @@ public final class MinioUtils
         return new ArrayList<>(source.collect(Collectors.toList()));
     }
 
+    public static <T> List<T> emptyList()
+    {
+        return Collections.emptyList();
+    }
+
+    public static <T> List<T> emptyList(final Class<T> type)
+    {
+        return Collections.emptyList();
+    }
+
     @NonNull
     public static String getYAMLContentType()
     {
@@ -480,23 +502,28 @@ public final class MinioUtils
     {
         final String path = getCharSequence(name);
 
-        if ((path != null) && (path.length() > 4))
+        if (path != null)
         {
-            if (path.endsWith(".json"))
+            final int leng = path.length();
+
+            if (leng > 4)
             {
-                return getJSONContentType();
-            }
-            if (path.endsWith(".java"))
-            {
-                return getJAVAContentType();
-            }
-            if (path.endsWith(".properties"))
-            {
-                return getPROPContentType();
-            }
-            if (path.endsWith(".yml") || path.endsWith(".yaml"))
-            {
-                return getYAMLContentType();
+                if (path.endsWith(".json"))
+                {
+                    return getJSONContentType();
+                }
+                if (path.endsWith(".java"))
+                {
+                    return getJAVAContentType();
+                }
+                if (path.endsWith(".properties"))
+                {
+                    return getPROPContentType();
+                }
+                if (path.endsWith(".yml") || path.endsWith(".yaml"))
+                {
+                    return getYAMLContentType();
+                }
             }
         }
         return NULL();
@@ -528,6 +555,18 @@ public final class MinioUtils
         return builder.toString();
     }
 
+    public static boolean isValidToRead(@NonNull final File file) throws IOException
+    {
+        return isValidToRead(file.toPath());
+    }
+
+    public static boolean isValidToRead(@NonNull final Path path) throws IOException
+    {
+        requireNonNull(path);
+
+        return ((Files.exists(path, LinkOption.NOFOLLOW_LINKS)) && (Files.isReadable(path)) && (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) && (false == Files.isHidden(path))));
+    }
+
     @NonNull
     public static InputStream getInputStream(@NonNull final File file) throws IOException
     {
@@ -537,9 +576,7 @@ public final class MinioUtils
     @NonNull
     public static InputStream getInputStream(@NonNull final Path path) throws IOException
     {
-        requireNonNull(path);
-
-        if ((Files.isReadable(path)) && (path.toFile().isFile()))
+        if (isValidToRead(requireNonNull(path)))
         {
             return Files.newInputStream(path);
         }
@@ -553,9 +590,7 @@ public final class MinioUtils
 
     public static long getSize(@NonNull final Path path) throws IOException
     {
-        requireNonNull(path);
-
-        if ((Files.isReadable(path)) && (path.toFile().isFile()))
+        if (isValidToRead(requireNonNull(path)))
         {
             return Files.size(path);
         }
@@ -614,5 +649,15 @@ public final class MinioUtils
     public static <T> T toJSONObject(@NonNull final Resource value, @NonNull final Class<T> type) throws MinioDataException
     {
         return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
+    }
+
+    public static long getCurrentMills()
+    {
+        return System.currentTimeMillis();
+    }
+
+    public static long getCurrentNanos()
+    {
+        return System.nanoTime();
     }
 }

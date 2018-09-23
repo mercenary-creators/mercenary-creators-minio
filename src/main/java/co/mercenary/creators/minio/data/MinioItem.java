@@ -32,6 +32,7 @@ import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.resource.MinioItemResource;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
+import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
@@ -39,11 +40,11 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 {
     private final boolean             file;
 
-    @Nullable
-    private final Date                time;
-
     @NonNull
     private final String              type;
+
+    @NonNull
+    private final Optional<Date>      time;
 
     @NonNull
     private final MinioItemOperations oper;
@@ -56,7 +57,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
         this.type = MinioUtils.fixContentType(type);
 
-        this.time = MinioUtils.toValueNonNull(time);
+        this.time = MinioUtils.toMaybeNonNull(time);
 
         this.oper = buildWithOperations(this, oper);
     }
@@ -80,10 +81,10 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
         return MinioUtils.fixPathString(super.getName());
     }
 
-    @Nullable
-    public Date getLastModified()
+    @NonNull
+    public Optional<Date> getLastModified()
     {
-        return MinioUtils.COPY(time);
+        return time.map(date -> new Date(date.getTime()));
     }
 
     @NonNull
@@ -145,6 +146,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public String getRegion()
             {
                 return oper.getRegion();
+            }
+
+            @NonNull
+            @Override
+            public WithServerData getServerData()
+            {
+                return oper.getServerData();
             }
 
             @Override
