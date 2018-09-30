@@ -19,13 +19,16 @@ package co.mercenary.creators.minio.test.aws3;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(locations = "/aws3-config.xml")
+@SpringJUnitConfig(MinioTestConfig.class)
+@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties")
 public class HasBucketsTest extends AbstractMinioTests
 {
     @Test

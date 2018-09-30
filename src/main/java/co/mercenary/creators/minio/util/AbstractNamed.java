@@ -18,6 +18,8 @@ package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public abstract class AbstractNamed implements WithName, WithDescription
 {
     @NonNull
@@ -42,6 +44,7 @@ public abstract class AbstractNamed implements WithName, WithDescription
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s).", getName());

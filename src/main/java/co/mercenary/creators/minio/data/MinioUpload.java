@@ -18,6 +18,8 @@ package co.mercenary.creators.minio.data;
 
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractCommon;
@@ -53,6 +55,7 @@ public class MinioUpload extends AbstractCommon
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s), bucket=(%s).", getName(), getBucket());

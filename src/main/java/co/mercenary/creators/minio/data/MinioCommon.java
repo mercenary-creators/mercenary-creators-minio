@@ -19,6 +19,10 @@ package co.mercenary.creators.minio.data;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
 
@@ -49,6 +53,7 @@ public abstract class MinioCommon extends AbstractCommon
     }
 
     @Nullable
+    @JsonInclude(Include.NON_NULL)
     public String getEtag()
     {
         return etag;
@@ -62,6 +67,7 @@ public abstract class MinioCommon extends AbstractCommon
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s).", getName(), getBucket(), getEtag(), getSize());

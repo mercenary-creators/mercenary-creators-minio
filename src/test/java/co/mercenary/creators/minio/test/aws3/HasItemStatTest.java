@@ -14,30 +14,28 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test.tika;
+package co.mercenary.creators.minio.test.aws3;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import co.mercenary.creators.minio.MinioTestConfig;
-import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter;
+import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 @SpringJUnitConfig(MinioTestConfig.class)
-@TestPropertySource(locations = "file:/opt/development/properties/mercenary-creators-minio/minio-test.properties", properties = "minio.type-probe=tika")
-public class HasBeanTestTika extends AbstractMinioTests
+@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties")
+public class HasItemStatTest extends AbstractMinioTests
 {
     @Test
     public void test() throws MinioOperationException
     {
-        final String name = MinioContentTypeProbeTikaAdapter.class.getName();
+        final MinioObjectStatus stat = getMinioTemplate().getObjectStatus("www.mercenary-creators.io", "script.js");
 
-        final String prop = getMinioTemplate().getContentTypeProbe().getClass().getName();
+        info(() -> toJSONString(stat));
 
-        info(() -> prop);
-
-        assertEquals(name, prop, () -> name);
+        assertEquals(stat.getContentType(), "text/javascript", () -> "not text/javascript");
     }
 }

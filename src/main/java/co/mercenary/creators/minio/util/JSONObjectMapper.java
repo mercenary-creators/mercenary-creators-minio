@@ -80,7 +80,7 @@ public class JSONObjectMapper extends ObjectMapper
     @NonNull
     public String toJSONString(@NonNull final Object value) throws MinioDataException
     {
-        MinioUtils.testAllNonNull(value);
+        MinioUtils.isEachNonNull(value);
 
         try
         {
@@ -95,7 +95,7 @@ public class JSONObjectMapper extends ObjectMapper
     @NonNull
     public <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
     {
-        MinioUtils.testAllNonNull(value, type);
+        MinioUtils.isEachNonNull(value, type);
 
         try
         {
@@ -110,7 +110,7 @@ public class JSONObjectMapper extends ObjectMapper
     @NonNull
     public <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioDataException
     {
-        MinioUtils.testAllNonNull(value, type);
+        MinioUtils.isEachNonNull(value, type);
 
         try
         {
@@ -125,7 +125,7 @@ public class JSONObjectMapper extends ObjectMapper
     @NonNull
     public <T> T toJSONObject(@NonNull final Resource value, @NonNull final Class<T> type) throws MinioDataException
     {
-        MinioUtils.testAllNonNull(value, type);
+        MinioUtils.isEachNonNull(value, type);
 
         try (final InputStream stream = value.getInputStream())
         {

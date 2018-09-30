@@ -23,26 +23,36 @@ import java.util.function.Supplier;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MinioObjectStatus extends MinioCommon
 {
     @NonNull
-    private final String         type;
+    private final String            type;
 
     @NonNull
-    private final Optional<Date> time;
+    private final Optional<Date>    time;
 
-    public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time)
+    @NonNull
+    private final MinioUserMetaData meta;
+
+    public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final MinioUserMetaData meta)
     {
         super(name, buck, etag, size);
 
+        this.type = MinioUtils.fixContentType(type);
+
         this.time = MinioUtils.toMaybeNonNull(time);
 
-        this.type = MinioUtils.fixContentType(type);
+        this.meta = MinioUtils.requireNonNull(meta);
     }
 
     @NonNull
+    @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getCreationTime()
     {
         return time.map(date -> new Date(date.getTime()));
@@ -55,7 +65,15 @@ public class MinioObjectStatus extends MinioCommon
     }
 
     @NonNull
+    @JsonInclude(Include.NON_EMPTY)
+    public MinioUserMetaData getUserMetaData()
+    {
+        return new MinioUserMetaData(meta);
+    }
+
+    @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getName(), getBucket(), getEtag(), getSize(), getContentType(), MinioUtils.format(time));

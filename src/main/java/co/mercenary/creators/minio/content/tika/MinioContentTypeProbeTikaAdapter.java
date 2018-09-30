@@ -125,6 +125,8 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, 
     @Override
     public void afterPropertiesSet() throws Exception
     {
+        System.err.println(getTika().getDetector().getClass().getSimpleName());
+
         // no implementation.
     }
 }

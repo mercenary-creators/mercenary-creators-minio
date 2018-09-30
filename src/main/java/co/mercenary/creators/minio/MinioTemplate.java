@@ -36,7 +36,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
@@ -47,6 +46,7 @@ import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioServerData;
 import co.mercenary.creators.minio.data.MinioUpload;
+import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractNamed;
@@ -78,7 +78,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     private MinioContentTypeProbe              type_probe;
 
     @NonNull
-    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>(MinioUtils.NULL());
+    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>();
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
@@ -91,32 +91,6 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         this.secret_key = MinioUtils.getCharSequence(secret);
 
         this.aws_region = MinioUtils.fixRegionString(region, MinioUtils.DEFAULT_REGION_EAST);
-    }
-
-    @NonNull
-    protected String getServerUrl()
-    {
-        return server_url;
-    }
-
-    @Nullable
-    @JsonIgnore
-    protected String getAccessKey()
-    {
-        return access_key;
-    }
-
-    @Nullable
-    @JsonIgnore
-    protected String getSecretKey()
-    {
-        return secret_key;
-    }
-
-    @Nullable
-    protected String getAwsRegion()
-    {
-        return aws_region;
     }
 
     @NonNull
@@ -136,7 +110,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
                         try
                         {
-                            return new MinioClient(getServerUrl(), getAccessKey(), getSecretKey(), MinioUtils.fixRegionString(getAwsRegion(), MinioUtils.isAmazonEndpoint(getServerUrl())));
+                            return new MinioClient(server_url, access_key, secret_key, MinioUtils.fixRegionString(aws_region, MinioUtils.isAmazonEndpoint(server_url)));
                         }
                         catch (final MinioException e)
                         {
@@ -171,14 +145,14 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String getServer()
     {
-        return getServerUrl();
+        return server_url;
     }
 
     @NonNull
     @Override
     public String getRegion()
     {
-        return MinioUtils.fixRegionString(getAwsRegion(), MinioUtils.DEFAULT_REGION_EAST);
+        return MinioUtils.fixRegionString(aws_region, MinioUtils.DEFAULT_REGION_EAST);
     }
 
     @NonNull
@@ -322,7 +296,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public Stream<MinioBucket> getBucketsNamed(@NonNull final Predicate<String> filter) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(filter);
+        MinioUtils.isEachNonNull(filter);
 
         try
         {
@@ -382,7 +356,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     {
         try
         {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -396,9 +370,9 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     {
         try
         {
-            final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
 
-            return new MinioObjectStatus(name, bucket, status.length(), getContentTypeProbe().getContentType(status.contentType(), name), status.etag(), () -> status.createdTime());
+            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), MinioUserMetaData.from(stat.httpHeaders()).normalize());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -412,9 +386,9 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     {
         try
         {
-            final ObjectStat status = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
 
-            return new MinioObjectStatus(name, bucket, status.length(), getContentTypeProbe().getContentType(status.contentType(), name), status.etag(), () -> status.createdTime());
+            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), MinioUserMetaData.from(stat.httpHeaders()).normalize());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -425,7 +399,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, input);
+        MinioUtils.isEachNonNull(bucket, name, input);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
@@ -442,7 +416,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, input);
+        MinioUtils.isEachNonNull(bucket, name, input);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
@@ -459,7 +433,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final CharSequence type) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, input);
+        MinioUtils.isEachNonNull(bucket, name, input);
 
         try (final ByteArrayInputStream baos = new ByteArrayInputStream(input))
         {
@@ -549,7 +523,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(method, bucket, name);
+        MinioUtils.isEachNonNull(method, bucket, name);
 
         try
         {
@@ -573,7 +547,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Long seconds) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(method, bucket, name, seconds);
+        MinioUtils.isEachNonNull(method, bucket, name, seconds);
 
         try
         {
@@ -597,7 +571,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Duration seconds) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(method, bucket, name, seconds);
+        MinioUtils.isEachNonNull(method, bucket, name, seconds);
 
         try
         {
@@ -621,7 +595,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public String getSignedObjectUrl(@NonNull final Method method, @NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Long time, @NonNull final TimeUnit unit) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(method, bucket, name, time, unit);
+        MinioUtils.isEachNonNull(method, bucket, name, time, unit);
 
         try
         {
@@ -644,7 +618,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, target);
+        MinioUtils.isEachNonNull(bucket, name, target);
 
         if (isObject(bucket, name))
         {
@@ -671,7 +645,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final CharSequence object, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, target);
+        MinioUtils.isEachNonNull(bucket, name, target);
 
         if (isObject(bucket, name))
         {
@@ -698,7 +672,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @NonNull final ServerSideEncryption keys) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(bucket, name, input, keys);
+        MinioUtils.isEachNonNull(bucket, name, input, keys);
 
         final MinioBucket create = createOrGetBucket(bucket);
 
@@ -722,7 +696,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     @Override
     public void setBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Object policy) throws MinioOperationException, MinioDataException
     {
-        MinioUtils.testAllNonNull(bucket, policy);
+        MinioUtils.isEachNonNull(bucket, policy);
 
         try
         {
@@ -773,7 +747,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     }
 
     @Override
-    public boolean removeUpload(final CharSequence bucket, final CharSequence name) throws MinioOperationException
+    public boolean removeUpload(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
         try
         {
@@ -782,6 +756,20 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
             return true;
         }
         catch (final MinioException | NoSuchAlgorithmException | IOException | XmlPullParserException | InvalidKeyException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @NonNull
+    @Override
+    public MinioUserMetaData getUserMetaData(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
+    {
+        try
+        {
+            return MinioUserMetaData.from(getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name)).httpHeaders()).normalize();
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }

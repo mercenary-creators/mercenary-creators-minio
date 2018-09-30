@@ -59,6 +59,9 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
     <T> T getBucketPolicy(@NonNull Class<T> type) throws MinioOperationException, MinioDataException;
 
     @NonNull
+    MinioUserMetaData getUserMetaData(@NonNull CharSequence name) throws MinioOperationException;
+
+    @NonNull
     MinioObjectStatus getObjectStatus(@NonNull CharSequence name) throws MinioOperationException;
 
     @NonNull

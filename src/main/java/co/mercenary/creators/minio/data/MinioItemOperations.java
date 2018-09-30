@@ -50,6 +50,9 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     Optional<MinioItem> getItemRelative(@NonNull CharSequence path) throws MinioOperationException;
 
     @NonNull
+    MinioUserMetaData getUserMetaData() throws MinioOperationException;
+
+    @NonNull
     MinioObjectStatus getObjectStatus() throws MinioOperationException;
 
     @NonNull

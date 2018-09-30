@@ -18,6 +18,8 @@ package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import co.mercenary.creators.minio.errors.MinioDataException;
 
 public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
@@ -29,6 +31,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s).", getName());
@@ -40,7 +43,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     {
         try
         {
-            return toJSONString();
+            return toJSONString(false);
         }
         catch (final MinioDataException e)
         {

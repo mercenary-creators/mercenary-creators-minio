@@ -40,6 +40,7 @@ import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUpload;
+import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
@@ -67,7 +68,7 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
     @NonNull
     default Stream<MinioBucket> getBucketsNamed(@NonNull final Pattern regex) throws MinioOperationException
     {
-        MinioUtils.testAllNonNull(regex);
+        MinioUtils.isEachNonNull(regex);
 
         return getBucketsNamed(named -> regex.matcher(named).matches());
     }
@@ -116,6 +117,9 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
 
     @NonNull
     MinioBucket createOrGetBucket(@NonNull CharSequence bucket) throws MinioOperationException;
+
+    @NonNull
+    MinioUserMetaData getUserMetaData(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
     @NonNull
     MinioObjectStatus getObjectStatus(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;

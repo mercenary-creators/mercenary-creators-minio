@@ -34,7 +34,7 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
 
     public MinioContentTypeProbeFileTypeMapAdapter()
     {
-        this(new MinioConfigurableMimeFileTypeMap().toFileTypeMap());
+        this(new MinioConfigurableMimeFileTypeMap());
     }
 
     public MinioContentTypeProbeFileTypeMapAdapter(@NonNull final FileTypeMap fmap)

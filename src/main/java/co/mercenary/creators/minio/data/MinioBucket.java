@@ -30,6 +30,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
@@ -59,12 +63,14 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
 
     @NonNull
     @Override
+    @JsonIgnore
     public MinioBucketOperations withOperations()
     {
         return oper;
     }
 
     @NonNull
+    @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getCreationTime()
     {
         return time.map(date -> new Date(date.getTime()));
@@ -72,6 +78,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s), creationTime=(%s).", getName(), MinioUtils.format(time));
@@ -100,7 +107,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
     @NonNull
     protected static MinioBucketOperations buildWithOperations(@NonNull final MinioBucket self, @NonNull final MinioOperations oper)
     {
-        MinioUtils.testAllNonNull(self, oper);
+        MinioUtils.isEachNonNull(self, oper);
 
         return new MinioBucketOperations()
         {
@@ -162,6 +169,13 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             public void setBucketPolicy(@NonNull final Object policy) throws MinioOperationException, MinioDataException
             {
                 oper.setBucketPolicy(self().getName(), MinioUtils.requireNonNull(policy));
+            }
+
+            @NonNull
+            @Override
+            public MinioUserMetaData getUserMetaData(@NonNull final CharSequence name) throws MinioOperationException
+            {
+                return oper.getUserMetaData(self().getName(), MinioUtils.requireNonNull(name));
             }
 
             @NonNull

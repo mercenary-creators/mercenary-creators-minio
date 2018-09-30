@@ -27,6 +27,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.resource.MinioItemResource;
@@ -64,6 +68,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
     @NonNull
     @Override
+    @JsonIgnore
     public MinioItemOperations withOperations()
     {
         return oper;
@@ -82,9 +87,24 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     }
 
     @NonNull
+    @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getLastModified()
     {
         return time.map(date -> new Date(date.getTime()));
+    }
+
+    @NonNull
+    @JsonInclude(Include.NON_EMPTY)
+    public MinioUserMetaData getUserMetaData()
+    {
+        try
+        {
+            return withOperations().getUserMetaData();
+        }
+        catch (final MinioOperationException e)
+        {
+            return new MinioUserMetaData();
+        }
     }
 
     @NonNull
@@ -95,6 +115,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toDescription()
     {
         return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), file=(%s), contentType=(%s), lastModified=(%s).", getName(), getBucket(), getEtag(), getSize(), isFile(), getContentType(), MinioUtils.format(time));
@@ -123,7 +144,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     @NonNull
     protected static MinioItemOperations buildWithOperations(@NonNull final MinioItem self, @NonNull final MinioOperations oper)
     {
-        MinioUtils.testAllNonNull(self, oper);
+        MinioUtils.isEachNonNull(self, oper);
 
         return new MinioItemOperations()
         {
@@ -166,6 +187,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public Resource getItemResource() throws MinioOperationException
             {
                 return new MinioItemResource(self());
+            }
+
+            @NonNull
+            @Override
+            public MinioUserMetaData getUserMetaData() throws MinioOperationException
+            {
+                return oper.getUserMetaData(self().getBucket(), self().getName());
             }
 
             @NonNull

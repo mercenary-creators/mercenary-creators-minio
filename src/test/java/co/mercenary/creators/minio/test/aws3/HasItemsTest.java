@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test.tika;
+package co.mercenary.creators.minio.test.aws3;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import co.mercenary.creators.minio.MinioTestConfig;
-import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter;
+import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 @SpringJUnitConfig(MinioTestConfig.class)
-@TestPropertySource(locations = "file:/opt/development/properties/mercenary-creators-minio/minio-test.properties", properties = "minio.type-probe=tika")
-public class HasBeanTestTika extends AbstractMinioTests
+@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties")
+public class HasItemsTest extends AbstractMinioTests
 {
     @Test
     public void test() throws MinioOperationException
     {
-        final String name = MinioContentTypeProbeTikaAdapter.class.getName();
+        final List<MinioItem> list = toList(getMinioTemplate().getItems("www.mercenary-creators.io", false));
 
-        final String prop = getMinioTemplate().getContentTypeProbe().getClass().getName();
+        list.forEach(item -> info(() -> toJSONString(item)));
 
-        info(() -> prop);
-
-        assertEquals(name, prop, () -> name);
+        assertFalse(list.isEmpty(), isEmptyMessage("items"));
     }
 }

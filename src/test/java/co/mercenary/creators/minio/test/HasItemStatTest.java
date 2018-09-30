@@ -17,13 +17,16 @@
 package co.mercenary.creators.minio.test;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(locations = "/test-config.xml")
+@SpringJUnitConfig(MinioTestConfig.class)
+@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")
 public class HasItemStatTest extends AbstractMinioTests
 {
     @Test

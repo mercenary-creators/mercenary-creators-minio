@@ -31,9 +31,12 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -81,6 +84,9 @@ public final class MinioUtils
 
     @NonNull
     public static final String                    DEFAULT_REGION_EAST = "us-east-1";
+
+    @NonNull
+    public static final String                    X_AMAZON_META_START = "x-amz-meta-";
 
     @NonNull
     public static final String                    AMAZON_S3_END_POINT = "s3.amazonaws.com";
@@ -159,7 +165,7 @@ public final class MinioUtils
         return (null != value) ? value : otherwise.get();
     }
 
-    public static void testAllNonNull(@NonNull final Object... values)
+    public static void isEachNonNull(@NonNull final Object... values)
     {
         for (final Object value : values)
         {
@@ -400,9 +406,26 @@ public final class MinioUtils
         return string;
     }
 
-    public static boolean isAmazonEndpoint(@NonNull final String endpoint)
+    public static boolean isAmazonEndpoint(@NonNull final String value)
     {
-        return endpoint.toLowerCase().indexOf(AMAZON_S3_END_POINT) >= 0;
+        return value.toLowerCase().indexOf(AMAZON_S3_END_POINT) >= 0;
+    }
+
+    public static boolean isAmazonMetaPrefix(@NonNull final String value)
+    {
+        return ((value != null) && (value.regionMatches(true, 0, X_AMAZON_META_START, 0, X_AMAZON_META_START.length())) && (false == value.equalsIgnoreCase(X_AMAZON_META_START)));
+    }
+
+    @NonNull
+    public static String noAmazonMetaPrefix(@NonNull final String value)
+    {
+        return value.substring(X_AMAZON_META_START.length());
+    }
+
+    @NonNull
+    public static String toAmazonMetaPrefix(@NonNull final String value)
+    {
+        return X_AMAZON_META_START + value;
     }
 
     @Nullable
@@ -437,6 +460,16 @@ public final class MinioUtils
         }
     }
 
+    @Nullable
+    public static <T> T toZero(final List<T> source)
+    {
+        if ((null == source) || (source.isEmpty()))
+        {
+            return NULL();
+        }
+        return source.get(0);
+    }
+
     @NonNull
     public static <T> Stream<T> getResultAsStream(@NonNull final Iterable<Result<T>> iterable)
     {
@@ -456,14 +489,83 @@ public final class MinioUtils
         return new ArrayList<>(source.collect(Collectors.toList()));
     }
 
+    @NonNull
     public static <T> List<T> emptyList()
     {
         return Collections.emptyList();
     }
 
+    @NonNull
     public static <T> List<T> emptyList(final Class<T> type)
     {
         return Collections.emptyList();
+    }
+
+    @NonNull
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@Nullable final Map<K, V> map)
+    {
+        if ((null == map) || (map.isEmpty()))
+        {
+            return new LinkedHashMap<>();
+        }
+        return new LinkedHashMap<>(map);
+    }
+
+    @NonNull
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@Nullable final Map<K, V> map, final boolean fix)
+    {
+        final LinkedHashMap<K, V> tmp = new LinkedHashMap<>();
+
+        if ((false == fix) || (null == map) || (map.isEmpty()))
+        {
+            return tmp;
+        }
+        map.forEach((k, v) -> {
+
+            if ((null != k) && (null != v))
+            {
+                tmp.put(k, v);
+            }
+        });
+        return tmp;
+    }
+
+    @NonNull
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@NonNull final K key, @Nullable final V val)
+    {
+        final LinkedHashMap<K, V> map = new LinkedHashMap<>();
+
+        map.put(requireNonNull(key), val);
+
+        return map;
+    }
+
+    @NonNull
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@NonNull final K key, @Nullable final V val, final boolean fix)
+    {
+        final LinkedHashMap<K, V> map = new LinkedHashMap<>();
+
+        if (false == fix)
+        {
+            map.put(requireNonNull(key), val);
+        }
+        else if ((null != key) && (null != val))
+        {
+            map.put(key, val);
+        }
+        return map;
+    }
+
+    @NonNull
+    public static <T> Collection<T> toKeys(@NonNull final Map<T, ?> map)
+    {
+        return Collections.unmodifiableCollection(map.keySet());
+    }
+
+    @NonNull
+    public static <T> Collection<T> toVals(@NonNull final Map<?, T> map)
+    {
+        return Collections.unmodifiableCollection(map.values());
     }
 
     @NonNull
@@ -629,7 +731,7 @@ public final class MinioUtils
     @NonNull
     public static String toJSONString(@NonNull final Object value, final boolean pretty) throws MinioDataException
     {
-        return new JSONObjectMapper(pretty).copy().toJSONString(requireNonNull(value));
+        return new JSONObjectMapper(pretty).toJSONString(requireNonNull(value));
     }
 
     @NonNull

@@ -21,11 +21,14 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.springframework.lang.NonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.errors.InvalidArgumentException;
 
+@JsonIgnoreType
 public class MinioCopyConditions
 {
     @NonNull
