@@ -413,7 +413,7 @@ public final class MinioUtils
 
     public static boolean isAmazonMetaPrefix(@NonNull final String value)
     {
-        return ((value != null) && (value.regionMatches(true, 0, X_AMAZON_META_START, 0, X_AMAZON_META_START.length())) && (false == value.equalsIgnoreCase(X_AMAZON_META_START)));
+        return ((value.regionMatches(true, 0, X_AMAZON_META_START, 0, X_AMAZON_META_START.length())) && (false == value.equalsIgnoreCase(X_AMAZON_META_START)));
     }
 
     @NonNull
@@ -531,7 +531,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@NonNull final K key, @Nullable final V val)
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(final K key, @Nullable final V val)
     {
         final LinkedHashMap<K, V> map = new LinkedHashMap<>();
 
@@ -541,7 +541,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@NonNull final K key, @Nullable final V val, final boolean fix)
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(final K key, @Nullable final V val, final boolean fix)
     {
         final LinkedHashMap<K, V> map = new LinkedHashMap<>();
 
