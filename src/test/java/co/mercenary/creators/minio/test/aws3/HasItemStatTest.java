@@ -18,21 +18,17 @@ package co.mercenary.creators.minio.test.aws3;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
-import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(MinioTestConfig.class)
 @TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties")
 public class HasItemStatTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws MinioOperationException
+    public void test() throws Exception
     {
-        final MinioObjectStatus stat = getMinioTemplate().getObjectStatus("www.mercenary-creators.io", "script.js");
+        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("www.mercenary-creators.io", "script.js");
 
         info(() -> toJSONString(stat));
 

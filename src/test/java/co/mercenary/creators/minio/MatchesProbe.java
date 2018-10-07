@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test;
+package co.mercenary.creators.minio;
 
-import java.util.List;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import org.junit.jupiter.api.Test;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import co.mercenary.creators.minio.data.MinioBucket;
-import co.mercenary.creators.minio.util.AbstractMinioTests;
+import org.springframework.context.annotation.Conditional;
 
-public class HasBucketsNamedPredicate extends AbstractMinioTests
+@Documented
+@Target(METHOD)
+@Retention(RUNTIME)
+@Conditional(MatchesProbeCondition.class)
+public @interface MatchesProbe
 {
-    @Test
-    public void test() throws Exception
-    {
-        final List<String> look = toList("root", "content");
+    String value() default "file";
 
-        final List<MinioBucket> list = toList(getMinioOperations().getBucketsNamed(value -> look.contains(value)));
-
-        list.forEach(value -> info(() -> toJSONString(value)));
-
-        assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
-    }
+    boolean matchIfMissing() default false;
 }

@@ -25,11 +25,16 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.MinioTemplate;
+import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.errors.MinioDataException;
 
+@SpringJUnitConfig(MinioTestConfig.class)
+@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")
 public abstract class AbstractMinioTests
 {
     @NonNull
@@ -47,7 +52,7 @@ public abstract class AbstractMinioTests
 
     protected MinioOperations getMinioOperations()
     {
-        return minioTemplate;
+        return getMinioTemplate();
     }
 
     @NonNull

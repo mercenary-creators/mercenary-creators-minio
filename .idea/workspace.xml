@@ -2,11 +2,33 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b265e2cc-2303-4935-b4cc-9a1c148a9f4c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.classpath" beforeDir="false" afterPath="$PROJECT_DIR$/.classpath" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.project" beforeDir="false" afterPath="$PROJECT_DIR$/.project" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/MinioOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/MinioOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/MinioTemplate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/MinioTemplate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioBucket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioBucket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioBucketOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioBucketOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioItem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioItemOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioItemOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioObjectStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioObjectStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioServerData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioUserMetaData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/data/MinioUserMetaData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/resource/MinioResourceUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/resource/MinioResourceUtils.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/util/JSONObjectMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/util/JSONObjectMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/util/MinioUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/co/mercenary/creators/minio/util/MinioUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/MinioContentTypeProbeTestConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/MinioContentTypeProbeTestConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsNamed.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsNamed.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsNamedPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsNamedPredicate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasBucketsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasItemStatTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasItemStatTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasItemsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/HasItemsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasBucketsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasBucketsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasItemStatTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasItemStatTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasItemsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/aws3/HasItemsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/play/PlayTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/play/HasBucketsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasBeanTestTika.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasBeanTestTika.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasItemStatTestTika.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasItemStatTestTika.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasItemsTestTika.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/test/tika/HasItemsTestTika.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/util/AbstractMinioTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/util/AbstractMinioTests.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/bin/default/" />
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -32,11 +54,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/build.gradle">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="23">
               <caret line="92" column="13" selection-start-line="92" selection-start-column="13" selection-end-line="92" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/MatchesProbeCondition.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="558">
+              <caret line="34" column="96" lean-forward="true" selection-start-line="34" selection-start-column="96" selection-end-line="34" selection-end-column="96" />
             </state>
           </provider>
         </entry>
@@ -67,6 +98,7 @@
         <option value="$PROJECT_DIR$/src/main/kotlin/co/mercenary/creators/minio/KotlinCommon.kt" />
         <option value="$PROJECT_DIR$/src/test/kotlin/co/mercenary/creators/minio/test/util/AbstractKotlinMinioTests.kt" />
         <option value="$PROJECT_DIR$/build.gradle" />
+        <option value="$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/MatchesProbeCondition.java" />
       </list>
     </option>
   </component>
@@ -88,17 +120,6 @@
             <path>
               <item name="mercenary-creators-minio" type="b2602c69:ProjectViewProjectNode" />
               <item name="mercenary-creators-minio" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="mercenary-creators-minio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mercenary-creators-minio" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name=".idea" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mercenary-creators-minio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mercenary-creators-minio" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name=".idea" type="462c0819:PsiDirectoryNode" />
-              <item name="libraries" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mercenary-creators-minio" type="b2602c69:ProjectViewProjectNode" />
@@ -256,6 +277,7 @@
       <workItem from="1537428930246" duration="463000" />
       <workItem from="1537430376318" duration="3854000" />
       <workItem from="1538177611305" duration="11000" />
+      <workItem from="1538891501032" duration="68000" />
     </task>
     <servers />
   </component>
@@ -292,10 +314,11 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="15351000" />
+    <option name="totallyTimeSpent" value="15419000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="187" y="173" width="2254" height="1194" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24977376" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -320,6 +343,7 @@
       <window_info anchor="bottom" id="Version Control" order="13" />
       <window_info anchor="bottom" id="Messages" order="14" weight="0.32993513" />
       <window_info anchor="bottom" id="Reviews" order="15" />
+      <window_info anchor="right" id="Mongo Explorer" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -354,20 +378,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.2.70/645811a161689d7b2d4362eaee1e30abf22a27d7/kotlin-stdlib-1.2.70-sources.jar!/kotlin/Collections.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="232">
-          <caret line="49" column="41" selection-start-line="49" selection-start-column="37" selection-end-line="49" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.0.9.RELEASE/e1e6cff03e69e4db489d723c9a1c91afe8e0c637/spring-test-5.0.9.RELEASE-sources.jar!/org/springframework/test/context/junit/jupiter/SpringJUnitConfig.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="244">
-          <caret line="49" column="25" lean-forward="true" selection-start-line="49" selection-start-column="25" selection-end-line="49" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.2.70/645811a161689d7b2d4362eaee1e30abf22a27d7/kotlin-stdlib-1.2.70-sources.jar!/kotlin/Collections.kt" />
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-test/5.0.9.RELEASE/e1e6cff03e69e4db489d723c9a1c91afe8e0c637/spring-test-5.0.9.RELEASE-sources.jar!/org/springframework/test/context/junit/jupiter/SpringJUnitConfig.java" />
     <entry file="file://$PROJECT_DIR$/bin/main/co/mercenary/creators/minio/MinioOperationsKt.kt" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.3.1/b03f607c0822a283c972e37eaeacb00dc3a3c2e7/junit-jupiter-api-5.3.1-sources.jar!/org/junit/jupiter/api/Assertions.java">
       <provider selected="true" editor-type-id="text-editor">
@@ -442,6 +454,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="23">
           <caret line="92" column="13" selection-start-line="92" selection-start-column="13" selection-end-line="92" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/co/mercenary/creators/minio/MatchesProbeCondition.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="558">
+          <caret line="34" column="96" lean-forward="true" selection-start-line="34" selection-start-column="96" selection-end-line="34" selection-end-column="96" />
         </state>
       </provider>
     </entry>

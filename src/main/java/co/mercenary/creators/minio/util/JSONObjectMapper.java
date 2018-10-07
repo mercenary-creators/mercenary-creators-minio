@@ -26,7 +26,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
@@ -46,16 +46,16 @@ import co.mercenary.creators.minio.errors.MinioDataException;
 
 public class JSONObjectMapper extends ObjectMapper
 {
-    private static final long              serialVersionUID = 7742077499646363644L;
+    private static final long          serialVersionUID = 7742077499646363644L;
 
     @NonNull
-    private static final PrettyPrinter     TO_PRETTY_PRINTS = toDefaultPrettyPrinter(MinioUtils.repeat(MinioUtils.SPACE_STRING_VALUED, 4));
+    private static final PrettyPrinter TO_PRETTY_PRINTS = toDefaultPrettyPrints(MinioUtils.repeat(MinioUtils.SPACE_STRING_VALUED, 4));
 
     @NonNull
-    private static final ArrayList<Module> EXTENDED_MODULES = MinioUtils.toList(new JodaModule(), new Jdk8Module(), new JavaTimeModule());
+    private static final List<Module>  EXTENDED_MODULES = MinioUtils.toList(new JodaModule(), new Jdk8Module(), new JavaTimeModule());
 
     @NonNull
-    private static PrettyPrinter toDefaultPrettyPrinter(final String indent)
+    private static PrettyPrinter toDefaultPrettyPrints(final String indent)
     {
         return new DefaultPrettyPrinter().withArrayIndenter(new DefaultIndenter().withIndent(indent)).withObjectIndenter(new DefaultIndenter().withIndent(indent));
     }

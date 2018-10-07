@@ -41,9 +41,6 @@ import io.minio.http.Method;
 @JsonIgnoreType
 public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServerData
 {
-    @NonNull
-    WithServerData getServerData();
-
     boolean deleteBucket() throws MinioOperationException;
 
     boolean isObject(@NonNull CharSequence name) throws MinioOperationException;

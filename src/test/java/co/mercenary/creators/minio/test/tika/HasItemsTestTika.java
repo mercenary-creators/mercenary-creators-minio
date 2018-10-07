@@ -20,21 +20,17 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioItem;
-import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(MinioTestConfig.class)
-@TestPropertySource(locations = "file:/opt/development/properties/mercenary-creators-minio/minio-test.properties", properties = "minio.type-probe=tika")
+@TestPropertySource(properties = "minio.type-probe=tika")
 public class HasItemsTestTika extends AbstractMinioTests
 {
     @Test
-    public void test() throws MinioOperationException
+    public void test() throws Exception
     {
-        final List<MinioItem> list = toList(getMinioTemplate().getItems("root"));
+        final List<MinioItem> list = toList(getMinioOperations().getItems("root"));
 
         list.forEach(item -> info(() -> toJSONString(item)));
 

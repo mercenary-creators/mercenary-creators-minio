@@ -17,6 +17,7 @@
 package co.mercenary.creators.minio.data;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -28,19 +29,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithUserMetaData;
 
-public class MinioObjectStatus extends MinioCommon
+public class MinioObjectStatus extends MinioCommon implements WithUserMetaData
 {
     @NonNull
-    private final String            type;
+    private final String              type;
 
     @NonNull
-    private final Optional<Date>    time;
+    private final Optional<Date>      time;
 
     @NonNull
-    private final MinioUserMetaData meta;
+    private final Map<String, String> meta;
 
-    public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final MinioUserMetaData meta)
+    public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final Map<String, String> meta)
     {
         super(name, buck, etag, size);
 
@@ -52,6 +54,12 @@ public class MinioObjectStatus extends MinioCommon
     }
 
     @NonNull
+    public String getContentType()
+    {
+        return type;
+    }
+
+    @NonNull
     @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getCreationTime()
     {
@@ -59,16 +67,11 @@ public class MinioObjectStatus extends MinioCommon
     }
 
     @NonNull
-    public String getContentType()
-    {
-        return type;
-    }
-
-    @NonNull
+    @Override
     @JsonInclude(Include.NON_EMPTY)
-    public MinioUserMetaData getUserMetaData()
+    public Map<String, String> getUserMetaData()
     {
-        return new MinioUserMetaData(meta);
+        return MinioUtils.toUnmodifiable(meta);
     }
 
     @NonNull

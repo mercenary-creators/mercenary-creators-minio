@@ -18,6 +18,7 @@ package co.mercenary.creators.minio;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
@@ -45,17 +46,13 @@ import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithDescription;
-import co.mercenary.creators.minio.util.WithName;
 import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
 @JsonIgnoreType
-public interface MinioOperations extends WithName, WithDescription, WithServerData
+public interface MinioOperations extends WithDescription, WithServerData
 {
-    @NonNull
-    WithServerData getServerData();
-
     @NonNull
     MinioContentTypeProbe getContentTypeProbe();
 
@@ -286,4 +283,8 @@ public interface MinioOperations extends WithName, WithDescription, WithServerDa
     Stream<MinioUpload> getIncompleteUploads(@NonNull CharSequence bucket, @Nullable CharSequence prefix, boolean recursive) throws MinioOperationException;
 
     boolean removeUpload(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
+
+    void offTraceStream();
+
+    void setTraceStream(@NonNull OutputStream stream);
 }

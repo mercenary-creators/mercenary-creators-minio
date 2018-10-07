@@ -18,23 +18,19 @@ package co.mercenary.creators.minio.test.tika;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
-import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(MinioTestConfig.class)
-@TestPropertySource(locations = "file:/opt/development/properties/mercenary-creators-minio/minio-test.properties", properties = "minio.type-probe=tika")
+@TestPropertySource(properties = "minio.type-probe=tika")
 public class HasItemStatTestTika extends AbstractMinioTests
 {
     @Test
-    public void test() throws MinioOperationException
+    public void test() throws Exception
     {
-        info(() -> getMinioTemplate().getContentTypeProbe().getClass().getName());
+        info(() -> getMinioOperations().getContentTypeProbe().getClass().getName());
 
-        final MinioObjectStatus stat = getMinioTemplate().getObjectStatus("root", "MinioProperties.java");
+        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "MinioProperties.java");
 
         info(() -> toJSONString(stat));
 

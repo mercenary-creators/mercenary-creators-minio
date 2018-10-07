@@ -19,22 +19,20 @@ package co.mercenary.creators.minio.test;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioBucket;
-import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(MinioTestConfig.class)
-@TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")
 public class HasBucketsNamed extends AbstractMinioTests
 {
     @Test
-    public void test() throws MinioOperationException
+    public void test() throws Exception
     {
-        final List<MinioBucket> list = toList(getMinioTemplate().getBucketsNamed(value -> value.equals("root")));
+        final String prop = getMinioOperations().getContentTypeProbe().getClass().getName();
+
+        info(() -> prop);
+
+        final List<MinioBucket> list = toList(getMinioOperations().getBucketsNamed(value -> value.equals("root")));
 
         list.forEach(value -> info(() -> toJSONString(value)));
 

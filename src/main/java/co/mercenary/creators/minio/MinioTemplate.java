@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -29,7 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
@@ -44,14 +44,12 @@ import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.data.MinioCopyConditions;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
-import co.mercenary.creators.minio.data.MinioServerData;
 import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.util.AbstractNamed;
+import co.mercenary.creators.minio.errors.MinioRuntimeException;
 import co.mercenary.creators.minio.util.MinioUtils;
-import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.ServerSideEncryption;
@@ -59,7 +57,7 @@ import io.minio.errors.MinioException;
 import io.minio.http.Method;
 
 @JsonIgnoreType
-public class MinioTemplate extends AbstractNamed implements MinioOperations, BeanNameAware
+public class MinioTemplate implements MinioOperations
 {
     @NonNull
     private final String                       server_url;
@@ -82,8 +80,6 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
-        super(MinioUtils.UUID());
-
         this.server_url = MinioUtils.requireToString(server);
 
         this.access_key = MinioUtils.getCharSequence(access);
@@ -135,12 +131,6 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         return MinioUtils.requireNonNullOrElse(type_probe, MinioContentTypeProbeFileTypeMapAdapter::instance);
     }
 
-    @Override
-    public void setBeanName(final String name)
-    {
-        setName(MinioUtils.toStringOrElse(name, getName()));
-    }
-
     @NonNull
     @Override
     public String getServer()
@@ -157,16 +147,9 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
 
     @NonNull
     @Override
-    public WithServerData getServerData()
-    {
-        return new MinioServerData(getServer(), getRegion());
-    }
-
-    @NonNull
-    @Override
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), server=(%s), region=(%s).", getName(), getServer(), getRegion());
+        return MinioUtils.format("server=(%s), region=(%s).", getServer(), getRegion());
     }
 
     @NonNull
@@ -372,7 +355,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         {
             final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
 
-            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), MinioUserMetaData.from(stat.httpHeaders()).normalize());
+            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), new MinioUserMetaData(stat.httpHeaders()));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -388,7 +371,7 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
         {
             final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
 
-            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), MinioUserMetaData.from(stat.httpHeaders()).normalize());
+            return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), new MinioUserMetaData(stat.httpHeaders()));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -767,11 +750,31 @@ public class MinioTemplate extends AbstractNamed implements MinioOperations, Bea
     {
         try
         {
-            return MinioUserMetaData.from(getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name)).httpHeaders()).normalize();
+            return new MinioUserMetaData(getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name)).httpHeaders());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
             throw new MinioOperationException(e);
         }
+    }
+
+    @Override
+    public void offTraceStream()
+    {
+        try
+        {
+            getMinioClient().traceOff();
+        }
+        catch (final IOException e)
+        {
+            throw new MinioRuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public void setTraceStream(@NonNull final OutputStream stream)
+    {
+        getMinioClient().traceOn(stream);
     }
 }

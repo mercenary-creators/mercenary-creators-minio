@@ -20,21 +20,17 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.data.MinioItem;
-import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@SpringJUnitConfig(MinioTestConfig.class)
 @TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-aws3.properties")
 public class HasItemsTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws MinioOperationException
+    public void test() throws Exception
     {
-        final List<MinioItem> list = toList(getMinioTemplate().getItems("www.mercenary-creators.io", false));
+        final List<MinioItem> list = toList(getMinioOperations().getItems("www.mercenary-creators.io", false));
 
         list.forEach(item -> info(() -> toJSONString(item)));
 

@@ -16,7 +16,6 @@
 
 package co.mercenary.creators.minio;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -28,20 +27,19 @@ import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter
 @Configuration
 public class MinioContentTypeProbeTestConfig
 {
-    @Value("${minio.type-probe:file}")
-    private String probe;
+    @Bean
+    @NonNull
+    @MatchesProbe("tika")
+    public MinioContentTypeProbe minioContentTypeTikaProbe()
+    {
+        return new MinioContentTypeProbeTikaAdapter();
+    }
 
     @Bean
     @NonNull
-    public MinioContentTypeProbe minioContentTypeProbe()
+    @MatchesProbe("file")
+    public MinioContentTypeProbe minioContentTypeFileProbe()
     {
-        if ("tika".equals(probe))
-        {
-            return new MinioContentTypeProbeTikaAdapter();
-        }
-        else
-        {
-            return new MinioContentTypeProbeFileTypeMapAdapter();
-        }
+        return new MinioContentTypeProbeFileTypeMapAdapter();
     }
 }

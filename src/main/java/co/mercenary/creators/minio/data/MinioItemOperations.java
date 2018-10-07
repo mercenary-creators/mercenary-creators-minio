@@ -36,9 +36,6 @@ import io.minio.http.Method;
 @JsonIgnoreType
 public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
 {
-    @NonNull
-    WithServerData getServerData();
-
     boolean isFile();
 
     boolean deleteObject() throws MinioOperationException;

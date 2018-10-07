@@ -29,7 +29,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,6 +80,9 @@ public final class MinioUtils
 
     @NonNull
     public static final String                    NULLS_STRING_VALUED = "null";
+
+    @NonNull
+    public static final String                    FALSE_STRING_VALUED = "false";
 
     @NonNull
     public static final String                    DEFAULT_REGION_EAST = "us-east-1";
@@ -287,12 +289,6 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String UUID()
-    {
-        return uuid().toUpperCase();
-    }
-
-    @NonNull
     public static String requireToString(final CharSequence value)
     {
         final String chars = getCharSequence(value);
@@ -419,13 +415,17 @@ public final class MinioUtils
     @NonNull
     public static String noAmazonMetaPrefix(@NonNull final String value)
     {
-        return value.substring(X_AMAZON_META_START.length());
+        if (isAmazonMetaPrefix(value))
+        {
+            return value.substring(X_AMAZON_META_START.length());
+        }
+        return value;
     }
 
     @NonNull
     public static String toAmazonMetaPrefix(@NonNull final String value)
     {
-        return X_AMAZON_META_START + value;
+        return X_AMAZON_META_START + noAmazonMetaPrefix(value);
     }
 
     @Nullable
@@ -478,15 +478,22 @@ public final class MinioUtils
 
     @NonNull
     @SafeVarargs
-    public static <T> ArrayList<T> toList(@NonNull final T... source)
+    public static <T> Stream<T> concat(@NonNull final T first, @NonNull final T... source)
     {
-        return new ArrayList<>(Arrays.asList(requireNonNull(source)));
+        return Stream.concat(Stream.of(first), Stream.of(source));
     }
 
     @NonNull
-    public static <T> ArrayList<T> toList(@NonNull final Stream<T> source)
+    @SafeVarargs
+    public static <T> List<T> toList(@NonNull final T... source)
     {
-        return new ArrayList<>(source.collect(Collectors.toList()));
+        return Arrays.asList(requireNonNull(source));
+    }
+
+    @NonNull
+    public static <T> List<T> toList(@NonNull final Stream<T> source)
+    {
+        return source.collect(Collectors.toList());
     }
 
     @NonNull
@@ -499,6 +506,22 @@ public final class MinioUtils
     public static <T> List<T> emptyList(final Class<T> type)
     {
         return Collections.emptyList();
+    }
+
+    @NonNull
+    public static <K, V> Map<K, V> emptyMap()
+    {
+        return Collections.emptyMap();
+    }
+
+    @NonNull
+    public static <K, V> Map<K, V> toUnmodifiable(@Nullable final Map<K, V> map)
+    {
+        if ((null == map) || (map.isEmpty()))
+        {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(map);
     }
 
     @NonNull

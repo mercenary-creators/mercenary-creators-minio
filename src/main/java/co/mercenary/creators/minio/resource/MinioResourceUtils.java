@@ -88,4 +88,12 @@ public final class MinioResourceUtils
         }
         throw new IllegalArgumentException("the location :'" + MinioUtils.toStringOrElse(location, MinioUtils.NULLS_STRING_VALUED) + "' is not a valid ninio location.");
     }
+
+    @NonNull
+    public static String getLocationForBucketAndObject(@NonNull final String bucket, @NonNull final String object)
+    {
+        final int size = MINIO_RESOURCE_PROTOCOL.length() + bucket.length() + MinioUtils.PATH_SEPARATOR_CHAR.length() + object.length();
+
+        return new StringBuilder(size).append(MINIO_RESOURCE_PROTOCOL).append(bucket).append(MinioUtils.PATH_SEPARATOR_CHAR).append(object).toString();
+    }
 }

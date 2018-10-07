@@ -36,7 +36,6 @@ import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.resource.MinioItemResource;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
-import co.mercenary.creators.minio.util.WithServerData;
 import io.minio.ServerSideEncryption;
 import io.minio.http.Method;
 
@@ -55,7 +54,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
     public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
     {
-        super(name, buck, etag, size);
+        super(MinioUtils.fixPathString(name), buck, etag, size);
 
         this.file = file;
 
@@ -80,31 +79,10 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     }
 
     @NonNull
-    @Override
-    public String getName()
-    {
-        return MinioUtils.fixPathString(super.getName());
-    }
-
-    @NonNull
     @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getLastModified()
     {
         return time.map(date -> new Date(date.getTime()));
-    }
-
-    @NonNull
-    @JsonInclude(Include.NON_EMPTY)
-    public MinioUserMetaData getUserMetaData()
-    {
-        try
-        {
-            return withOperations().getUserMetaData();
-        }
-        catch (final MinioOperationException e)
-        {
-            return new MinioUserMetaData();
-        }
     }
 
     @NonNull
@@ -167,13 +145,6 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public String getRegion()
             {
                 return oper.getRegion();
-            }
-
-            @NonNull
-            @Override
-            public WithServerData getServerData()
-            {
-                return oper.getServerData();
             }
 
             @Override
