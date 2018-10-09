@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.resource;
+package co.mercenary.creators.minio.io.resource;
 
 import org.springframework.core.io.ProtocolResolver;
 import org.springframework.core.io.Resource;

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.resource.MinioItemResource;
+import co.mercenary.creators.minio.io.resource.MinioItemResource;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithOperations;
 import io.minio.ServerSideEncryption;
@@ -300,6 +300,12 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public Optional<MinioItem> getItemRelative(@NonNull final CharSequence path) throws MinioOperationException
             {
                 return oper.getItem(self().getBucket(), MinioUtils.getPathRelative(self().getName(), path));
+            }
+
+            @Override
+            public void setUserMetaData(@NonNull final MinioUserMetaData meta) throws MinioOperationException
+            {
+                oper.setUserMetaData(self().getBucket(), self().getName(), meta);
             }
         };
     }

@@ -219,12 +219,6 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             }
 
             @Override
-            public void putObject(@NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-            {
-                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
-            }
-
-            @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final CharSequence type) throws MinioOperationException
             {
                 oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
@@ -243,21 +237,9 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             }
 
             @Override
-            public void putObject(@NonNull final CharSequence name, @NonNull final File input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-            {
-                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
-            }
-
-            @Override
             public void putObject(@NonNull final CharSequence name, @NonNull final Path input, @Nullable final CharSequence type) throws MinioOperationException
             {
                 oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), type);
-            }
-
-            @Override
-            public void putObject(@NonNull final CharSequence name, @NonNull final Path input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-            {
-                oper.putObject(self().getName(), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), size, type);
             }
 
             @NonNull
@@ -318,6 +300,12 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             public Stream<MinioUpload> getIncompleteUploads(@Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
             {
                 return oper.getIncompleteUploads(self().getName(), prefix, recursive);
+            }
+
+            @Override
+            public void setUserMetaData(final CharSequence name, final MinioUserMetaData meta) throws MinioOperationException
+            {
+                oper.setUserMetaData(self().getName(), name, meta);
             }
         };
     }

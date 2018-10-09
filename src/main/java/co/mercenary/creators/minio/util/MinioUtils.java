@@ -67,6 +67,9 @@ public final class MinioUtils
     public static final Long                      MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
 
     @NonNull
+    public static final Long                      MAXINUM_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
+
+    @NonNull
     public static final String                    EMPTY_STRING_VALUED = "";
 
     @NonNull
@@ -153,6 +156,16 @@ public final class MinioUtils
     public static boolean isNonNull(@Nullable final Object value)
     {
         return (null != value);
+    }
+
+    public static boolean isPresent(@NonNull final String name)
+    {
+        return isPresent(name, NULL());
+    }
+
+    public static boolean isPresent(@NonNull final String name, @Nullable final ClassLoader loader)
+    {
+        return ClassUtils.isPresent(requireNonNull(name), loader);
     }
 
     @NonNull
@@ -522,6 +535,16 @@ public final class MinioUtils
             return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(map);
+    }
+
+    @NonNull
+    public static <K, V> Map<K, V> concat(@NonNull final Map<K, V> map, @NonNull final K key, @NonNull final V val)
+    {
+        final LinkedHashMap<K, V> tmp = new LinkedHashMap<>(map);
+
+        tmp.put(key, val);
+
+        return tmp;
     }
 
     @NonNull

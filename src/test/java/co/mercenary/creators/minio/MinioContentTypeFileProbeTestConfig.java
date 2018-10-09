@@ -22,23 +22,14 @@ import org.springframework.lang.NonNull;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
 import co.mercenary.creators.minio.content.MinioContentTypeProbeFileTypeMapAdapter;
-import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter;
 
 @Configuration
-public class MinioContentTypeProbeTestConfig
+public class MinioContentTypeFileProbeTestConfig
 {
     @Bean
     @NonNull
-    @MatchesProbe("tika")
-    public MinioContentTypeProbe minioContentTypeTikaProbe()
-    {
-        return new MinioContentTypeProbeTikaAdapter();
-    }
-
-    @Bean
-    @NonNull
     @MatchesProbe("file")
-    public MinioContentTypeProbe minioContentTypeFileProbe()
+    public MinioContentTypeProbe minioContentTypeProbe()
     {
         return new MinioContentTypeProbeFileTypeMapAdapter();
     }

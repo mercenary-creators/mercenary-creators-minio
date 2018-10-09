@@ -42,17 +42,17 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         super();
     }
 
-    public MinioUserMetaData(@Nullable final MinioUserMetaData map)
-    {
-        super(MinioUtils.toLinkedHashMap(map, true));
-    }
-
     public MinioUserMetaData(@Nullable final Map<String, List<String>> map)
     {
         if (null != map)
         {
             map.keySet().stream().filter(MinioUtils::isAmazonMetaPrefix).forEach(key -> MinioUtils.toOptional(map.get(key)).map(MinioUtils::toZero).ifPresent(val -> plus(MinioUtils.noAmazonMetaPrefix(key), val)));
         }
+    }
+
+    public MinioUserMetaData(@NonNull final String key, @Nullable final String val)
+    {
+        plus(key, val);
     }
 
     @Nullable
@@ -72,7 +72,6 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
     @Nullable
     @Override
     public String put(final String key, final String val)
-
     {
         return super.put(MinioUtils.requireToString(key), MinioUtils.requireToString(val));
     }

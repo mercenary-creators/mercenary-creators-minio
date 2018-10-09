@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.resource;
+package co.mercenary.creators.minio.io.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,40 +27,26 @@ import org.springframework.lang.NonNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
-import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.data.MinioItem;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
-public class MinioResource extends AbstractMinioResource<MinioOperations>
+public class MinioItemResource extends AbstractMinioResource<MinioItem>
 {
-    @NonNull
-    private final String bucket;
-
-    @NonNull
-    private final String object;
-
-    public MinioResource(@NonNull final MinioOperations minops, @NonNull final CharSequence bucket, @NonNull final CharSequence object)
+    public MinioItemResource(@NonNull final MinioItem item)
     {
-        super(minops, "server=(%s), object=(%s), bucket=(%s).", minops.getServer(), object, bucket);
+        this(item, item.toDescription());
+    }
 
-        this.bucket = MinioUtils.requireToString(bucket);
-
-        this.object = MinioUtils.requireToString(object);
+    public MinioItemResource(@NonNull final MinioItem item, @NonNull final CharSequence description)
+    {
+        super(item, description);
     }
 
     @Override
     public boolean exists()
     {
-        try
-        {
-            return self().isObject(bucket, object);
-        }
-        catch (final MinioOperationException e)
-        {
-            return false;
-        }
+        return self().isFile();
     }
 
     @NonNull
@@ -69,7 +55,7 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     {
         try
         {
-            return new URL(self().getSignedObjectUrl(bucket, object));
+            return new URL(self().withOperations().getSignedObjectUrl());
         }
         catch (final MinioOperationException e)
         {
@@ -80,38 +66,19 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     @Override
     public long contentLength() throws IOException
     {
-        try
-        {
-            return self().getObjectStatus(bucket, object).getSize();
-        }
-        catch (final MinioOperationException e)
-        {
-            throw new IOException(e);
-        }
+        return self().getSize();
     }
 
     @Override
     public long lastModified() throws IOException
     {
-        try
-        {
-            final Optional<MinioItem> item = self().getItem(bucket, object);
+        final Optional<Date> date = self().getLastModified();
 
-            if (item.isPresent())
-            {
-                final Optional<Date> date = item.get().getLastModified();
-
-                if (date.isPresent())
-                {
-                    return date.get().getTime();
-                }
-            }
-            throw new IOException(getDescription() + " not found.");
-        }
-        catch (final MinioOperationException e)
+        if (date.isPresent())
         {
-            throw new IOException(e);
+            return date.get().getTime();
         }
+        throw new IOException(getDescription() + " not found.");
     }
 
     @NonNull
@@ -120,7 +87,7 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     {
         try
         {
-            return self().getObjectInputStream(bucket, object);
+            return self().withOperations().getObjectInputStream();
         }
         catch (final MinioOperationException e)
         {
@@ -132,7 +99,14 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     @Override
     public Resource createRelative(@NonNull final String path) throws IOException
     {
-        return new MinioResource(self(), bucket, MinioUtils.getPathRelative(object, path));
+        try
+        {
+            return self().withOperations().getItemRelative(path).map(item -> new MinioItemResource(item)).orElseThrow(() -> new IOException(path + " not found."));
+        }
+        catch (final MinioOperationException e)
+        {
+            throw new IOException(e);
+        }
     }
 
     @Override

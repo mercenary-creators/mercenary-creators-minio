@@ -23,9 +23,10 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
+import co.mercenary.creators.minio.logging.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MatchesProbeCondition implements Condition
+public class MatchesProbeCondition extends AbstractWithLogger implements Condition
 {
     @Override
     public boolean matches(@NonNull final ConditionContext context, @NonNull final AnnotatedTypeMetadata metadata)
@@ -34,11 +35,7 @@ public class MatchesProbeCondition implements Condition
 
         if (attrs != null)
         {
-            if (getAttributeString(attrs.getFirst("value"), "file").equals(context.getEnvironment().getProperty("minio.type-probe")))
-            {
-                return true;
-            }
-            if (getAttributeString(attrs.getFirst("matchIfMissing"), "false").equals("true"))
+            if (getAttributeString(attrs.getFirst("value"), "file").equalsIgnoreCase(context.getEnvironment().getProperty("minio.type-probe", "file")))
             {
                 return true;
             }
@@ -50,6 +47,10 @@ public class MatchesProbeCondition implements Condition
     @NonNull
     private String getAttributeString(@Nullable final Object value, @NonNull final String oherwise)
     {
-        return MinioUtils.requireNonNullOrElse(value, oherwise).toString();
+        final String text = MinioUtils.requireNonNullOrElse(value, oherwise).toString();
+
+        info(() -> text);
+
+        return text;
     }
 }

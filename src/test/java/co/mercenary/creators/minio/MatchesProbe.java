@@ -32,6 +32,4 @@ import org.springframework.context.annotation.Conditional;
 public @interface MatchesProbe
 {
     String value() default "file";
-
-    boolean matchIfMissing() default false;
 }

@@ -28,8 +28,6 @@ public class HasItemStatTestTika extends AbstractMinioTests
     @Test
     public void test() throws Exception
     {
-        info(() -> getMinioOperations().getContentTypeProbe().getClass().getName());
-
         final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "MinioProperties.java");
 
         info(() -> toJSONString(stat));

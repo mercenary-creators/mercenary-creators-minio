@@ -49,7 +49,9 @@ import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.errors.MinioRuntimeException;
+import co.mercenary.creators.minio.logging.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
+import io.minio.CopyConditions;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.ServerSideEncryption;
@@ -57,7 +59,7 @@ import io.minio.errors.MinioException;
 import io.minio.http.Method;
 
 @JsonIgnoreType
-public class MinioTemplate implements MinioOperations
+public class MinioTemplate extends AbstractWithLogger implements MinioOperations
 {
     @NonNull
     private final String                       server_url;
@@ -388,24 +390,7 @@ public class MinioTemplate implements MinioOperations
 
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, MinioUtils.fixContentType(type));
-        }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-    {
-        MinioUtils.isEachNonNull(bucket, name, input);
-
-        final MinioBucket create = createOrGetBucket(bucket);
-
-        try
-        {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.fixContentType(type));
+            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, getContentTypeProbe().getContentType(type, name));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -420,7 +405,7 @@ public class MinioTemplate implements MinioOperations
 
         try (final ByteArrayInputStream baos = new ByteArrayInputStream(input))
         {
-            putObject(bucket, name, baos, baos.available(), type);
+            putObject(bucket, name, baos, type);
         }
         catch (final IOException e)
         {
@@ -455,7 +440,7 @@ public class MinioTemplate implements MinioOperations
     {
         try (final InputStream is = MinioUtils.getInputStream(input))
         {
-            putObject(bucket, name, is, MinioUtils.getSize(input), type);
+            putObject(bucket, name, is, type);
         }
         catch (final IOException e)
         {
@@ -468,33 +453,7 @@ public class MinioTemplate implements MinioOperations
     {
         try (final InputStream is = MinioUtils.getInputStream(input))
         {
-            putObject(bucket, name, is, MinioUtils.getSize(input), type);
-        }
-        catch (final IOException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-    {
-        try (final InputStream is = MinioUtils.getInputStream(input))
-        {
-            putObject(bucket, name, is, size, type);
-        }
-        catch (final IOException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path input, final long size, @Nullable final CharSequence type) throws MinioOperationException
-    {
-        try (final InputStream is = MinioUtils.getInputStream(input))
-        {
-            putObject(bucket, name, is, size, type);
+            putObject(bucket, name, is, type);
         }
         catch (final IOException e)
         {
@@ -652,23 +611,6 @@ public class MinioTemplate implements MinioOperations
         return false;
     }
 
-    @Override
-    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final InputStream input, final long size, @NonNull final ServerSideEncryption keys) throws MinioOperationException
-    {
-        MinioUtils.isEachNonNull(bucket, name, input, keys);
-
-        final MinioBucket create = createOrGetBucket(bucket);
-
-        try
-        {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, size, MinioUtils.getCharSequence(MinioUtils.NULL()));
-        }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
-        {
-            throw new MinioOperationException(e);
-        }
-    }
-
     @NonNull
     @Override
     public Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
@@ -759,7 +701,7 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void offTraceStream()
+    public void setTraceStream()
     {
         try
         {
@@ -769,12 +711,28 @@ public class MinioTemplate implements MinioOperations
         {
             throw new MinioRuntimeException(e);
         }
-
     }
 
     @Override
     public void setTraceStream(@NonNull final OutputStream stream)
     {
         getMinioClient().traceOn(stream);
+    }
+
+    @Override
+    public void setUserMetaData(final CharSequence bucket, final CharSequence name, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        try
+        {
+            final CopyConditions cond = new CopyConditions();
+
+            cond.setReplaceMetadataDirective();
+
+            getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), cond, meta.getUserMetaData());
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
     }
 }

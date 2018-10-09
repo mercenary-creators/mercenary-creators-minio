@@ -28,10 +28,6 @@ public class HasBucketsNamed extends AbstractMinioTests
     @Test
     public void test() throws Exception
     {
-        final String prop = getMinioOperations().getContentTypeProbe().getClass().getName();
-
-        info(() -> prop);
-
         final List<MinioBucket> list = toList(getMinioOperations().getBucketsNamed(value -> value.equals("root")));
 
         list.forEach(value -> info(() -> toJSONString(value)));
