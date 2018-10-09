@@ -14,19 +14,35 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.logging;
+package co.mercenary.creators.minio.logging.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.lang.NonNull;
 
+import co.mercenary.creators.minio.logging.ILogger;
+import co.mercenary.creators.minio.logging.ILoggerFactory;
+import co.mercenary.creators.minio.logging.WithLoggerOf;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class CommonsLoggerFactory implements ILoggerFactory
+public class SLF4JLoggerFactory implements ILoggerFactory
 {
+    @NonNull
+    public static final Marker MERCENARY_MARKER;
+
+    static
+    {
+        start();
+
+        MERCENARY_MARKER = MarkerFactory.getMarker(ILogger.class.getPackage().getName() + ".MARKER");
+    }
+
     @NonNull
     private final ConcurrentHashMap<String, ILogger> loggers = new ConcurrentHashMap<>();
 
@@ -34,22 +50,30 @@ public class CommonsLoggerFactory implements ILoggerFactory
     @Override
     public ILogger getLogger(@NonNull final CharSequence name)
     {
-        return loggers.computeIfAbsent(MinioUtils.requireToString(name), CommonsLogger::new);
+        return loggers.computeIfAbsent(MinioUtils.requireToString(name), SLF4JLogger::new);
     }
 
-    protected static class CommonsLogger implements ILogger, WithLoggerOf<Log>
+    private static void start()
+    {
+        if (false == SLF4JBridgeHandler.isInstalled())
+        {
+            SLF4JBridgeHandler.install();
+        }
+    }
+
+    protected static class SLF4JLogger implements ILogger, WithLoggerOf<Logger>
     {
         @NonNull
-        private final Log logs;
+        private final Logger logs;
 
-        protected CommonsLogger(@NonNull final String name)
+        protected SLF4JLogger(@NonNull final String name)
         {
-            this.logs = LogFactory.getLog(MinioUtils.requireToString(name));
+            this.logs = LoggerFactory.getLogger(MinioUtils.requireToString(name));
         }
 
         @NonNull
         @Override
-        public Log logger()
+        public Logger logger()
         {
             return logs;
         }
@@ -72,7 +96,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isInfoEnabled())
             {
-                logger().info(message.get().toString());
+                logger().info(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -81,7 +105,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isInfoEnabled())
             {
-                logger().info(message.get().toString(), cause);
+                logger().info(MERCENARY_MARKER, message.get().toString(), cause);
             }
         }
 
@@ -96,7 +120,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isWarnEnabled())
             {
-                logger().warn(message.get().toString());
+                logger().warn(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -105,7 +129,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isWarnEnabled())
             {
-                logger().warn(message.get().toString(), cause);
+                logger().warn(MERCENARY_MARKER, message.get().toString(), cause);
             }
         }
 
@@ -120,7 +144,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isTraceEnabled())
             {
-                logger().trace(message.get().toString());
+                logger().trace(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -129,7 +153,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isTraceEnabled())
             {
-                logger().trace(message.get().toString(), cause);
+                logger().trace(MERCENARY_MARKER, message.get().toString(), cause);
             }
         }
 
@@ -144,7 +168,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isDebugEnabled())
             {
-                logger().debug(message.get().toString());
+                logger().debug(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -153,7 +177,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isDebugEnabled())
             {
-                logger().debug(message.get().toString(), cause);
+                logger().debug(MERCENARY_MARKER, message.get().toString(), cause);
             }
         }
 
@@ -168,7 +192,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isErrorEnabled())
             {
-                logger().error(message.get().toString());
+                logger().error(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -177,14 +201,14 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isErrorEnabled())
             {
-                logger().error(message.get().toString(), cause);
+                logger().error(MERCENARY_MARKER, message.get().toString(), cause);
             }
         }
 
         @Override
         public boolean isFatalEnabled()
         {
-            return logger().isFatalEnabled();
+            return logger().isErrorEnabled();
         }
 
         @Override
@@ -192,7 +216,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isFatalEnabled())
             {
-                logger().fatal(message.get().toString());
+                logger().error(MERCENARY_MARKER, message.get().toString());
             }
         }
 
@@ -201,7 +225,7 @@ public class CommonsLoggerFactory implements ILoggerFactory
         {
             if (isFatalEnabled())
             {
-                logger().fatal(message.get().toString(), cause);
+                logger().error(MERCENARY_MARKER, message.get().toString());
             }
         }
     }

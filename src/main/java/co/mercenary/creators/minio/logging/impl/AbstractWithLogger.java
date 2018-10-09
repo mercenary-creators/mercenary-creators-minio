@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.logging;
+package co.mercenary.creators.minio.logging.impl;
 
 import org.springframework.lang.NonNull;
+
+import co.mercenary.creators.minio.logging.ILogger;
+import co.mercenary.creators.minio.logging.Logging;
+import co.mercenary.creators.minio.logging.WithLoggerDefault;
 
 public abstract class AbstractWithLogger implements WithLoggerDefault
 {

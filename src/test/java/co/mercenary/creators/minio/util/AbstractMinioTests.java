@@ -35,7 +35,7 @@ import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.errors.MinioDataException;
-import co.mercenary.creators.minio.logging.AbstractWithLogger;
+import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 
 @SpringJUnitConfig(MinioTestConfig.class)
 @TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")

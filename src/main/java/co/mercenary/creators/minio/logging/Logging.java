@@ -21,6 +21,9 @@ import java.util.function.Supplier;
 
 import org.springframework.lang.NonNull;
 
+import co.mercenary.creators.minio.logging.impl.CommonsLoggerFactory;
+import co.mercenary.creators.minio.logging.impl.DefaultLoggerFactory;
+import co.mercenary.creators.minio.logging.impl.SLF4JLoggerFactory;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public final class Logging

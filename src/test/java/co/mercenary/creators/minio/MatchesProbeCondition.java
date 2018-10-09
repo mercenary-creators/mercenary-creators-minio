@@ -23,7 +23,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
-import co.mercenary.creators.minio.logging.AbstractWithLogger;
+import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class MatchesProbeCondition extends AbstractWithLogger implements Condition

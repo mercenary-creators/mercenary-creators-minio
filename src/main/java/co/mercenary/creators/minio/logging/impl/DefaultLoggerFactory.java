@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.logging;
+package co.mercenary.creators.minio.logging.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -23,6 +23,9 @@ import java.util.logging.Logger;
 
 import org.springframework.lang.NonNull;
 
+import co.mercenary.creators.minio.logging.ILogger;
+import co.mercenary.creators.minio.logging.ILoggerFactory;
+import co.mercenary.creators.minio.logging.WithLoggerOf;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class DefaultLoggerFactory implements ILoggerFactory

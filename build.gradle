@@ -63,7 +63,7 @@ task doJavaDocs(type: Javadoc) {
             'co/mercenary/creators/**'
     ]
     excludes = [
-            'co/mercenary/creators/content/tika/**'
+            'co/mercenary/creators/minio/content/tika/**', 'co/mercenary/creators/minio/logging/impl/**'
     ]
     title = "${getProjectCommonName()}"
     (options as StandardJavadocDocletOptions).with {

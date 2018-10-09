@@ -49,7 +49,7 @@ import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.errors.MinioRuntimeException;
-import co.mercenary.creators.minio.logging.AbstractWithLogger;
+import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.MinioClient;
