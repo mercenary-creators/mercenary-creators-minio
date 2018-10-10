@@ -27,8 +27,10 @@ public class PutItemMetaData extends AbstractMinioTests
     @Test
     public void test() throws Exception
     {
-        getMinioOperations().putObject("root", "jones.json", getResource());
-
+        if (false == getMinioOperations().isObject("root", "jones.json"))
+        {
+            getMinioOperations().putObject("root", "jones.json", getResource());
+        }
         getMinioOperations().setUserMetaData("root", "jones.json", new MinioUserMetaData("test-meta", uuid()));
 
         final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "jones.json");

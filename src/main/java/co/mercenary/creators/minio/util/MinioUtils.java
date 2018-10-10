@@ -491,13 +491,6 @@ public final class MinioUtils
 
     @NonNull
     @SafeVarargs
-    public static <T> Stream<T> concat(@NonNull final T first, @NonNull final T... source)
-    {
-        return Stream.concat(Stream.of(first), Stream.of(source));
-    }
-
-    @NonNull
-    @SafeVarargs
     public static <T> List<T> toList(@NonNull final T... source)
     {
         return Arrays.asList(requireNonNull(source));
@@ -603,15 +596,9 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <T> Collection<T> toKeys(@NonNull final Map<T, ?> map)
+    public static <T> Collection<T> keys(@NonNull final Map<T, ?> map)
     {
         return Collections.unmodifiableCollection(map.keySet());
-    }
-
-    @NonNull
-    public static <T> Collection<T> toVals(@NonNull final Map<?, T> map)
-    {
-        return Collections.unmodifiableCollection(map.values());
     }
 
     @NonNull

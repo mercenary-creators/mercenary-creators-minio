@@ -28,7 +28,7 @@ public class MinioContentTypeTikaProbeTestConfig
 {
     @Bean
     @NonNull
-    @MatchesProbe("tika")
+    @MatchesContentTypeProbeName("tika")
     public MinioContentTypeProbe minioContentTypeProbe()
     {
         return new MinioContentTypeProbeTikaAdapter();

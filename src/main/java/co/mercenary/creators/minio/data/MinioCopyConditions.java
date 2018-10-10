@@ -131,16 +131,10 @@ public class MinioCopyConditions
     }
 
     @NonNull
-    public MinioCopyConditions setReplaceMetadataDirective() throws MinioDataException
+    public MinioCopyConditions setReplaceMetadataDirective()
     {
-        try
-        {
-            getCopyConditions().setReplaceMetadataDirective();
-        }
-        catch (final Exception e)
-        {
-            throw new MinioDataException(e);
-        }
+        getCopyConditions().setReplaceMetadataDirective();
+
         return this;
     }
 

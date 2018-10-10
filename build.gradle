@@ -63,7 +63,7 @@ task doJavaDocs(type: Javadoc) {
             'co/mercenary/creators/**'
     ]
     excludes = [
-            'co/mercenary/creators/minio/content/tika/**', 'co/mercenary/creators/minio/logging/impl/**'
+            'co/mercenary/creators/minio/content/tika/**'
     ]
     title = "${getProjectCommonName()}"
     (options as StandardJavadocDocletOptions).with {
@@ -174,8 +174,6 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
-    compileOnly(group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25')
-    compileOnly(group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3')
     compileOnly(group: 'org.apache.tika', name: 'tika-core', version: '1.19')
     testCompile(group: 'org.apache.tika', name: 'tika-core', version: '1.19')
     testCompile(group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25')

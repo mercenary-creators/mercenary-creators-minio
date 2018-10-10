@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test.tika;
+package co.mercenary.creators.minio.test;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 
-import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter;
+import co.mercenary.creators.minio.data.MinioObjectStatus;
+import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@TestPropertySource(properties = "minio.content-type-probe.name=tika")
-public class HasBeanTestTika extends AbstractMinioTests
+public class PutItemMetaDataEmpty extends AbstractMinioTests
 {
     @Test
     public void test() throws Exception
     {
-        final String name = MinioContentTypeProbeTikaAdapter.class.getName();
+        if (false == getMinioOperations().isObject("root", "jones.json"))
+        {
+            getMinioOperations().putObject("root", "jones.json", getResource());
+        }
+        getMinioOperations().setUserMetaData("root", "jones.json", new MinioUserMetaData());
 
-        final String prop = getMinioOperations().getContentTypeProbe().getClass().getName();
+        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "jones.json");
 
-        info(() -> prop);
+        info(() -> toJSONString(stat));
 
-        assertEquals(name, prop, () -> name);
+        assertEquals(stat.getContentType(), "application/json", () -> "not application/json");
     }
 }

@@ -23,19 +23,18 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
-import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class MatchesProbeCondition extends AbstractWithLogger implements Condition
+public class MatchesProbeCondition implements Condition
 {
     @Override
     public boolean matches(@NonNull final ConditionContext context, @NonNull final AnnotatedTypeMetadata metadata)
     {
-        final MultiValueMap<String, Object> attrs = metadata.getAllAnnotationAttributes(MatchesProbe.class.getName());
+        final MultiValueMap<String, Object> attrs = metadata.getAllAnnotationAttributes(MatchesContentTypeProbeName.class.getName());
 
         if (attrs != null)
         {
-            if (getAttributeString(attrs.getFirst("value"), "file").equalsIgnoreCase(context.getEnvironment().getProperty("minio.type-probe", "file")))
+            if (getAttributeString(attrs.getFirst("value"), "file").equalsIgnoreCase(context.getEnvironment().getProperty("minio.content-type-probe.name", "file")))
             {
                 return true;
             }
@@ -48,8 +47,6 @@ public class MatchesProbeCondition extends AbstractWithLogger implements Conditi
     private String getAttributeString(@Nullable final Object value, @NonNull final String oherwise)
     {
         final String text = MinioUtils.requireNonNullOrElse(value, oherwise).toString();
-
-        info(() -> text);
 
         return text;
     }

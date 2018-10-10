@@ -48,8 +48,6 @@ import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
-import co.mercenary.creators.minio.errors.MinioRuntimeException;
-import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.MinioClient;
@@ -59,8 +57,11 @@ import io.minio.errors.MinioException;
 import io.minio.http.Method;
 
 @JsonIgnoreType
-public class MinioTemplate extends AbstractWithLogger implements MinioOperations
+public class MinioTemplate implements MinioOperations
 {
+    @NonNull
+    private static final CopyConditions        META_COPY_CONDITIONS = new MinioCopyConditions().setReplaceMetadataDirective().getCopyConditions();
+
     @NonNull
     private final String                       server_url;
 
@@ -78,7 +79,7 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     private MinioContentTypeProbe              type_probe;
 
     @NonNull
-    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>();
+    private final AtomicReference<MinioClient> atomic_ref           = new AtomicReference<>();
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
@@ -218,7 +219,7 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     {
         try
         {
-            return MinioUtils.isNonNull(getObjectStatus(bucket, name).getCreationTime());
+            return getObjectStatus(bucket, name).getCreationTime().isPresent();
         }
         catch (final MinioOperationException e)
         {
@@ -386,11 +387,9 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     {
         MinioUtils.isEachNonNull(bucket, name, input);
 
-        final MinioBucket create = createOrGetBucket(bucket);
-
         try
         {
-            getMinioClient().putObject(create.getName(), MinioUtils.getCharSequence(name), input, getContentTypeProbe().getContentType(type, name));
+            getMinioClient().putObject(createOrGetBucket(bucket).getName(), MinioUtils.getCharSequence(name), input, getContentTypeProbe().getContentType(type, name));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -644,7 +643,7 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     @Override
     public <T> T getBucketPolicy(@NonNull final CharSequence bucket, @NonNull final Class<T> type) throws MinioOperationException, MinioDataException
     {
-        MinioUtils.requireNonNull(type);
+        MinioUtils.isEachNonNull(bucket, type);
 
         final String policy = getBucketPolicy(bucket);
 
@@ -674,6 +673,8 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     @Override
     public boolean removeUpload(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
             getMinioClient().removeIncompleteUpload(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
@@ -690,9 +691,28 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
     @Override
     public MinioUserMetaData getUserMetaData(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
             return new MinioUserMetaData(getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name)).httpHeaders());
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @Override
+    public boolean setUserMetaData(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name);
+
+        try
+        {
+            getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), META_COPY_CONDITIONS, MinioUtils.requireNonNullOrElse(meta, MinioUserMetaData::new).getUserMetaData());
+
+            return true;
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -709,30 +729,13 @@ public class MinioTemplate extends AbstractWithLogger implements MinioOperations
         }
         catch (final IOException e)
         {
-            throw new MinioRuntimeException(e);
+            MinioUtils.requireNonNull(e);
         }
     }
 
     @Override
     public void setTraceStream(@NonNull final OutputStream stream)
     {
-        getMinioClient().traceOn(stream);
-    }
-
-    @Override
-    public void setUserMetaData(final CharSequence bucket, final CharSequence name, final MinioUserMetaData meta) throws MinioOperationException
-    {
-        try
-        {
-            final CopyConditions cond = new CopyConditions();
-
-            cond.setReplaceMetadataDirective();
-
-            getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), cond, meta.getUserMetaData());
-        }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
-        {
-            throw new MinioOperationException(e);
-        }
+        getMinioClient().traceOn(MinioUtils.requireNonNull(stream));
     }
 }

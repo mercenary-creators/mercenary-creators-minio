@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.logging.impl;
+package co.mercenary.creators.minio;
 
-import org.springframework.lang.NonNull;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import co.mercenary.creators.minio.logging.ILogger;
-import co.mercenary.creators.minio.logging.Logging;
-import co.mercenary.creators.minio.logging.WithLoggerDefault;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-public abstract class AbstractWithLogger implements WithLoggerDefault
+import org.springframework.context.annotation.Conditional;
+
+@Documented
+@Target(METHOD)
+@Retention(RUNTIME)
+@Conditional(MatchesProbeCondition.class)
+public @interface MatchesContentTypeProbeName
 {
-    @NonNull
-    private final ILogger logger = Logging.getLogger(getClass());
-
-    @NonNull
-    @Override
-    public ILogger logger()
-    {
-        return logger;
-    }
+    String value() default "file";
 }

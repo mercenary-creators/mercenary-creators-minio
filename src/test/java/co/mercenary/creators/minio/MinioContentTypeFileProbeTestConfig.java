@@ -28,7 +28,7 @@ public class MinioContentTypeFileProbeTestConfig
 {
     @Bean
     @NonNull
-    @MatchesProbe("file")
+    @MatchesContentTypeProbeName("file")
     public MinioContentTypeProbe minioContentTypeProbe()
     {
         return new MinioContentTypeProbeFileTypeMapAdapter();

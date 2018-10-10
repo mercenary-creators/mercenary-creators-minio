@@ -303,9 +303,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             }
 
             @Override
-            public void setUserMetaData(@NonNull final MinioUserMetaData meta) throws MinioOperationException
+            public boolean setUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                oper.setUserMetaData(self().getBucket(), self().getName(), meta);
+                if ((null == meta) || meta.isEmpty())
+                {
+                    return false;
+                }
+                return oper.setUserMetaData(self().getBucket(), self().getName(), meta);
             }
         };
     }

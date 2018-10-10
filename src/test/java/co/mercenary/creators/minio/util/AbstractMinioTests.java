@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -35,12 +36,14 @@ import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.errors.MinioDataException;
-import co.mercenary.creators.minio.logging.impl.AbstractWithLogger;
 
 @SpringJUnitConfig(MinioTestConfig.class)
 @TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")
-public abstract class AbstractMinioTests extends AbstractWithLogger
+public abstract class AbstractMinioTests
 {
+    @NonNull
+    private final Logger  logger = LoggingOps.getLogger(getClass());
+
     @Nullable
     @Autowired
     private MinioTemplate minioTemplate;
@@ -64,6 +67,12 @@ public abstract class AbstractMinioTests extends AbstractWithLogger
     }
 
     @NonNull
+    protected Logger getLogger()
+    {
+        return logger;
+    }
+
+    @NonNull
     protected String uuid()
     {
         return UUID.randomUUID().toString();
@@ -73,8 +82,6 @@ public abstract class AbstractMinioTests extends AbstractWithLogger
     protected void doBeforeEachTest()
     {
         info(() -> getMinioOperations().getContentTypeProbe().getClass().getName());
-
-        info(() -> logger());
     }
 
     @NonNull
@@ -87,6 +94,70 @@ public abstract class AbstractMinioTests extends AbstractWithLogger
     protected Supplier<String> isEmptyMessage(@NonNull final Supplier<String> message)
     {
         return () -> message.get() + " is empty.";
+    }
+
+    protected void info(@NonNull final Supplier<?> message)
+    {
+        if (getLogger().isInfoEnabled())
+        {
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString());
+        }
+    }
+
+    protected void info(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
+    {
+        if (getLogger().isInfoEnabled())
+        {
+            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+        }
+    }
+
+    protected void warn(@NonNull final Supplier<?> message)
+    {
+        if (getLogger().isWarnEnabled())
+        {
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString());
+        }
+    }
+
+    protected void warn(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
+    {
+        if (getLogger().isWarnEnabled())
+        {
+            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+        }
+    }
+
+    protected void debug(@NonNull final Supplier<?> message)
+    {
+        if (getLogger().isDebugEnabled())
+        {
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString());
+        }
+    }
+
+    protected void debug(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
+    {
+        if (getLogger().isDebugEnabled())
+        {
+            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+        }
+    }
+
+    protected void error(@NonNull final Supplier<?> message)
+    {
+        if (getLogger().isErrorEnabled())
+        {
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString());
+        }
+    }
+
+    protected void error(@NonNull final Supplier<?> message, @NonNull final Throwable cause)
+    {
+        if (getLogger().isErrorEnabled())
+        {
+            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+        }
     }
 
     @NonNull

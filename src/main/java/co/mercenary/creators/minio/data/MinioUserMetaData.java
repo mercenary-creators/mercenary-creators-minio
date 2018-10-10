@@ -29,11 +29,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithJSONOperations;
 import co.mercenary.creators.minio.util.WithUserMetaData;
 
 @JsonInclude(Include.NON_EMPTY)
-public class MinioUserMetaData extends LinkedHashMap<String, String> implements WithUserMetaData
+public class MinioUserMetaData extends LinkedHashMap<String, String> implements WithUserMetaData, WithJSONOperations
 {
     private static final long serialVersionUID = 5745617887209205963L;
 
@@ -50,34 +52,34 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         }
     }
 
-    public MinioUserMetaData(@NonNull final String key, @Nullable final String val)
+    public MinioUserMetaData(@NonNull final String key, @NonNull final String val)
     {
         plus(key, val);
     }
 
     @Nullable
     @Override
-    public String get(final Object key)
+    public String get(@NonNull final Object key)
     {
         return super.get(MinioUtils.requireNonNull(key));
     }
 
     @Nullable
     @Override
-    public String remove(final Object key)
+    public String remove(@NonNull final Object key)
     {
         return super.remove(MinioUtils.requireNonNull(key));
     }
 
     @Nullable
     @Override
-    public String put(final String key, final String val)
+    public String put(@NonNull final String key, @NonNull final String val)
     {
         return super.put(MinioUtils.requireToString(key), MinioUtils.requireToString(val));
     }
 
     @NonNull
-    public MinioUserMetaData plus(@NonNull final String key, @Nullable final String val)
+    public MinioUserMetaData plus(@NonNull final String key, @NonNull final String val)
     {
         if (null != val)
         {
@@ -87,9 +89,9 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
     }
 
     @NonNull
-    public MinioUserMetaData minus(@NonNull final String key, final String... keys)
+    public MinioUserMetaData minus(@NonNull final String key, @NonNull final String... keys)
     {
-        return minus(MinioUtils.concat(key, keys));
+        return minus(Stream.concat(Stream.of(MinioUtils.requireNonNull(key)), Stream.of(MinioUtils.requireNonNull(keys))));
     }
 
     @NonNull
@@ -116,5 +118,46 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         keySet().forEach(key -> tmp.put(MinioUtils.toAmazonMetaPrefix(key), get(key)));
 
         return tmp;
+    }
+
+    @NonNull
+    @Override
+    public String toJSONString(final boolean pretty) throws MinioDataException
+    {
+        return MinioUtils.toJSONString(getUserMetaData(), pretty);
+    }
+
+    @NonNull
+    @Override
+    public String toString()
+    {
+        try
+        {
+            return toJSONString();
+        }
+        catch (final MinioDataException e)
+        {
+            return super.toString();
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (other instanceof MinioUserMetaData)
+        {
+            return toString().equals(other.toString());
+        }
+        return false;
     }
 }
