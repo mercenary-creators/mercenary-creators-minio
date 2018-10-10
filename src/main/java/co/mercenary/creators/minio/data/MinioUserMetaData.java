@@ -52,7 +52,7 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         }
     }
 
-    public MinioUserMetaData(@NonNull final String key, @NonNull final String val)
+    public MinioUserMetaData(@NonNull final String key, @Nullable final String val)
     {
         plus(key, val);
     }
@@ -73,13 +73,13 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
 
     @Nullable
     @Override
-    public String put(@NonNull final String key, @NonNull final String val)
+    public String put(@NonNull final String key, @Nullable final String val)
     {
         return super.put(MinioUtils.requireToString(key), MinioUtils.requireToString(val));
     }
 
     @NonNull
-    public MinioUserMetaData plus(@NonNull final String key, @NonNull final String val)
+    public MinioUserMetaData plus(@NonNull final String key, @Nullable final String val)
     {
         if (null != val)
         {
