@@ -418,7 +418,7 @@ public class MinioTemplate implements MinioOperations
     {
         final MinioContentTypeProbe probe = getContentTypeProbe();
 
-        return MinioUtils.getResultAsStream(getMinioClient().listObjects(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioItem(item.objectName(), bucket, item.objectSize(), !item.isDir(), item.etag(), probe.getContentType(item.objectName()), () -> item.lastModified(), this));
+        return MinioUtils.getResultAsStream(getMinioClient().listObjects(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioItem(item.objectName(), bucket, item.objectSize(), !item.isDir(), item.etag(), probe.getContentType(item.objectName()), () -> item.lastModified(), item.storageClass(), this));
     }
 
     @Override
@@ -718,6 +718,16 @@ public class MinioTemplate implements MinioOperations
         {
             throw new MinioOperationException(e);
         }
+    }
+
+    @Override
+    public boolean addUserMetaData(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        if ((null == meta) || (meta.isEmpty()))
+        {
+            return false;
+        }
+        return setUserMetaData(bucket, name, getUserMetaData(bucket, name).plus(meta));
     }
 
     @Override

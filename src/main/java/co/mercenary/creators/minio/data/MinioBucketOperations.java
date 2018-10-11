@@ -204,4 +204,6 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
     Stream<MinioUpload> getIncompleteUploads(@Nullable CharSequence prefix, boolean recursive) throws MinioOperationException;
 
     boolean setUserMetaData(@NonNull CharSequence name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+
+    boolean addUserMetaData(@NonNull CharSequence name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
 }

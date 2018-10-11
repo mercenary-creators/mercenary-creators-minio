@@ -305,11 +305,13 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             @Override
             public boolean setUserMetaData(@NonNull final CharSequence name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                if ((null == meta) || meta.isEmpty())
-                {
-                    return false;
-                }
                 return oper.setUserMetaData(self().getName(), name, meta);
+            }
+
+            @Override
+            public boolean addUserMetaData(@NonNull final CharSequence name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+            {
+                return oper.addUserMetaData(self().getName(), name, meta);
             }
         };
     }

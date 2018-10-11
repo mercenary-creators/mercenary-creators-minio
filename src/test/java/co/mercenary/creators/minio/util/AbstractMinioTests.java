@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
@@ -42,11 +43,14 @@ import co.mercenary.creators.minio.errors.MinioDataException;
 public abstract class AbstractMinioTests
 {
     @NonNull
-    private final Logger  logger = LoggingOps.getLogger(getClass());
+    private final NanoTicker ticker = new NanoTicker();
+
+    @NonNull
+    private final Logger     logger = LoggingOps.getLogger(getClass());
 
     @Nullable
     @Autowired
-    private MinioTemplate minioTemplate;
+    private MinioTemplate    minioTemplate;
 
     @Nullable
     protected MinioTemplate getMinioTemplate()
@@ -82,6 +86,18 @@ public abstract class AbstractMinioTests
     protected void doBeforeEachTest()
     {
         info(() -> getMinioOperations().getContentTypeProbe().getClass().getName());
+
+        ticker.reset();
+    }
+
+    @AfterEach
+    protected void doAfterEachTest()
+    {
+        final String value = ticker.toString();
+
+        info(() -> value);
+
+        ticker.reset();
     }
 
     @NonNull

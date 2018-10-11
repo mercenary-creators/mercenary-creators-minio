@@ -271,4 +271,6 @@ public interface MinioOperations extends WithDescription, WithServerData
     void setTraceStream(@NonNull OutputStream stream);
 
     boolean setUserMetaData(@NonNull CharSequence bucket, @NonNull CharSequence name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+
+    boolean addUserMetaData(@NonNull CharSequence bucket, @NonNull CharSequence name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
 }

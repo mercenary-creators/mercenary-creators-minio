@@ -100,4 +100,6 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     boolean copyObject(@NonNull CharSequence bucket, @Nullable CharSequence name, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
 
     boolean setUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
+
+    boolean addUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
 }

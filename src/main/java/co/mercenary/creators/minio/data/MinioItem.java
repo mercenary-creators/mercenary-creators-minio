@@ -43,6 +43,9 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 {
     private final boolean             file;
 
+    @Nullable
+    private final String              stor;
+
     @NonNull
     private final String              type;
 
@@ -52,7 +55,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     @NonNull
     private final MinioItemOperations oper;
 
-    public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @NonNull final MinioOperations oper)
+    public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @Nullable final CharSequence stor, @NonNull final MinioOperations oper)
     {
         super(MinioUtils.fixPathString(name), buck, etag, size);
 
@@ -61,6 +64,8 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
         this.type = MinioUtils.fixContentType(type);
 
         this.time = MinioUtils.toMaybeNonNull(time);
+
+        this.stor = MinioUtils.toStorageClass(stor);
 
         this.oper = buildWithOperations(this, oper);
     }
@@ -79,16 +84,23 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     }
 
     @NonNull
+    public String getContentType()
+    {
+        return type;
+    }
+
+    @NonNull
     @JsonInclude(Include.NON_ABSENT)
     public Optional<Date> getLastModified()
     {
         return time.map(date -> new Date(date.getTime()));
     }
 
-    @NonNull
-    public String getContentType()
+    @Nullable
+    @JsonInclude(Include.NON_NULL)
+    public String getStorageClass()
     {
-        return type;
+        return stor;
     }
 
     @NonNull
@@ -305,11 +317,13 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             @Override
             public boolean setUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                if ((null == meta) || meta.isEmpty())
-                {
-                    return false;
-                }
                 return oper.setUserMetaData(self().getBucket(), self().getName(), meta);
+            }
+
+            @Override
+            public boolean addUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
+            {
+                return oper.addUserMetaData(self().getBucket(), self().getName(), meta);
             }
         };
     }

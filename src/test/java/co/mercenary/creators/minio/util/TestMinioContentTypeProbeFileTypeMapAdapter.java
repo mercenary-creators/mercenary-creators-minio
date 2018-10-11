@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio;
+package co.mercenary.creators.minio.util;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import javax.activation.FileTypeMap;
+
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.content.MinioContentTypeProbe;
-import co.mercenary.creators.minio.util.TestMinioContentTypeProbeFileTypeMapAdapter;
+import co.mercenary.creators.minio.content.MinioContentTypeProbeFileTypeMapAdapter;
 
-@Configuration
-public class MinioContentTypeFileProbeTestConfig
+public class TestMinioContentTypeProbeFileTypeMapAdapter extends MinioContentTypeProbeFileTypeMapAdapter
 {
-    @Bean
-    @NonNull
-    @MatchesContentTypeProbeName(matchIfMissing = true)
-    public MinioContentTypeProbe minioContentTypeProbe()
+    public TestMinioContentTypeProbeFileTypeMapAdapter()
     {
-        return new TestMinioContentTypeProbeFileTypeMapAdapter();
+        super();
+    }
+
+    public TestMinioContentTypeProbeFileTypeMapAdapter(@NonNull final FileTypeMap fmap)
+    {
+        super(fmap);
     }
 }

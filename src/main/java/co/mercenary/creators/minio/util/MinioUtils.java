@@ -85,6 +85,9 @@ public final class MinioUtils
     public static final String                    NULLS_STRING_VALUED = "null";
 
     @NonNull
+    public static final String                    USERS_STRING_VALUED = "user";
+
+    @NonNull
     public static final String                    FALSE_STRING_VALUED = "false";
 
     @NonNull
@@ -345,6 +348,18 @@ public final class MinioUtils
         if (null != string)
         {
             return string.replace(QUOTE_STRING_VALUED, EMPTY_STRING_VALUED);
+        }
+        return string;
+    }
+
+    @Nullable
+    public static String toStorageClass(@Nullable final CharSequence value)
+    {
+        final String string = getCharSequence(value);
+
+        if (null != string)
+        {
+            return string.toUpperCase();
         }
         return string;
     }

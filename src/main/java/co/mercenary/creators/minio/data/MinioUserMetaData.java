@@ -52,6 +52,11 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         }
     }
 
+    public MinioUserMetaData(@Nullable final MinioUserMetaData map)
+    {
+        plus(map);
+    }
+
     public MinioUserMetaData(@NonNull final String key, @Nullable final String val)
     {
         plus(key, val);
@@ -84,6 +89,16 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         if (null != val)
         {
             put(key, val);
+        }
+        return this;
+    }
+
+    @NonNull
+    public MinioUserMetaData plus(@Nullable final Map<String, String> map)
+    {
+        if ((null != map) && (false == map.isEmpty()))
+        {
+            super.putAll(MinioUtils.toLinkedHashMap(map, true));
         }
         return this;
     }

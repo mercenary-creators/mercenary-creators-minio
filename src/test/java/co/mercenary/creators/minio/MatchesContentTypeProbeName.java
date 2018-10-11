@@ -24,12 +24,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Conditional;
+import org.springframework.core.annotation.AliasFor;
 
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-@Conditional(MatchesProbeCondition.class)
+@Conditional(MatchesContentTypeProbeNameCondition.class)
 public @interface MatchesContentTypeProbeName
 {
+    @AliasFor("named")
     String value() default "file";
+
+    @AliasFor("value")
+    String named() default "file";
+
+    boolean matchIfMissing() default false;
 }
