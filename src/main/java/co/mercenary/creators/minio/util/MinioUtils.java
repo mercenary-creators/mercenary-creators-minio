@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
@@ -54,7 +53,6 @@ import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
-import co.mercenary.creators.minio.errors.MinioDataException;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 
@@ -83,9 +81,6 @@ public final class MinioUtils
 
     @NonNull
     public static final String                    NULLS_STRING_VALUED = "null";
-
-    @NonNull
-    public static final String                    USERS_STRING_VALUED = "user";
 
     @NonNull
     public static final String                    FALSE_STRING_VALUED = "false";
@@ -352,7 +347,7 @@ public final class MinioUtils
         return string;
     }
 
-    @Nullable
+    @NonNull
     public static String toStorageClass(@Nullable final CharSequence value)
     {
         final String string = getCharSequence(value);
@@ -362,6 +357,12 @@ public final class MinioUtils
             return string.toUpperCase();
         }
         return string;
+    }
+
+    @NonNull
+    public static String fixBuckString(@NonNull final CharSequence buck)
+    {
+        return buck.toString();
     }
 
     @NonNull
@@ -540,29 +541,9 @@ public final class MinioUtils
     {
         if ((null == map) || (map.isEmpty()))
         {
-            return Collections.emptyMap();
+            return emptyMap();
         }
         return Collections.unmodifiableMap(map);
-    }
-
-    @NonNull
-    public static <K, V> Map<K, V> concat(@NonNull final Map<K, V> map, @NonNull final K key, @NonNull final V val)
-    {
-        final LinkedHashMap<K, V> tmp = new LinkedHashMap<>(map);
-
-        tmp.put(key, val);
-
-        return tmp;
-    }
-
-    @NonNull
-    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@Nullable final Map<K, V> map)
-    {
-        if ((null == map) || (map.isEmpty()))
-        {
-            return new LinkedHashMap<>();
-        }
-        return new LinkedHashMap<>(map);
     }
 
     @NonNull
@@ -585,35 +566,21 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(final K key, @Nullable final V val)
-    {
-        final LinkedHashMap<K, V> map = new LinkedHashMap<>();
-
-        map.put(requireNonNull(key), val);
-
-        return map;
-    }
-
-    @NonNull
-    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(final K key, @Nullable final V val, final boolean fix)
-    {
-        final LinkedHashMap<K, V> map = new LinkedHashMap<>();
-
-        if (false == fix)
-        {
-            map.put(requireNonNull(key), val);
-        }
-        else if ((null != key) && (null != val))
-        {
-            map.put(key, val);
-        }
-        return map;
-    }
-
-    @NonNull
     public static <T> Collection<T> keys(@NonNull final Map<T, ?> map)
     {
         return Collections.unmodifiableCollection(map.keySet());
+    }
+
+    @NonNull
+    public static String getTEXTContentType()
+    {
+        return "text/plain";
+    }
+
+    @NonNull
+    public static String getHTMLContentType()
+    {
+        return "text/html";
     }
 
     @NonNull
@@ -649,31 +616,35 @@ public final class MinioUtils
     @Nullable
     public static String getContentTypeCommon(@Nullable final CharSequence name)
     {
-        final String path = getCharSequence(name);
-
-        if (path != null)
+        if ((null == name) || (name.length() < 5))
         {
-            final int leng = path.length();
+            return NULL();
+        }
+        final String path = name.toString();
 
-            if (leng > 4)
-            {
-                if (path.endsWith(".json"))
-                {
-                    return getJSONContentType();
-                }
-                if (path.endsWith(".java"))
-                {
-                    return getJAVAContentType();
-                }
-                if (path.endsWith(".properties"))
-                {
-                    return getPROPContentType();
-                }
-                if (path.endsWith(".yml") || path.endsWith(".yaml"))
-                {
-                    return getYAMLContentType();
-                }
-            }
+        if (path.endsWith(".json"))
+        {
+            return getJSONContentType();
+        }
+        if (path.endsWith(".html") || path.endsWith(".htm"))
+        {
+            return getHTMLContentType();
+        }
+        if (path.endsWith(".txt") || path.endsWith(".text"))
+        {
+            return getTEXTContentType();
+        }
+        if (path.endsWith(".java"))
+        {
+            return getJAVAContentType();
+        }
+        if (path.endsWith(".properties"))
+        {
+            return getPROPContentType();
+        }
+        if (path.endsWith(".yml") || path.endsWith(".yaml"))
+        {
+            return getYAMLContentType();
         }
         return NULL();
     }
@@ -732,20 +703,6 @@ public final class MinioUtils
         throw new IOException(path.toString());
     }
 
-    public static long getSize(@NonNull final File file) throws IOException
-    {
-        return getSize(file.toPath());
-    }
-
-    public static long getSize(@NonNull final Path path) throws IOException
-    {
-        if (isValidToRead(requireNonNull(path)))
-        {
-            return Files.size(path);
-        }
-        throw new IOException(path.toString());
-    }
-
     @NonNull
     public static Integer getDuration(@NonNull final Long time)
     {
@@ -768,36 +725,6 @@ public final class MinioUtils
     public static Integer getDuration(@NonNull final Long time, @NonNull final TimeUnit unit)
     {
         return getDuration(unit.toSeconds(time.longValue()));
-    }
-
-    @NonNull
-    public static String toJSONString(@NonNull final Object value) throws MinioDataException
-    {
-        return toJSONString(requireNonNull(value), true);
-    }
-
-    @NonNull
-    public static String toJSONString(@NonNull final Object value, final boolean pretty) throws MinioDataException
-    {
-        return new JSONObjectMapper(pretty).toJSONString(requireNonNull(value));
-    }
-
-    @NonNull
-    public static <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
-    {
-        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
-    }
-
-    @NonNull
-    public static <T> T toJSONObject(@NonNull final InputStream value, @NonNull final Class<T> type) throws MinioDataException
-    {
-        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
-    }
-
-    @NonNull
-    public static <T> T toJSONObject(@NonNull final Resource value, @NonNull final Class<T> type) throws MinioDataException
-    {
-        return new JSONObjectMapper(false).toJSONObject(requireNonNull(value), requireNonNull(type));
     }
 
     public static long getCurrentMills()

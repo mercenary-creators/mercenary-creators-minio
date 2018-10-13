@@ -38,7 +38,7 @@ public abstract class MinioCommon extends AbstractCommon
 
     protected MinioCommon(@NonNull final CharSequence name, @NonNull final CharSequence buck, @Nullable final CharSequence etag, final long size)
     {
-        super(name);
+        super(MinioUtils.fixPathString(name));
 
         this.size = size;
 

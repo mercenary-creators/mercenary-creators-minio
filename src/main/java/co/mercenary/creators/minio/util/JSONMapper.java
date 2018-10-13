@@ -24,8 +24,11 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
@@ -44,7 +47,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
 
-public class JSONObjectMapper extends ObjectMapper
+public class JSONMapper extends ObjectMapper
 {
     private static final long          serialVersionUID = 7742077499646363644L;
 
@@ -60,7 +63,12 @@ public class JSONObjectMapper extends ObjectMapper
         return new DefaultPrettyPrinter().withArrayIndenter(new DefaultIndenter().withIndent(indent)).withObjectIndenter(new DefaultIndenter().withIndent(indent));
     }
 
-    public JSONObjectMapper(final boolean pretty)
+    public JSONMapper()
+    {
+        this(false);
+    }
+
+    public JSONMapper(final boolean pretty)
     {
         registerModules(EXTENDED_MODULES).enable(ALLOW_COMMENTS).enable(ESCAPE_NON_ASCII).disable(AUTO_CLOSE_SOURCE).disable(AUTO_CLOSE_TARGET).disable(FAIL_ON_UNKNOWN_PROPERTIES).enable(WRITE_BIGDECIMAL_AS_PLAIN);
 
@@ -72,7 +80,7 @@ public class JSONObjectMapper extends ObjectMapper
         }
     }
 
-    protected JSONObjectMapper(@NonNull final JSONObjectMapper parent)
+    protected JSONMapper(@NonNull final JSONMapper parent)
     {
         super(MinioUtils.requireNonNull(parent));
     }
@@ -93,6 +101,36 @@ public class JSONObjectMapper extends ObjectMapper
     }
 
     @NonNull
+    public byte[] toByteArray(@NonNull final Object value) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value);
+
+        try
+        {
+            return MinioUtils.requireNonNull(writeValueAsBytes(value));
+        }
+        catch (final JsonProcessingException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @NonNull
+    public <T> T toJSONObject(@NonNull final byte[] value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value, type);
+
+        try
+        {
+            return MinioUtils.requireNonNull(readerFor(type).readValue(value));
+        }
+        catch (final IOException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @NonNull
     public <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
     {
         MinioUtils.isEachNonNull(value, type);
@@ -100,6 +138,21 @@ public class JSONObjectMapper extends ObjectMapper
         try
         {
             return MinioUtils.requireNonNull(readerFor(type).readValue(value.toString()));
+        }
+        catch (final IOException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @NonNull
+    public <T> T toJSONObject(@NonNull final Reader value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value, type);
+
+        try
+        {
+            return MinioUtils.requireNonNull(readerFor(type).readValue(value));
         }
         catch (final IOException e)
         {
@@ -137,30 +190,68 @@ public class JSONObjectMapper extends ObjectMapper
         }
     }
 
-    public boolean canSerializeClass(@Nullable final Class<?> type)
+    @NonNull
+    public <T> T toJSONObject(@NonNull final File value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value, type);
+
+        try (final InputStream stream = MinioUtils.getInputStream(value))
+        {
+            return MinioUtils.requireNonNull(readerFor(type).readValue(stream));
+        }
+        catch (final IOException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @NonNull
+    public <T> T toJSONObject(@NonNull final Path value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value, type);
+
+        try (final InputStream stream = MinioUtils.getInputStream(value))
+        {
+            return MinioUtils.requireNonNull(readerFor(type).readValue(stream));
+        }
+        catch (final IOException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @Override
+    public boolean canSerialize(@Nullable final Class<?> type)
     {
         if (null != type)
         {
-            return canSerialize(type);
+            return super.canSerialize(type);
         }
         return false;
     }
 
-    public boolean canSerializeValue(@Nullable final Object object)
+    public boolean canSerializeObject(@Nullable final Object object)
     {
         if (null != object)
         {
-            return canSerializeClass(object.getClass());
+            if (object instanceof Class)
+            {
+                return canSerialize(MinioUtils.CAST(object));
+            }
+            else
+            {
+                return super.canSerialize(object.getClass());
+            }
         }
         return false;
     }
 
     @NonNull
     @Override
-    public JSONObjectMapper copy()
+    public JSONMapper copy()
     {
-        _checkInvalidCopy(JSONObjectMapper.class);
+        _checkInvalidCopy(JSONMapper.class);
 
-        return new JSONObjectMapper(this);
+        return new JSONMapper(this);
     }
 }

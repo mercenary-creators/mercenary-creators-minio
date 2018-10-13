@@ -200,7 +200,7 @@ public abstract class AbstractMinioTests
     {
         try
         {
-            return MinioUtils.toJSONString(value, pretty);
+            return JSONUtils.toJSONString(value, pretty);
         }
         catch (final MinioDataException e)
         {
@@ -213,7 +213,7 @@ public abstract class AbstractMinioTests
     {
         try
         {
-            return MinioUtils.toJSONObject(value, type);
+            return JSONUtils.toJSONObject(value, type);
         }
         catch (final MinioDataException e)
         {

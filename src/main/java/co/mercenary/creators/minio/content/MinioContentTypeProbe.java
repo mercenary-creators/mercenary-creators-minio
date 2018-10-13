@@ -90,6 +90,12 @@ public interface MinioContentTypeProbe
     }
 
     @Nullable
+    default String getContentType(@Nullable final byte[] data)
+    {
+        return MinioUtils.NULL();
+    }
+
+    @Nullable
     default String getContentType(@Nullable final Resource value)
     {
         String name = MinioUtils.NULL();

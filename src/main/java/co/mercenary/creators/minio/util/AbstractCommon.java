@@ -43,7 +43,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     {
         try
         {
-            return toJSONString(false);
+            return toJSONString();
         }
         catch (final MinioDataException e)
         {
@@ -75,6 +75,6 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     @Override
     public String toJSONString(final boolean pretty) throws MinioDataException
     {
-        return MinioUtils.toJSONString(this, pretty);
+        return JSONUtils.toJSONString(this, pretty);
     }
 }

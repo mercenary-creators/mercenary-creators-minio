@@ -24,22 +24,23 @@ import co.mercenary.creators.minio.MinioOperations;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.util.AbstractCommon;
 import co.mercenary.creators.minio.util.MinioUtils;
+import co.mercenary.creators.minio.util.WithOperations;
 
-public class MinioUpload extends AbstractCommon
+public class MinioUpload extends AbstractCommon implements WithOperations<MinioUploadOperations>
 {
     @NonNull
-    private final String          buck;
+    private final String                buck;
 
     @NonNull
-    private final MinioOperations oper;
+    private final MinioUploadOperations oper;
 
-    public MinioUpload(@NonNull final CharSequence name, @NonNull final CharSequence buck, @NonNull final MinioOperations opers)
+    public MinioUpload(@NonNull final String name, @NonNull final String buck, @NonNull final MinioOperations oper)
     {
-        super(name);
+        super(MinioUtils.fixPathString(name));
 
-        this.buck = MinioUtils.requireToString(buck);
+        this.buck = MinioUtils.requireNonNull(buck);
 
-        this.oper = MinioUtils.requireNonNull(opers);
+        this.oper = buildWithOperations(this, oper);
     }
 
     @NonNull
@@ -48,9 +49,12 @@ public class MinioUpload extends AbstractCommon
         return buck;
     }
 
-    public boolean removeUpload() throws MinioOperationException
+    @NonNull
+    @Override
+    @JsonIgnore
+    public MinioUploadOperations withOperations()
     {
-        return oper.removeUpload(getBucket(), getName());
+        return oper;
     }
 
     @NonNull
@@ -79,5 +83,41 @@ public class MinioUpload extends AbstractCommon
             return toString().equals(other.toString());
         }
         return false;
+    }
+
+    @NonNull
+    protected static MinioUploadOperations buildWithOperations(@NonNull final MinioUpload self, @NonNull final MinioOperations oper)
+    {
+        MinioUtils.isEachNonNull(self, oper);
+
+        return new MinioUploadOperations()
+        {
+            @NonNull
+            @Override
+            public MinioUpload self()
+            {
+                return self;
+            }
+
+            @NonNull
+            @Override
+            public String getServer()
+            {
+                return oper.getServer();
+            }
+
+            @NonNull
+            @Override
+            public String getRegion()
+            {
+                return oper.getRegion();
+            }
+
+            @Override
+            public boolean removeUpload() throws MinioOperationException
+            {
+                return oper.removeUpload(self().getBucket(), self().getName());
+            }
+        };
     }
 }

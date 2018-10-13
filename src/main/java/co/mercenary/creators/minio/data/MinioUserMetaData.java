@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
+import co.mercenary.creators.minio.util.JSONUtils;
 import co.mercenary.creators.minio.util.MinioUtils;
 import co.mercenary.creators.minio.util.WithJSONOperations;
 import co.mercenary.creators.minio.util.WithUserMetaData;
@@ -44,17 +45,17 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
         super();
     }
 
+    public MinioUserMetaData(final int size)
+    {
+        super(size);
+    }
+
     public MinioUserMetaData(@Nullable final Map<String, List<String>> map)
     {
         if (null != map)
         {
             map.keySet().stream().filter(MinioUtils::isAmazonMetaPrefix).forEach(key -> MinioUtils.toOptional(map.get(key)).map(MinioUtils::toZero).ifPresent(val -> plus(MinioUtils.noAmazonMetaPrefix(key), val)));
         }
-    }
-
-    public MinioUserMetaData(@Nullable final MinioUserMetaData map)
-    {
-        plus(map);
     }
 
     public MinioUserMetaData(@NonNull final String key, @Nullable final String val)
@@ -128,18 +129,18 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
     @JsonIgnore
     public Map<String, String> getUserMetaData()
     {
-        final MinioUserMetaData tmp = new MinioUserMetaData();
+        final MinioUserMetaData map = new MinioUserMetaData(size());
 
-        keySet().forEach(key -> tmp.put(MinioUtils.toAmazonMetaPrefix(key), get(key)));
+        keySet().forEach(key -> map.plus(MinioUtils.toAmazonMetaPrefix(key), get(key)));
 
-        return tmp;
+        return MinioUtils.toUnmodifiable(map);
     }
 
     @NonNull
     @Override
     public String toJSONString(final boolean pretty) throws MinioDataException
     {
-        return MinioUtils.toJSONString(getUserMetaData(), pretty);
+        return JSONUtils.toJSONString(getUserMetaData(), pretty);
     }
 
     @NonNull

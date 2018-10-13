@@ -16,15 +16,16 @@
 
 package co.mercenary.creators.minio.content.tika;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.language.translate.Translator;
 import org.apache.tika.parser.Parser;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
@@ -34,7 +35,7 @@ import co.mercenary.creators.minio.content.MinioContentTypeProbe;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
-public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, InitializingBean
+public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
 {
     @NonNull
     private final Tika tika;
@@ -85,11 +86,76 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, 
         }
         final String valu = getTika().detect(name.toString());
 
-        if ((null == valu) || (valu.trim().isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
+        if ((null == valu) || (valu.isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
         {
             return getContentType(name, () -> MinioUtils.NULL());
         }
         return valu;
+    }
+
+    @Nullable
+    @Override
+    public String getContentType(@Nullable final byte[] input)
+    {
+        if (null == input)
+        {
+            return MinioUtils.NULL();
+        }
+        final String valu = getTika().detect(input);
+
+        if ((null == valu) || (valu.trim().isEmpty()))
+        {
+            return MinioUtils.NULL();
+        }
+        return valu;
+    }
+
+    @Nullable
+    @Override
+    public String getContentType(@Nullable final Path input)
+    {
+        if (null == input)
+        {
+            return MinioUtils.NULL();
+        }
+        try
+        {
+            final String valu = getTika().detect(input);
+
+            if ((null == valu) || (valu.trim().isEmpty()))
+            {
+                return MinioUtils.NULL();
+            }
+            return valu;
+        }
+        catch (final IOException e)
+        {
+            return MinioUtils.NULL();
+        }
+    }
+
+    @Nullable
+    @Override
+    public String getContentType(@Nullable final File input)
+    {
+        if (null == input)
+        {
+            return MinioUtils.NULL();
+        }
+        try
+        {
+            final String valu = getTika().detect(input);
+
+            if ((null == valu) || (valu.trim().isEmpty()))
+            {
+                return MinioUtils.NULL();
+            }
+            return valu;
+        }
+        catch (final IOException e)
+        {
+            return MinioUtils.NULL();
+        }
     }
 
     @Nullable
@@ -120,11 +186,5 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe, 
     protected Tika getTika()
     {
         return tika;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
-        // no implementation.
     }
 }

@@ -100,6 +100,8 @@ public interface MinioOperations extends WithDescription, WithServerData
 
     boolean deleteBucket(@NonNull CharSequence bucket) throws MinioOperationException;
 
+    boolean ensureBucket(@NonNull CharSequence bucket) throws MinioOperationException;
+
     boolean isObject(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
     boolean deleteObject(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
@@ -111,9 +113,6 @@ public interface MinioOperations extends WithDescription, WithServerData
 
     @NonNull
     <T> T getBucketPolicy(@NonNull CharSequence bucket, @NonNull Class<T> type) throws MinioOperationException, MinioDataException;
-
-    @NonNull
-    MinioBucket createOrGetBucket(@NonNull CharSequence bucket) throws MinioOperationException;
 
     @NonNull
     MinioUserMetaData getUserMetaData(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
@@ -222,43 +221,43 @@ public interface MinioOperations extends WithDescription, WithServerData
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class));
+        return getItems(bucket, MinioUtils.NULL());
     }
 
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket, final boolean recursive) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), recursive);
+        return getItems(bucket, MinioUtils.NULL(), recursive);
     }
 
     @NonNull
     default Optional<MinioItem> getItem(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), MinioUtils.requireToString(name), false).findFirst();
+        return getItems(bucket, name.toString(), false).findFirst();
     }
 
     @NonNull
     default Stream<MinioItem> getItems(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(bucket), prefix, true);
+        return getItems(bucket, prefix, true);
     }
 
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket) throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), false);
+        return getIncompleteUploads(bucket, false);
     }
 
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, final boolean recursive) throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), MinioUtils.NULL(CharSequence.class), recursive);
+        return getIncompleteUploads(bucket, MinioUtils.NULL(), recursive);
     }
 
     @NonNull
     default Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix) throws MinioOperationException
     {
-        return getIncompleteUploads(MinioUtils.requireNonNull(bucket), prefix, false);
+        return getIncompleteUploads(bucket, prefix, false);
     }
 
     @NonNull
@@ -266,9 +265,9 @@ public interface MinioOperations extends WithDescription, WithServerData
 
     boolean removeUpload(@NonNull CharSequence bucket, @NonNull CharSequence name) throws MinioOperationException;
 
-    void setTraceStream();
+    void traceStreamOff();
 
-    void setTraceStream(@NonNull OutputStream stream);
+    void setTraceStream(@Nullable OutputStream stream);
 
     boolean setUserMetaData(@NonNull CharSequence bucket, @NonNull CharSequence name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
 

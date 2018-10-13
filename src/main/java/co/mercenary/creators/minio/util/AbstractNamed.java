@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class AbstractNamed implements WithName, WithDescription
 {
     @NonNull
-    private String name;
+    private final String name;
 
     protected AbstractNamed(@NonNull final CharSequence name)
     {
@@ -35,11 +35,6 @@ public abstract class AbstractNamed implements WithName, WithDescription
     public String getName()
     {
         return name;
-    }
-
-    protected void setName(@NonNull final CharSequence name)
-    {
-        this.name = MinioUtils.requireToString(name);
     }
 
     @NonNull

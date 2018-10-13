@@ -48,6 +48,8 @@ import co.mercenary.creators.minio.data.MinioUpload;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
+import co.mercenary.creators.minio.errors.MinioRuntimeException;
+import co.mercenary.creators.minio.util.JSONUtils;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.MinioClient;
@@ -60,7 +62,7 @@ import io.minio.http.Method;
 public class MinioTemplate implements MinioOperations
 {
     @NonNull
-    private static final CopyConditions        META_COPY_CONDITIONS = new MinioCopyConditions().setReplaceMetadataDirective().getCopyConditions();
+    private static final CopyConditions        COPY_CONDS = new MinioCopyConditions().setReplaceMetadataDirective().getCopyConditions();
 
     @NonNull
     private final String                       server_url;
@@ -79,7 +81,7 @@ public class MinioTemplate implements MinioOperations
     private MinioContentTypeProbe              type_probe;
 
     @NonNull
-    private final AtomicReference<MinioClient> atomic_ref           = new AtomicReference<>();
+    private final AtomicReference<MinioClient> atomic_ref = new AtomicReference<>();
 
     public MinioTemplate(@NonNull final CharSequence server, @Nullable final CharSequence access, @Nullable final CharSequence secret, @Nullable final CharSequence region)
     {
@@ -113,13 +115,13 @@ public class MinioTemplate implements MinioOperations
                         }
                         catch (final MinioException e)
                         {
-                            return update;
+                            throw new MinioRuntimeException(e);
                         }
                     });
                 }
             }
         }
-        return client;
+        return MinioUtils.requireNonNull(client, () -> MinioUtils.format("could not create MinioClient server=(%s), region=(%s).", getServer(), getRegion()));
     }
 
     public void setContentTypeProbe(@Nullable final MinioContentTypeProbe type_probe)
@@ -185,9 +187,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean isBucket(@NonNull final CharSequence bucket) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket);
+
         try
         {
-            return getMinioClient().bucketExists(MinioUtils.requireToString(bucket));
+            return getMinioClient().bucketExists(bucket.toString());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -198,11 +202,13 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean deleteBucket(@NonNull final CharSequence bucket) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket);
+
         if (isBucket(bucket))
         {
             try
             {
-                getMinioClient().removeBucket(MinioUtils.getCharSequence(bucket));
+                getMinioClient().removeBucket(bucket.toString());
 
                 return true;
             }
@@ -217,6 +223,8 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean isObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
             return getObjectStatus(bucket, name).getCreationTime().isPresent();
@@ -230,11 +238,13 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean deleteObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
-        if (isBucket(bucket))
+        MinioUtils.isEachNonNull(bucket, name);
+
+        if (isObject(bucket, name))
         {
             try
             {
-                getMinioClient().removeObject(MinioUtils.getCharSequence(bucket), MinioUtils.requireToString(name));
+                getMinioClient().removeObject(bucket.toString(), name.toString());
 
                 return true;
             }
@@ -246,22 +256,25 @@ public class MinioTemplate implements MinioOperations
         return false;
     }
 
-    @NonNull
     @Override
-    public MinioBucket createOrGetBucket(@NonNull final CharSequence bucket) throws MinioOperationException
+    public boolean ensureBucket(@NonNull final CharSequence bucket) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket);
+
         if (false == isBucket(bucket))
         {
             try
             {
-                getMinioClient().makeBucket(MinioUtils.getCharSequence(bucket));
+                getMinioClient().makeBucket(bucket.toString());
+
+                return true;
             }
             catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
             {
                 throw new MinioOperationException(e);
             }
         }
-        return getBucket(bucket).orElseThrow(() -> new MinioOperationException(MinioUtils.format("no bucket %s", bucket)));
+        return false;
     }
 
     @NonNull
@@ -298,9 +311,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            return getMinioClient().getObject(bucket.toString(), name.toString());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -312,9 +327,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), skip);
+            return getMinioClient().getObject(bucket.toString(), name.toString(), skip);
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -326,9 +343,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, final long skip, final long leng) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), skip, leng);
+            return getMinioClient().getObject(bucket.toString(), name.toString(), skip, leng);
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -340,9 +359,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public InputStream getObjectInputStream(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name, keys);
+
         try
         {
-            return getMinioClient().getObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
+            return getMinioClient().getObject(bucket.toString(), name.toString(), keys);
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -354,9 +375,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public MinioObjectStatus getObjectStatus(@NonNull final CharSequence bucket, @NonNull final CharSequence name) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         try
         {
-            final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            final ObjectStat stat = getMinioClient().statObject(bucket.toString(), name.toString());
 
             return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), new MinioUserMetaData(stat.httpHeaders()));
         }
@@ -370,9 +393,11 @@ public class MinioTemplate implements MinioOperations
     @Override
     public MinioObjectStatus getObjectStatus(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final ServerSideEncryption keys) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name, keys);
+
         try
         {
-            final ObjectStat stat = getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.requireNonNull(keys));
+            final ObjectStat stat = getMinioClient().statObject(bucket.toString(), name.toString(), keys);
 
             return new MinioObjectStatus(name, bucket, stat.length(), getContentTypeProbe().getContentType(stat.contentType(), name), stat.etag(), () -> stat.createdTime(), new MinioUserMetaData(stat.httpHeaders()));
         }
@@ -389,7 +414,9 @@ public class MinioTemplate implements MinioOperations
 
         try
         {
-            getMinioClient().putObject(createOrGetBucket(bucket).getName(), MinioUtils.getCharSequence(name), input, getContentTypeProbe().getContentType(type, name));
+            ensureBucket(bucket);
+
+            getMinioClient().putObject(bucket.toString(), name.toString(), input, getContentTypeProbe().getContentType(type, name));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -424,6 +451,8 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Resource input, @Nullable final CharSequence type) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
         try (final InputStream is = input.getInputStream())
         {
             putObject(bucket, name, is, type);
@@ -437,6 +466,8 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final File input, @Nullable final CharSequence type) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
         try (final InputStream is = MinioUtils.getInputStream(input))
         {
             putObject(bucket, name, is, type);
@@ -450,6 +481,8 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final Path input, @Nullable final CharSequence type) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
         try (final InputStream is = MinioUtils.getInputStream(input))
         {
             putObject(bucket, name, is, type);
@@ -470,11 +503,11 @@ public class MinioTemplate implements MinioOperations
         {
             if ((method == Method.GET) || (method == Method.HEAD))
             {
-                return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+                return getMinioClient().presignedGetObject(bucket.toString(), name.toString());
             }
             if ((method == Method.PUT) || (method == Method.POST))
             {
-                return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+                return getMinioClient().presignedPutObject(bucket.toString(), name.toString());
             }
             throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
@@ -494,11 +527,11 @@ public class MinioTemplate implements MinioOperations
         {
             if ((method == Method.GET) || (method == Method.HEAD))
             {
-                return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
+                return getMinioClient().presignedGetObject(bucket.toString(), name.toString(), MinioUtils.getDuration(seconds));
             }
             if ((method == Method.PUT) || (method == Method.POST))
             {
-                return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
+                return getMinioClient().presignedPutObject(bucket.toString(), name.toString(), MinioUtils.getDuration(seconds));
             }
             throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
@@ -518,11 +551,11 @@ public class MinioTemplate implements MinioOperations
         {
             if ((method == Method.GET) || (method == Method.HEAD))
             {
-                return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
+                return getMinioClient().presignedGetObject(bucket.toString(), name.toString(), MinioUtils.getDuration(seconds));
             }
             if ((method == Method.PUT) || (method == Method.POST))
             {
-                return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(seconds));
+                return getMinioClient().presignedPutObject(bucket.toString(), name.toString(), MinioUtils.getDuration(seconds));
             }
             throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
@@ -542,11 +575,11 @@ public class MinioTemplate implements MinioOperations
         {
             if ((method == Method.GET) || (method == Method.HEAD))
             {
-                return getMinioClient().presignedGetObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(time, unit));
+                return getMinioClient().presignedGetObject(bucket.toString(), name.toString(), MinioUtils.getDuration(time, unit));
             }
             if ((method == Method.PUT) || (method == Method.POST))
             {
-                return getMinioClient().presignedPutObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name), MinioUtils.getDuration(time, unit));
+                return getMinioClient().presignedPutObject(bucket.toString(), name.toString(), MinioUtils.getDuration(time, unit));
             }
             throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
         }
@@ -559,28 +592,7 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean copyObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final CharSequence target, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
     {
-        MinioUtils.isEachNonNull(bucket, name, target);
-
-        if (isObject(bucket, name))
-        {
-            try
-            {
-                if ((null != conditions) && (false == conditions.isEmpty()))
-                {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()), conditions.getCopyConditions());
-                }
-                else
-                {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(MinioUtils.NULL()));
-                }
-                return true;
-            }
-            catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
-            {
-                throw new MinioOperationException(e);
-            }
-        }
-        return false;
+        return copyObject(bucket, name, target, MinioUtils.NULL(), conditions);
     }
 
     @Override
@@ -592,13 +604,17 @@ public class MinioTemplate implements MinioOperations
         {
             try
             {
+                if (false == bucket.equals(target))
+                {
+                    ensureBucket(target);
+                }
                 if ((null != conditions) && (false == conditions.isEmpty()))
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(object), conditions.getCopyConditions());
+                    getMinioClient().copyObject(bucket.toString(), name.toString(), target.toString(), (null == object) ? MinioUtils.NULL() : object.toString(), conditions.getCopyConditions());
                 }
                 else
                 {
-                    getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), createOrGetBucket(target).getName(), MinioUtils.getCharSequence(object));
+                    getMinioClient().copyObject(bucket.toString(), name.toString(), target.toString(), (null == object) ? MinioUtils.NULL() : object.toString());
                 }
                 return true;
             }
@@ -614,7 +630,7 @@ public class MinioTemplate implements MinioOperations
     @Override
     public Stream<MinioUpload> getIncompleteUploads(@NonNull final CharSequence bucket, @Nullable final CharSequence prefix, final boolean recursive) throws MinioOperationException
     {
-        return MinioUtils.getResultAsStream(getMinioClient().listIncompleteUploads(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioUpload(item.objectName(), bucket, this));
+        return MinioUtils.getResultAsStream(getMinioClient().listIncompleteUploads(MinioUtils.requireToString(bucket), MinioUtils.getCharSequence(prefix), recursive)).map(item -> new MinioUpload(item.objectName(), bucket.toString(), this));
     }
 
     @Override
@@ -626,11 +642,11 @@ public class MinioTemplate implements MinioOperations
         {
             if (policy instanceof CharSequence)
             {
-                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), policy.toString());
+                getMinioClient().setBucketPolicy(bucket.toString(), policy.toString());
             }
             else
             {
-                getMinioClient().setBucketPolicy(MinioUtils.requireToString(bucket), MinioUtils.toJSONString(policy));
+                getMinioClient().setBucketPolicy(bucket.toString(), JSONUtils.toJSONString(policy));
             }
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
@@ -653,16 +669,18 @@ public class MinioTemplate implements MinioOperations
 
             return MinioUtils.requireNonNull(value);
         }
-        return MinioUtils.toJSONObject(policy, type);
+        return JSONUtils.toJSONObject(policy, type);
     }
 
     @NonNull
     @Override
     public String getBucketPolicy(@NonNull final CharSequence bucket) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket);
+
         try
         {
-            return getMinioClient().getBucketPolicy(MinioUtils.requireToString(bucket));
+            return MinioUtils.requireNonNull(getMinioClient().getBucketPolicy(bucket.toString()));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -677,7 +695,7 @@ public class MinioTemplate implements MinioOperations
 
         try
         {
-            getMinioClient().removeIncompleteUpload(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name));
+            getMinioClient().removeIncompleteUpload(bucket.toString(), name.toString());
 
             return true;
         }
@@ -695,7 +713,7 @@ public class MinioTemplate implements MinioOperations
 
         try
         {
-            return new MinioUserMetaData(getMinioClient().statObject(MinioUtils.requireToString(bucket), MinioUtils.requireToString(name)).httpHeaders());
+            return new MinioUserMetaData(getMinioClient().statObject(bucket.toString(), name.toString()).httpHeaders());
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -710,7 +728,7 @@ public class MinioTemplate implements MinioOperations
 
         try
         {
-            getMinioClient().copyObject(MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), MinioUtils.getCharSequence(bucket), MinioUtils.getCharSequence(name), META_COPY_CONDITIONS, MinioUtils.requireNonNullOrElse(meta, MinioUserMetaData::new).getUserMetaData());
+            getMinioClient().copyObject(bucket.toString(), name.toString(), bucket.toString(), MinioUtils.NULL(), COPY_CONDS, (null == meta) ? MinioUtils.NULL() : meta.getUserMetaData());
 
             return true;
         }
@@ -723,6 +741,8 @@ public class MinioTemplate implements MinioOperations
     @Override
     public boolean addUserMetaData(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
+        MinioUtils.isEachNonNull(bucket, name);
+
         if ((null == meta) || (meta.isEmpty()))
         {
             return false;
@@ -731,7 +751,7 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void setTraceStream()
+    public void traceStreamOff()
     {
         try
         {
@@ -739,13 +759,20 @@ public class MinioTemplate implements MinioOperations
         }
         catch (final IOException e)
         {
-            MinioUtils.requireNonNull(e);
+            throw new MinioRuntimeException(e);
         }
     }
 
     @Override
-    public void setTraceStream(@NonNull final OutputStream stream)
+    public void setTraceStream(@Nullable final OutputStream stream)
     {
-        getMinioClient().traceOn(MinioUtils.requireNonNull(stream));
+        if (null == stream)
+        {
+            traceStreamOff();
+        }
+        else
+        {
+            getMinioClient().traceOn(stream);
+        }
     }
 }

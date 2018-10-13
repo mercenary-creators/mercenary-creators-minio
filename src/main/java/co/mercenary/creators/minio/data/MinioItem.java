@@ -57,7 +57,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
     public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @Nullable final CharSequence stor, @NonNull final MinioOperations oper)
     {
-        super(MinioUtils.fixPathString(name), buck, etag, size);
+        super(name, buck, etag, size);
 
         this.file = file;
 
