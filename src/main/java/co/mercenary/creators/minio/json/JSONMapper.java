@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.util;
+package co.mercenary.creators.minio.json;
 
 import static com.fasterxml.jackson.core.JsonGenerator.Feature.AUTO_CLOSE_TARGET;
 import static com.fasterxml.jackson.core.JsonGenerator.Feature.ESCAPE_NON_ASCII;
@@ -34,6 +34,7 @@ import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.PrettyPrinter;
@@ -46,6 +47,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
+import co.mercenary.creators.minio.util.MinioUtils;
 
 public class JSONMapper extends ObjectMapper
 {
@@ -110,6 +112,27 @@ public class JSONMapper extends ObjectMapper
             return MinioUtils.requireNonNull(writeValueAsBytes(value));
         }
         catch (final JsonProcessingException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @Nullable
+    public <T> T convert(@Nullable final Object value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        if (null == value)
+        {
+            return MinioUtils.NULL();
+        }
+        if (ClassUtils.isAssignableValue(type, value))
+        {
+            return type.cast(value);
+        }
+        try
+        {
+            return super.convertValue(value, type);
+        }
+        catch (final IllegalArgumentException e)
         {
             throw new MinioDataException(e);
         }

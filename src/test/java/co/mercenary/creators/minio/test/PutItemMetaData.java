@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
+import co.mercenary.creators.minio.json.JSONObject;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 public class PutItemMetaData extends AbstractMinioTests
@@ -27,15 +28,17 @@ public class PutItemMetaData extends AbstractMinioTests
     @Test
     public void test() throws Exception
     {
-        if (false == getMinioOperations().isObject("root", "jones.json"))
-        {
-            getMinioOperations().putObject("root", "jones.json", getResource());
-        }
-        getMinioOperations().setUserMetaData("root", "jones.json", new MinioUserMetaData("test-meta", uuid()));
+        final JSONObject json = new JSONObject().plus("name", "Dean Jones").plus("year", 1963);
 
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "jones.json");
+        getMinioOperations().putObject("root", "zips.json", json.toByteArray(), new MinioUserMetaData("zips-meta", uuid()).plus("zips-name", "Dean Jones"));
+
+        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "zips.json");
 
         info(() -> toJSONString(stat));
+
+        final MinioUserMetaData meta = getMinioOperations().getUserMetaData("root", "zips.json");
+
+        info(() -> meta);
 
         assertEquals(stat.getContentType(), "application/json", () -> "not application/json");
     }

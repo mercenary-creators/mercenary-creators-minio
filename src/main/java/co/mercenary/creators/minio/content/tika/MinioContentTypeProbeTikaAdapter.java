@@ -19,6 +19,7 @@ package co.mercenary.creators.minio.content.tika;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
 
 import org.apache.tika.Tika;
@@ -32,6 +33,7 @@ import org.springframework.lang.Nullable;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
+import co.mercenary.creators.minio.logging.Logging;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
@@ -68,6 +70,30 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
     public MinioContentTypeProbeTikaAdapter(@NonNull final Detector detector, @NonNull final Parser parser, @NonNull final Translator translator)
     {
         this.tika = new Tika(MinioUtils.requireNonNull(detector), MinioUtils.requireNonNull(parser), MinioUtils.requireNonNull(translator));
+    }
+
+    @Nullable
+    @Override
+    public String getContentType(@Nullable final URL link)
+    {
+        if (null == link)
+        {
+            return MinioUtils.NULL();
+        }
+        try
+        {
+            final String valu = getTika().detect(link);
+
+            if ((null == valu) || (valu.isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
+            {
+                return MinioUtils.NULL();
+            }
+            return valu;
+        }
+        catch (final IOException e)
+        {
+            return Logging.handle(e);
+        }
     }
 
     @Nullable
@@ -130,7 +156,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return MinioUtils.NULL();
+            return Logging.handle(e);
         }
     }
 
@@ -154,7 +180,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return MinioUtils.NULL();
+            return Logging.handle(e);
         }
     }
 
@@ -178,7 +204,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return MinioUtils.NULL();
+            return Logging.handle(e);
         }
     }
 

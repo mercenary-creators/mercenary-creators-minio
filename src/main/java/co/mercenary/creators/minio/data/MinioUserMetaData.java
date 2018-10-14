@@ -30,9 +30,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
-import co.mercenary.creators.minio.util.JSONUtils;
+import co.mercenary.creators.minio.json.JSONUtils;
+import co.mercenary.creators.minio.json.WithJSONOperations;
 import co.mercenary.creators.minio.util.MinioUtils;
-import co.mercenary.creators.minio.util.WithJSONOperations;
 import co.mercenary.creators.minio.util.WithUserMetaData;
 
 @JsonInclude(Include.NON_EMPTY)

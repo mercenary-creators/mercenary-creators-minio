@@ -14,21 +14,39 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.util;
+package co.mercenary.creators.minio.logging;
 
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.errors.MinioDataException;
-
-@FunctionalInterface
-public interface WithJSONOperations
+public abstract class AbstractWithLogging implements WithLogging
 {
     @NonNull
-    String toJSONString(boolean pretty) throws MinioDataException;
+    private final ILogger logger;
+
+    protected AbstractWithLogging()
+    {
+        logger = Logging.getLogger(getClass());
+    }
+
+    protected AbstractWithLogging(@NonNull final Class<?> type)
+    {
+        logger = Logging.getLogger(type);
+    }
+
+    protected AbstractWithLogging(@NonNull final ILogger logs)
+    {
+        logger = Logging.getLogger(logs.getName());
+    }
+
+    protected AbstractWithLogging(@NonNull final CharSequence name)
+    {
+        logger = Logging.getLogger(name.toString());
+    }
 
     @NonNull
-    default String toJSONString() throws MinioDataException
+    @Override
+    public ILogger getLogger()
     {
-        return toJSONString(true);
+        return logger;
     }
 }

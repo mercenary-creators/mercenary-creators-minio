@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.util;
+package co.mercenary.creators.minio.json;
+
+import java.util.LinkedHashMap;
 
 import org.springframework.lang.NonNull;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
-import co.mercenary.creators.minio.json.JSONUtils;
-import co.mercenary.creators.minio.json.WithJSONOperations;
+import co.mercenary.creators.minio.errors.MinioRuntimeException;
 
-public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
+public class JSONObject extends LinkedHashMap<String, Object> implements WithJSONOperations
 {
-    protected AbstractCommon(@NonNull final CharSequence name)
+    private static final long serialVersionUID = 3248651885486937763L;
+
+    public JSONObject()
     {
-        super(name);
     }
 
     @NonNull
     @Override
-    @JsonIgnore
-    public String toDescription()
+    public String toJSONString(final boolean pretty) throws MinioDataException
     {
-        return MinioUtils.format("name=(%s).", getName());
+        return JSONUtils.toJSONString(this, pretty);
     }
 
     @NonNull
@@ -45,12 +45,26 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     {
         try
         {
-            return toJSONString();
+            return toJSONString(false);
         }
         catch (final MinioDataException e)
         {
-            return toDescription();
+            throw new MinioRuntimeException(e);
         }
+    }
+
+    @NonNull
+    public JSONObject plus(@NonNull final String key, @Nullable final Object val)
+    {
+        super.put(key, val);
+
+        return this;
+    }
+
+    @NonNull
+    public byte[] toByteArray() throws MinioDataException
+    {
+        return JSONUtils.toByteArray(this);
     }
 
     @Override
@@ -66,17 +80,10 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
         {
             return true;
         }
-        if (other instanceof AbstractCommon)
+        if (other instanceof JSONObject)
         {
             return toString().equals(other.toString());
         }
         return false;
-    }
-
-    @NonNull
-    @Override
-    public String toJSONString(final boolean pretty) throws MinioDataException
-    {
-        return JSONUtils.toJSONString(this, pretty);
     }
 }

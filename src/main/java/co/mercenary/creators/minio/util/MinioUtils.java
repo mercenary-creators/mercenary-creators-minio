@@ -566,6 +566,22 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static Map<String, String> toHeaderMap(@Nullable final WithUserMetaData meta)
+    {
+        if (null == meta)
+        {
+            return new LinkedHashMap<>();
+        }
+        final Map<String, String> vals = meta.getUserMetaData();
+
+        if ((vals == null) || (vals.isEmpty()))
+        {
+            return new LinkedHashMap<>();
+        }
+        return new LinkedHashMap<>(vals);
+    }
+
+    @NonNull
     public static <T> Collection<T> keys(@NonNull final Map<T, ?> map)
     {
         return Collections.unmodifiableCollection(map.keySet());

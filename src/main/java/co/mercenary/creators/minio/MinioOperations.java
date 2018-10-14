@@ -175,6 +175,10 @@ public interface MinioOperations extends WithDescription, WithServerData
 
     void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull InputStream input, @Nullable CharSequence type) throws MinioOperationException;
 
+    void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull byte[] input, @Nullable CharSequence type, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+
+    void putObject(@NonNull CharSequence bucket, @NonNull CharSequence name, @NonNull byte[] input, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+
     default void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input) throws MinioOperationException
     {
         putObject(MinioUtils.requireNonNull(bucket), MinioUtils.requireNonNull(name), MinioUtils.requireNonNull(input), MinioUtils.NULL(CharSequence.class));

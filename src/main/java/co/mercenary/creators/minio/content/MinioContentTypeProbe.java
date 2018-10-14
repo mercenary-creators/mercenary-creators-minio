@@ -16,10 +16,17 @@
 
 package co.mercenary.creators.minio.content;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 import org.springframework.core.io.Resource;
@@ -28,11 +35,59 @@ import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
+import co.mercenary.creators.minio.logging.Logging;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
 public interface MinioContentTypeProbe
 {
+    @Nullable
+    default String getContentType(@Nullable final URL link)
+    {
+        if (null == link)
+        {
+            return MinioUtils.NULL();
+        }
+        if ("file".equalsIgnoreCase(link.getProtocol()))
+        {
+            try
+            {
+                final Path path = Paths.get(link.toURI());
+
+                if (Files.isRegularFile(path))
+                {
+                    return getContentType(path);
+                }
+            }
+            catch (final URISyntaxException e)
+            {
+                Logging.handle(e);
+            }
+        }
+        try
+        {
+            final URLConnection conn = link.openConnection();
+
+            String type = conn.getContentType();
+
+            final int size = conn.getContentLength();
+
+            try (BufferedInputStream buff = new BufferedInputStream(conn.getInputStream(), size))
+            {
+                type = getContentType(buff, type);
+            }
+            if (conn instanceof HttpURLConnection)
+            {
+                MinioUtils.CAST(conn, HttpURLConnection.class).disconnect();
+            }
+            return type;
+        }
+        catch (final IOException e)
+        {
+            return Logging.handle(e);
+        }
+    }
+
     @Nullable
     default String getContentType(@Nullable final Path path)
     {
@@ -86,7 +141,13 @@ public interface MinioContentTypeProbe
     @Nullable
     default String getContentType(@Nullable final InputStream input)
     {
-        return MinioUtils.NULL();
+        return getContentType(input, MinioUtils.NULL());
+    }
+
+    @Nullable
+    default String getContentType(@Nullable final InputStream input, @Nullable final String type)
+    {
+        return type;
     }
 
     @Nullable
@@ -116,7 +177,7 @@ public interface MinioContentTypeProbe
                 }
                 catch (final IOException e)
                 {
-                    name = MinioUtils.NULL();
+                    name = Logging.handle(e);
                 }
             }
         }
@@ -124,11 +185,11 @@ public interface MinioContentTypeProbe
         {
             try (final InputStream input = value.getInputStream())
             {
-                name = getContentType(input);
+                name = getContentType(input, name);
             }
             catch (final IOException e)
             {
-                name = MinioUtils.NULL();
+                name = Logging.handle(e);
             }
         }
         return name;

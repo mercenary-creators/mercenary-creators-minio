@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -49,7 +50,7 @@ import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioOperationException;
 import co.mercenary.creators.minio.errors.MinioRuntimeException;
-import co.mercenary.creators.minio.util.JSONUtils;
+import co.mercenary.creators.minio.json.JSONUtils;
 import co.mercenary.creators.minio.util.MinioUtils;
 import io.minio.CopyConditions;
 import io.minio.MinioClient;
@@ -775,4 +776,34 @@ public class MinioTemplate implements MinioOperations
             getMinioClient().traceOn(stream);
         }
     }
+
+    @Override
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final CharSequence type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
+        final Map<String, String> head = MinioUtils.toHeaderMap(meta);
+
+        head.put("Content-Type", getContentTypeProbe().getContentType(type, name));
+
+        try
+        {
+            ensureBucket(bucket);
+
+            final ByteArrayInputStream baos = new ByteArrayInputStream(input);
+
+            getMinioClient().putObject(bucket.toString(), name.toString(), baos, baos.available(), head);
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @Override
+    public void putObject(@NonNull final CharSequence bucket, @NonNull final CharSequence name, @NonNull final byte[] input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
 }
