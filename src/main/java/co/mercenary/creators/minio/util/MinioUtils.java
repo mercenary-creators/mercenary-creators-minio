@@ -347,7 +347,7 @@ public final class MinioUtils
         return string;
     }
 
-    @NonNull
+    @Nullable
     public static String toStorageClass(@Nullable final CharSequence value)
     {
         final String string = getCharSequence(value);
@@ -356,7 +356,7 @@ public final class MinioUtils
         {
             return string.toUpperCase();
         }
-        return "STANDARD";
+        return string;
     }
 
     @NonNull
