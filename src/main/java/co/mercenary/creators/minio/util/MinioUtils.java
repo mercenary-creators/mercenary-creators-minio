@@ -356,7 +356,7 @@ public final class MinioUtils
         {
             return string.toUpperCase();
         }
-        return string;
+        return "STANDARD";
     }
 
     @NonNull
