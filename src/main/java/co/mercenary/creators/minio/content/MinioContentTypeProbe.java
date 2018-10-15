@@ -183,7 +183,7 @@ public interface MinioContentTypeProbe
         {
             try (final InputStream input = value.getInputStream())
             {
-                return getContentType(input, name);
+                return getContentType(input);
             }
             catch (final IOException e)
             {
