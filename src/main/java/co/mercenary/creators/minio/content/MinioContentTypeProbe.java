@@ -24,7 +24,6 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
@@ -35,7 +34,6 @@ import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
-import co.mercenary.creators.minio.logging.Logging;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
@@ -54,14 +52,14 @@ public interface MinioContentTypeProbe
             {
                 final Path path = Paths.get(link.toURI());
 
-                if (Files.isRegularFile(path))
+                if (path.toFile().isFile())
                 {
                     return getContentType(path);
                 }
             }
             catch (final URISyntaxException e)
             {
-                Logging.handle(e);
+                // ignore
             }
         }
         try
@@ -84,7 +82,7 @@ public interface MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return Logging.handle(e);
+            return MinioUtils.NULL();
         }
     }
 
@@ -177,7 +175,8 @@ public interface MinioContentTypeProbe
                 }
                 catch (final IOException e)
                 {
-                    name = Logging.handle(e);
+                    name = MinioUtils.NULL();
+
                 }
             }
         }
@@ -189,7 +188,8 @@ public interface MinioContentTypeProbe
             }
             catch (final IOException e)
             {
-                name = Logging.handle(e);
+                name = MinioUtils.NULL();
+
             }
         }
         return name;

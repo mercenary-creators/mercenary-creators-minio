@@ -30,6 +30,7 @@ public class JSONObject extends LinkedHashMap<String, Object> implements WithJSO
 
     public JSONObject()
     {
+        super();
     }
 
     @NonNull

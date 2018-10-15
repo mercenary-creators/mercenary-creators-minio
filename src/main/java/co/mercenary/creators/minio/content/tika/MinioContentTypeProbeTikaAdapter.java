@@ -33,7 +33,6 @@ import org.springframework.lang.Nullable;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 import co.mercenary.creators.minio.content.MinioContentTypeProbe;
-import co.mercenary.creators.minio.logging.Logging;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 @JsonIgnoreType
@@ -92,7 +91,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return Logging.handle(e);
+            return MinioUtils.NULL();
         }
     }
 
@@ -156,7 +155,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return Logging.handle(e);
+            return MinioUtils.NULL();
         }
     }
 
@@ -180,7 +179,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return Logging.handle(e);
+            return MinioUtils.NULL();
         }
     }
 
@@ -204,7 +203,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         catch (final IOException e)
         {
-            return Logging.handle(e);
+            return MinioUtils.NULL();
         }
     }
 

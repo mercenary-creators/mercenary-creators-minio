@@ -572,13 +572,7 @@ public final class MinioUtils
         {
             return new LinkedHashMap<>();
         }
-        final Map<String, String> vals = meta.getUserMetaData();
-
-        if ((vals == null) || (vals.isEmpty()))
-        {
-            return new LinkedHashMap<>();
-        }
-        return new LinkedHashMap<>(vals);
+        return new LinkedHashMap<>(meta.getUserMetaData());
     }
 
     @NonNull
