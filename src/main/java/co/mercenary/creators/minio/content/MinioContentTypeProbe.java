@@ -59,7 +59,7 @@ public interface MinioContentTypeProbe
             }
             catch (final URISyntaxException e)
             {
-                // ignore
+                MinioUtils.requireNonNull(e);
             }
         }
         try
@@ -176,7 +176,6 @@ public interface MinioContentTypeProbe
                 catch (final IOException e)
                 {
                     name = MinioUtils.NULL();
-
                 }
             }
         }
@@ -184,11 +183,11 @@ public interface MinioContentTypeProbe
         {
             try (final InputStream input = value.getInputStream())
             {
-                name = getContentType(input, name);
+                return getContentType(input, name);
             }
             catch (final IOException e)
             {
-                name = MinioUtils.NULL();
+                return MinioUtils.NULL();
 
             }
         }

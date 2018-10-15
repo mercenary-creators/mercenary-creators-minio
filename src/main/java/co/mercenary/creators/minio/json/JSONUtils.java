@@ -159,7 +159,7 @@ public final class JSONUtils
         }
         if (object instanceof Optional)
         {
-            final Optional<?> value = MinioUtils.CAST(object);
+            final Optional<?> value = MinioUtils.CAST(object, Optional.class);
 
             if (value.isPresent())
             {
