@@ -36,13 +36,13 @@ public abstract class MinioCommon extends AbstractCommon
     @NonNull
     private final String buck;
 
-    protected MinioCommon(@NonNull final CharSequence name, @NonNull final CharSequence buck, @Nullable final CharSequence etag, final long size)
+    protected MinioCommon(@NonNull final String name, @NonNull final String buck, @Nullable final String etag, final long size)
     {
         super(MinioUtils.fixPathString(name));
 
         this.size = size;
 
-        this.buck = MinioUtils.requireToString(buck);
+        this.buck = MinioUtils.fixBucketString(buck);
 
         this.etag = MinioUtils.getETagSequence(etag);
     }

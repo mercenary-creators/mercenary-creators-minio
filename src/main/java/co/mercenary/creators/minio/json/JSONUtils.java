@@ -83,7 +83,7 @@ public final class JSONUtils
     }
 
     @NonNull
-    public static <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
+    public static <T> T toJSONObject(@NonNull final String value, @NonNull final Class<T> type) throws MinioDataException
     {
         return NORMAL.toJSONObject(value, type);
     }

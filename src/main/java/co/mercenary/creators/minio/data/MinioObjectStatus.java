@@ -42,7 +42,7 @@ public class MinioObjectStatus extends MinioCommon implements WithUserMetaData
     @NonNull
     private final Map<String, String> meta;
 
-    public MinioObjectStatus(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, @Nullable final CharSequence type, @Nullable final CharSequence etag, @NonNull final Supplier<Date> time, @NonNull final Map<String, String> meta)
+    public MinioObjectStatus(@NonNull final String name, @NonNull final String buck, final long size, @Nullable final String type, @Nullable final String etag, @NonNull final Supplier<Date> time, @NonNull final Map<String, String> meta)
     {
         super(name, buck, etag, size);
 

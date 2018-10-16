@@ -154,13 +154,13 @@ public class JSONMapper extends ObjectMapper
     }
 
     @NonNull
-    public <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type) throws MinioDataException
+    public <T> T toJSONObject(@NonNull final String value, @NonNull final Class<T> type) throws MinioDataException
     {
         MinioUtils.isEachNonNull(value, type);
 
         try
         {
-            return MinioUtils.requireNonNull(readerFor(type).readValue(value.toString()));
+            return MinioUtils.requireNonNull(readerFor(type).readValue(value));
         }
         catch (final IOException e)
         {

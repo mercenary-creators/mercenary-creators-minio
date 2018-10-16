@@ -17,7 +17,6 @@
 package co.mercenary.creators.minio.util;
 
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.PathMatcher;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
@@ -31,16 +30,16 @@ public class PatternPathMatcher implements WithPatternPathMatcher
     @NonNull
     private final PathMatcher matcher;
 
-    public PatternPathMatcher(@NonNull final CharSequence pattern)
+    public PatternPathMatcher(@NonNull final String pattern)
     {
         this(pattern, MinioUtils.GLOBAL_PATH_MATCHER);
     }
 
-    public PatternPathMatcher(@NonNull final CharSequence pattern, @Nullable final PathMatcher matcher)
+    public PatternPathMatcher(@NonNull final String pattern, @NonNull final PathMatcher matcher)
     {
-        this.pattern = MinioUtils.requireToString(pattern);
+        this.pattern = MinioUtils.requireNonNull(pattern);
 
-        this.matcher = MinioUtils.requireNonNullOrElse(matcher, MinioUtils.GLOBAL_PATH_MATCHER);
+        this.matcher = MinioUtils.requireNonNull(matcher);
     }
 
     @NonNull

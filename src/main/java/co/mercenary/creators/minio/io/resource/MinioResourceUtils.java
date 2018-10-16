@@ -30,31 +30,31 @@ public final class MinioResourceUtils
     {
     }
 
-    public static boolean isMinioResourceProtocol(@Nullable final CharSequence location)
+    public static boolean isMinioResourceProtocol(@Nullable final String location)
     {
         if ((null == location) || (location.length() < 1))
         {
             return false;
         }
-        return MinioUtils.requireToString(location).toLowerCase().startsWith(MINIO_RESOURCE_PROTOCOL);
+        return location.toLowerCase().startsWith(MINIO_RESOURCE_PROTOCOL);
     }
 
     @NonNull
-    public static String noMinioResourceProtocol(@Nullable final CharSequence location)
+    public static String noMinioResourceProtocol(@Nullable final String location)
     {
         if (isMinioResourceProtocol(location))
         {
-            return MinioUtils.requireToString(location).substring(MINIO_RESOURCE_PROTOCOL.length());
+            return location.substring(MINIO_RESOURCE_PROTOCOL.length());
         }
         throw new IllegalArgumentException("the location :'" + MinioUtils.toStringOrElse(location, MinioUtils.NULLS_STRING_VALUED) + "' is not a valid ninio location.");
     }
 
     @NonNull
-    public static String getBucketNameFromLocation(@Nullable final CharSequence location)
+    public static String getBucketNameFromLocation(@Nullable final String location)
     {
         if (isMinioResourceProtocol(location))
         {
-            final String value = MinioUtils.requireToString(location);
+            final String value = MinioUtils.requireNonNull(location);
 
             final int index = value.indexOf(MinioUtils.PATH_SEPARATOR_CHAR, MINIO_RESOURCE_PROTOCOL.length());
 
@@ -68,11 +68,11 @@ public final class MinioResourceUtils
     }
 
     @NonNull
-    public static String getObjectNameFromLocation(@NonNull final CharSequence location)
+    public static String getObjectNameFromLocation(@NonNull final String location)
     {
         if (isMinioResourceProtocol(location))
         {
-            final String value = MinioUtils.requireToString(location);
+            final String value = MinioUtils.requireNonNull(location);
 
             final int index = value.indexOf(MinioUtils.PATH_SEPARATOR_CHAR, MINIO_RESOURCE_PROTOCOL.length());
 

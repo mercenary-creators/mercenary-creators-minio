@@ -44,7 +44,7 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     Resource getItemResource() throws MinioOperationException;
 
     @NonNull
-    Optional<MinioItem> getItemRelative(@NonNull CharSequence path) throws MinioOperationException;
+    Optional<MinioItem> getItemRelative(@NonNull String path) throws MinioOperationException;
 
     @NonNull
     MinioUserMetaData getUserMetaData() throws MinioOperationException;
@@ -91,13 +91,13 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     @NonNull
     String getSignedObjectUrl(@NonNull Method method, @NonNull Long time, @NonNull TimeUnit unit) throws MinioOperationException;
 
-    boolean copyObject(@NonNull CharSequence bucket) throws MinioOperationException;
+    boolean copyObject(@NonNull String bucket) throws MinioOperationException;
 
-    boolean copyObject(@NonNull CharSequence bucket, @Nullable CharSequence name) throws MinioOperationException;
+    boolean copyObject(@NonNull String bucket, @Nullable String name) throws MinioOperationException;
 
-    boolean copyObject(@NonNull CharSequence bucket, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
+    boolean copyObject(@NonNull String bucket, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
 
-    boolean copyObject(@NonNull CharSequence bucket, @Nullable CharSequence name, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
+    boolean copyObject(@NonNull String bucket, @Nullable String name, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
 
     boolean setUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
 

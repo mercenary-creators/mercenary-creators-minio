@@ -107,13 +107,13 @@ public interface MinioContentTypeProbe
     }
 
     @Nullable
-    default String getContentType(@Nullable final CharSequence name)
+    default String getContentType(@Nullable final String name)
     {
         return getContentType(name, () -> MinioUtils.NULL());
     }
 
     @NonNull
-    default String getContentType(@Nullable final CharSequence type, @Nullable final CharSequence name)
+    default String getContentType(@Nullable final String type, @Nullable final String name)
     {
         final String valu = MinioUtils.toStringOrElse(type, MinioUtils.EMPTY_STRING_VALUED).trim();
 
@@ -195,7 +195,7 @@ public interface MinioContentTypeProbe
     }
 
     @Nullable
-    default String getContentType(@Nullable final CharSequence name, @NonNull final Supplier<String> otherwise)
+    default String getContentType(@Nullable final String name, @NonNull final Supplier<String> otherwise)
     {
         final String path = MinioUtils.toStringOrElse(name, MinioUtils.EMPTY_STRING_VALUED);
 

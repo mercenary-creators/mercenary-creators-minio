@@ -25,9 +25,9 @@ public abstract class AbstractNamed implements WithName, WithDescription
     @NonNull
     private final String name;
 
-    protected AbstractNamed(@NonNull final CharSequence name)
+    protected AbstractNamed(@NonNull final String name)
     {
-        this.name = MinioUtils.requireToString(name);
+        this.name = MinioUtils.requireNonNull(name);
     }
 
     @NonNull

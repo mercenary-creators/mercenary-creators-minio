@@ -40,14 +40,14 @@ public abstract class AbstractMinioResource<T> extends AbstractResource implemen
     @NonNull
     private final String desc;
 
-    protected AbstractMinioResource(@NonNull final T with, @NonNull final CharSequence desc)
+    protected AbstractMinioResource(@NonNull final T with, @NonNull final String desc)
     {
         this.with = MinioUtils.requireNonNull(with);
 
-        this.desc = MinioUtils.requireNonNull(desc.toString());
+        this.desc = MinioUtils.requireNonNull(desc);
     }
 
-    protected AbstractMinioResource(@NonNull final T with, @NonNull final CharSequence format, @NonNull final Object... args)
+    protected AbstractMinioResource(@NonNull final T with, @NonNull final String format, @NonNull final Object... args)
     {
         this(with, MinioUtils.format(format, args));
     }

@@ -282,15 +282,15 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String format(@NonNull final CharSequence format, @NonNull final Object... args)
+    public static String format(@NonNull final String format, @NonNull final Object... args)
     {
-        return String.format(format.toString(), args);
+        return String.format(format, args);
     }
 
     @NonNull
-    public static byte[] getBytes(@NonNull final CharSequence value)
+    public static byte[] getBytes(@NonNull final String value)
     {
-        return value.toString().getBytes(StandardCharsets.UTF_8);
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 
     @NonNull
@@ -300,19 +300,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String requireToString(final CharSequence value)
-    {
-        final String chars = getCharSequence(value);
-
-        if (null != chars)
-        {
-            return chars;
-        }
-        throw new NullPointerException();
-    }
-
-    @NonNull
-    public static String toStringOrElse(final CharSequence value, @NonNull final String otherwise)
+    public static String toStringOrElse(final String value, @NonNull final String otherwise)
     {
         final String chars = getCharSequence(value);
 
@@ -336,61 +324,57 @@ public final class MinioUtils
     }
 
     @Nullable
-    public static String getETagSequence(@Nullable final CharSequence value)
+    public static String getETagSequence(@Nullable final String value)
     {
-        final String string = getCharSequence(value);
-
-        if (null != string)
+        if (null != value)
         {
-            return string.replace(QUOTE_STRING_VALUED, EMPTY_STRING_VALUED);
+            return value.replace(QUOTE_STRING_VALUED, EMPTY_STRING_VALUED);
         }
-        return string;
+        return value;
     }
 
     @Nullable
-    public static String toStorageClass(@Nullable final CharSequence value)
+    public static String toStorageClass(@Nullable final String value)
     {
-        final String string = getCharSequence(value);
-
-        if (null != string)
+        if (null != value)
         {
-            return string.toUpperCase();
+            return value.toUpperCase();
         }
-        return string;
+        return value;
     }
 
     @NonNull
-    public static String fixBuckString(@NonNull final CharSequence buck)
+    public static String fixBucketString(@NonNull final String buck)
     {
         return buck.toString();
     }
 
     @NonNull
-    public static String fixPathString(@NonNull final CharSequence path)
+    public static String fixPathString(@NonNull final String path)
     {
         return StringUtils.cleanPath(path.toString());
     }
 
     @NonNull
-    public static String getPathRelative(@NonNull final CharSequence base, @NonNull final CharSequence path)
+    public static String getPathRelative(@NonNull final String base, @NonNull final String path)
     {
-        return fixPathString(StringUtils.applyRelativePath(requireToString(base), requireToString(path)));
+        return fixPathString(StringUtils.applyRelativePath(requireNonNull(base), requireNonNull(path)));
     }
 
     @NonNull
-    public static String fixContentType(@Nullable final CharSequence value)
+    public static String fixContentType(@Nullable final String value)
     {
         return toStringOrElse(value, getDefaultContentType());
     }
 
     @Nullable
-    public static String fixRegionString(@Nullable final CharSequence value, final boolean amazon)
+    public static String fixRegionString(@Nullable final String value, final boolean amazon)
     {
         if ((null == value) || (value.length() < 1))
         {
             return amazon ? DEFAULT_REGION_EAST : NULL();
         }
-        final String string = requireToString(value).trim();
+        final String string = value.trim();
 
         if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
         {
@@ -400,13 +384,19 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String fixRegionString(@Nullable final CharSequence value, @NonNull final String otherwise)
+    public static String fixServerString(@Nullable final String value)
+    {
+        return requireNonNull(value);
+    }
+
+    @NonNull
+    public static String fixRegionString(@Nullable final String value, @NonNull final String otherwise)
     {
         if ((null == value) || (value.length() < 1))
         {
             return otherwise;
         }
-        final String string = requireToString(value).trim();
+        final String string = value.trim();
 
         if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
         {
@@ -416,13 +406,13 @@ public final class MinioUtils
     }
 
     @Nullable
-    public static String fixRegionString(@Nullable final CharSequence value)
+    public static String fixRegionString(@Nullable final String value)
     {
         if ((null == value) || (value.length() < 1))
         {
             return NULL();
         }
-        final String string = requireToString(value).trim();
+        final String string = value.trim();
 
         if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
         {
@@ -458,7 +448,7 @@ public final class MinioUtils
     }
 
     @Nullable
-    public static String failIfNullBytePresent(@Nullable final CharSequence value)
+    public static String failIfNullBytePresent(@Nullable final String value)
     {
         if (null != value)
         {
@@ -471,7 +461,7 @@ public final class MinioUtils
                     throw new IllegalArgumentException("null byte present in string, there are no known legitimate use cases for such data, but several injection attacks may use it.");
                 }
             }
-            return value.toString();
+            return value;
         }
         return NULL();
     }
@@ -624,35 +614,33 @@ public final class MinioUtils
     }
 
     @Nullable
-    public static String getContentTypeCommon(@Nullable final CharSequence name)
+    public static String getContentTypeCommon(@Nullable final String name)
     {
         if ((null == name) || (name.length() < 5))
         {
             return NULL();
         }
-        final String path = name.toString();
-
-        if (path.endsWith(".json"))
+        if (name.endsWith(".json"))
         {
             return getJSONContentType();
         }
-        if (path.endsWith(".html") || path.endsWith(".htm"))
+        if (name.endsWith(".html") || name.endsWith(".htm"))
         {
             return getHTMLContentType();
         }
-        if (path.endsWith(".txt") || path.endsWith(".text"))
+        if (name.endsWith(".txt") || name.endsWith(".text"))
         {
             return getTEXTContentType();
         }
-        if (path.endsWith(".java"))
+        if (name.endsWith(".java"))
         {
             return getJAVAContentType();
         }
-        if (path.endsWith(".properties"))
+        if (name.endsWith(".properties"))
         {
             return getPROPContentType();
         }
-        if (path.endsWith(".yml") || path.endsWith(".yaml"))
+        if (name.endsWith(".yml") || name.endsWith(".yaml"))
         {
             return getYAMLContentType();
         }
@@ -660,7 +648,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String repeat(@Nullable final CharSequence string, final int times)
+    public static String repeat(@Nullable final String string, final int times)
     {
         if (null == string)
         {
@@ -668,13 +656,13 @@ public final class MinioUtils
         }
         if (times < 2)
         {
-            return string.toString();
+            return string;
         }
         final int count = string.length();
 
         if (count < 1)
         {
-            return string.toString();
+            return string;
         }
         final StringBuilder builder = new StringBuilder(count * times);
 

@@ -97,9 +97,9 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
 
     @Nullable
     @Override
-    public String getContentType(@Nullable final CharSequence name)
+    public String getContentType(@Nullable final String name)
     {
-        if ((null == name) || (name.length() < 1))
+        if ((null == name) || (name.isEmpty()))
         {
             return MinioUtils.NULL();
         }
@@ -109,7 +109,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         {
             return type;
         }
-        final String valu = getTika().detect(name.toString());
+        final String valu = getTika().detect(name);
 
         if ((null == valu) || (valu.isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
         {
@@ -128,7 +128,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         }
         final String valu = getTika().detect(input);
 
-        if ((null == valu) || (valu.trim().isEmpty()))
+        if ((null == valu) || (valu.isEmpty()))
         {
             return MinioUtils.NULL();
         }
@@ -147,7 +147,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         {
             final String valu = getTika().detect(input);
 
-            if ((null == valu) || (valu.trim().isEmpty()))
+            if ((null == valu) || (valu.isEmpty()))
             {
                 return MinioUtils.NULL();
             }
@@ -171,7 +171,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         {
             final String valu = getTika().detect(input);
 
-            if ((null == valu) || (valu.trim().isEmpty()))
+            if ((null == valu) || (valu.isEmpty()))
             {
                 return MinioUtils.NULL();
             }
@@ -195,7 +195,7 @@ public class MinioContentTypeProbeTikaAdapter implements MinioContentTypeProbe
         {
             final String valu = getTika().detect(input);
 
-            if ((null == valu) || (valu.trim().isEmpty()))
+            if ((null == valu) || (valu.isEmpty()))
             {
                 return MinioUtils.NULL();
             }

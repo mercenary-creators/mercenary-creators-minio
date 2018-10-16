@@ -26,7 +26,7 @@ import co.mercenary.creators.minio.json.WithJSONOperations;
 
 public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
 {
-    protected AbstractCommon(@NonNull final CharSequence name)
+    protected AbstractCommon(@NonNull final String name)
     {
         super(name);
     }

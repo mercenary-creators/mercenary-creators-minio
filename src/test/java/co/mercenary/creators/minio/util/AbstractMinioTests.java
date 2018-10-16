@@ -210,7 +210,7 @@ public abstract class AbstractMinioTests
     }
 
     @NonNull
-    protected <T> T toJSONObject(@NonNull final CharSequence value, @NonNull final Class<T> type)
+    protected <T> T toJSONObject(@NonNull final String value, @NonNull final Class<T> type)
     {
         try
         {

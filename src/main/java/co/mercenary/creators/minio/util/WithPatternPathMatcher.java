@@ -34,18 +34,18 @@ public interface WithPatternPathMatcher
         return MinioUtils.GLOBAL_PATH_MATCHER;
     }
 
-    default boolean isPattern(@NonNull final CharSequence path)
+    default boolean isPattern(@NonNull final String path)
     {
-        return getPathMatcher().isPattern(MinioUtils.requireToString(path));
+        return getPathMatcher().isPattern(MinioUtils.requireNonNull(path));
     }
 
-    default boolean isMatching(@NonNull final CharSequence path)
+    default boolean isMatching(@NonNull final String path)
     {
-        return getPathMatcher().match(getPattern(), MinioUtils.requireToString(path));
+        return getPathMatcher().match(getPattern(), MinioUtils.requireNonNull(path));
     }
 
-    default boolean isStarting(@NonNull final CharSequence path)
+    default boolean isStarting(@NonNull final String path)
     {
-        return getPathMatcher().matchStart(getPattern(), MinioUtils.requireToString(path));
+        return getPathMatcher().matchStart(getPattern(), MinioUtils.requireNonNull(path));
     }
 }

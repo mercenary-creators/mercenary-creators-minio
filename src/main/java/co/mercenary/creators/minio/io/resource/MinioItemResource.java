@@ -38,7 +38,7 @@ public class MinioItemResource extends AbstractMinioResource<MinioItem>
         this(item, item.toDescription());
     }
 
-    public MinioItemResource(@NonNull final MinioItem item, @NonNull final CharSequence description)
+    public MinioItemResource(@NonNull final MinioItem item, @NonNull final String description)
     {
         super(item, description);
     }

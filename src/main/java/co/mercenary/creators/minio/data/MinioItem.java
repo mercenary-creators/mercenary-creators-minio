@@ -55,7 +55,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     @NonNull
     private final MinioItemOperations oper;
 
-    public MinioItem(@NonNull final CharSequence name, @NonNull final CharSequence buck, final long size, final boolean file, @Nullable final CharSequence etag, @Nullable final CharSequence type, @NonNull final Supplier<Date> time, @Nullable final CharSequence stor, @NonNull final MinioOperations oper)
+    public MinioItem(@NonNull final String name, @NonNull final String buck, final long size, final boolean file, @Nullable final String etag, @Nullable final String type, @NonNull final Supplier<Date> time, @Nullable final String stor, @NonNull final MinioOperations oper)
     {
         super(name, buck, etag, size);
 
@@ -284,32 +284,32 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             }
 
             @Override
-            public boolean copyObject(@NonNull final CharSequence bucket) throws MinioOperationException
+            public boolean copyObject(@NonNull final String bucket) throws MinioOperationException
             {
                 return oper.copyObject(self().getBucket(), self().getName(), MinioUtils.requireNonNull(bucket));
             }
 
             @Override
-            public boolean copyObject(@NonNull final CharSequence bucket, @Nullable final CharSequence name) throws MinioOperationException
+            public boolean copyObject(@NonNull final String bucket, @Nullable final String name) throws MinioOperationException
             {
                 return oper.copyObject(self().getBucket(), self().getName(), MinioUtils.requireNonNull(bucket), name);
             }
 
             @Override
-            public boolean copyObject(@NonNull final CharSequence bucket, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
+            public boolean copyObject(@NonNull final String bucket, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
             {
                 return oper.copyObject(self().getBucket(), self().getName(), MinioUtils.requireNonNull(bucket), conditions);
             }
 
             @Override
-            public boolean copyObject(@NonNull final CharSequence bucket, @Nullable final CharSequence name, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
+            public boolean copyObject(@NonNull final String bucket, @Nullable final String name, @Nullable final MinioCopyConditions conditions) throws MinioOperationException
             {
                 return oper.copyObject(self().getBucket(), self().getName(), MinioUtils.requireNonNull(bucket), name, conditions);
             }
 
             @NonNull
             @Override
-            public Optional<MinioItem> getItemRelative(@NonNull final CharSequence path) throws MinioOperationException
+            public Optional<MinioItem> getItemRelative(@NonNull final String path) throws MinioOperationException
             {
                 return oper.getItem(self().getBucket(), MinioUtils.getPathRelative(self().getName(), path));
             }

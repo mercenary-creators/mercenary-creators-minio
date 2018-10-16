@@ -44,9 +44,9 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
 
     @Nullable
     @Override
-    public String getContentType(@Nullable final CharSequence name)
+    public String getContentType(@Nullable final String name)
     {
-        if ((null == name) || (name.length() < 1))
+        if ((null == name) || (name.isEmpty()))
         {
             return MinioUtils.NULL();
         }
@@ -56,9 +56,9 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
         {
             return type;
         }
-        final String valu = fmap.getContentType(name.toString());
+        final String valu = fmap.getContentType(name);
 
-        if ((null == valu) || (valu.trim().isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
+        if ((null == valu) || (valu.isEmpty()) || (valu.equals(MinioUtils.getDefaultContentType())))
         {
             return getContentType(name, () -> MinioUtils.NULL());
         }
@@ -77,10 +77,10 @@ public class MinioContentTypeProbeFileTypeMapAdapter implements MinioContentType
     @NonNull
     public static MinioContentTypeProbe instance()
     {
-        return Factory.INSTANCE;
+        return InstanceHolder.INSTANCE;
     }
 
-    private static final class Factory
+    private static final class InstanceHolder
     {
         @NonNull
         private static final MinioContentTypeProbeFileTypeMapAdapter INSTANCE = new MinioContentTypeProbeFileTypeMapAdapter();

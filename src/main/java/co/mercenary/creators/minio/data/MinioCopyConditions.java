@@ -103,7 +103,7 @@ public class MinioCopyConditions
     }
 
     @NonNull
-    public MinioCopyConditions setMatchETag(@NonNull final CharSequence etag) throws MinioDataException
+    public MinioCopyConditions setMatchETag(@NonNull final String etag) throws MinioDataException
     {
         try
         {
@@ -117,7 +117,7 @@ public class MinioCopyConditions
     }
 
     @NonNull
-    public MinioCopyConditions setMatchETagNone(@NonNull final CharSequence etag) throws MinioDataException
+    public MinioCopyConditions setMatchETagNone(@NonNull final String etag) throws MinioDataException
     {
         try
         {

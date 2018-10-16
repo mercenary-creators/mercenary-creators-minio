@@ -41,13 +41,13 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     @NonNull
     private final String object;
 
-    public MinioResource(@NonNull final MinioOperations minops, @NonNull final CharSequence bucket, @NonNull final CharSequence object)
+    public MinioResource(@NonNull final MinioOperations minops, @NonNull final String bucket, @NonNull final String object)
     {
         super(minops, "server=(%s), object=(%s), bucket=(%s).", minops.getServer(), object, bucket);
 
-        this.bucket = MinioUtils.requireToString(bucket);
+        this.bucket = MinioUtils.requireNonNull(bucket);
 
-        this.object = MinioUtils.requireToString(object);
+        this.object = MinioUtils.requireNonNull(object);
     }
 
     @Override
