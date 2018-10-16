@@ -346,13 +346,13 @@ public final class MinioUtils
     @NonNull
     public static String fixBucketString(@NonNull final String buck)
     {
-        return buck.toString();
+        return requireNonNull(buck);
     }
 
     @NonNull
     public static String fixPathString(@NonNull final String path)
     {
-        return StringUtils.cleanPath(path.toString());
+        return StringUtils.cleanPath(requireNonNull(path));
     }
 
     @NonNull
