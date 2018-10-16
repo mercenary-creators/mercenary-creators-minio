@@ -79,7 +79,7 @@ public class MinioUserMetaData extends LinkedHashMap<String, String> implements 
 
     @Nullable
     @Override
-    public String put(@NonNull final String key, @Nullable final String val)
+    public String put(@NonNull final String key, final String val)
     {
         return super.put(MinioUtils.requireNonNull(key), MinioUtils.requireNonNull(val));
     }

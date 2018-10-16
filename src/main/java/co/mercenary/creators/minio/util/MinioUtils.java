@@ -384,7 +384,7 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static String fixServerString(@Nullable final String value)
+    public static String fixServerString(@NonNull final String value)
     {
         return requireNonNull(value);
     }
