@@ -95,7 +95,7 @@ public class MinioResource extends AbstractMinioResource<MinioOperations>
     {
         try
         {
-            final Optional<MinioItem> item = self().getItem(bucket, object);
+            final Optional<MinioItem> item = self().findItem(bucket, object);
 
             if (item.isPresent())
             {

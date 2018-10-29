@@ -26,11 +26,11 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasItemStatTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("www.mercenary-creators.io", "script.js");
+        final MinioObjectStatus stat = getOperations().getObjectStatus("www.mercenary-creators.io", "script.js");
 
-        info(() -> toJSONString(stat));
+        info(() -> stat);
 
         assertEquals(stat.getContentType(), "text/javascript", () -> "not text/javascript");
     }

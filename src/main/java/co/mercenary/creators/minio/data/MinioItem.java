@@ -108,7 +108,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), file=(%s), contentType=(%s), lastModified=(%s).", getName(), getBucket(), getEtag(), getSize(), isFile(), getContentType(), MinioUtils.format(time));
+        return String.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), file=(%s), contentType=(%s), lastModified=(%s).", getName(), getBucket(), getEtag(), getSize(), isFile(), getContentType(), toDateString(time));
     }
 
     @Override
@@ -132,7 +132,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
     }
 
     @NonNull
-    protected static MinioItemOperations buildWithOperations(@NonNull final MinioItem self, @NonNull final MinioOperations oper)
+    private static MinioItemOperations buildWithOperations(@NonNull final MinioItem self, @NonNull final MinioOperations oper)
     {
         MinioUtils.isEachNonNull(self, oper);
 
@@ -163,6 +163,16 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
             public boolean isFile()
             {
                 return self().isFile();
+            }
+
+            @Override
+            public boolean isObject() throws MinioOperationException
+            {
+                if (isFile())
+                {
+                    return oper.isObject(self().getBucket(), self().getName());
+                }
+                return false;
             }
 
             @NonNull
@@ -309,21 +319,34 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
             @NonNull
             @Override
+            public Optional<MinioBucket> findBucket() throws MinioOperationException
+            {
+                return oper.findBucket(self().getBucket());
+            }
+
+            @NonNull
+            @Override
             public Optional<MinioItem> getItemRelative(@NonNull final String path) throws MinioOperationException
             {
-                return oper.getItem(self().getBucket(), MinioUtils.getPathRelative(self().getName(), path));
+                return oper.findItem(self().getBucket(), MinioUtils.getPathRelative(self().getName(), path));
             }
 
             @Override
-            public boolean setUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
+            public void deleteUserMetaData() throws MinioOperationException
             {
-                return oper.setUserMetaData(self().getBucket(), self().getName(), meta);
+                oper.deleteUserMetaData(self().getBucket(), self().getName());
             }
 
             @Override
-            public boolean addUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
+            public void setUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                return oper.addUserMetaData(self().getBucket(), self().getName(), meta);
+                oper.setUserMetaData(self().getBucket(), self().getName(), meta);
+            }
+
+            @Override
+            public void addUserMetaData(@Nullable final MinioUserMetaData meta) throws MinioOperationException
+            {
+                oper.addUserMetaData(self().getBucket(), self().getName(), meta);
             }
         };
     }

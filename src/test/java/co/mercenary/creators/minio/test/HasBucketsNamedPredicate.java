@@ -26,13 +26,9 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasBucketsNamedPredicate extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final List<String> look = toList("root", "content");
-
-        final List<MinioBucket> list = toList(getMinioOperations().getBucketsNamed(value -> look.contains(value)));
-
-        list.forEach(value -> info(() -> toJSONString(value)));
+        final List<MinioBucket> list = forInfo(getOperations().findBuckets(toList("content")));
 
         assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
     }

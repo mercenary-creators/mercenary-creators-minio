@@ -112,24 +112,24 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
     }
 
     @NonNull
-    Stream<MinioItem> getItems(@Nullable String prefix, boolean recursive) throws MinioOperationException;
+    Stream<MinioItem> findItems(@Nullable String prefix, boolean recursive) throws MinioOperationException;
 
     @NonNull
-    default Stream<MinioItem> getItems(final boolean recursive) throws MinioOperationException
+    default Stream<MinioItem> findItems(final boolean recursive) throws MinioOperationException
     {
-        return getItems(MinioUtils.NULL(), recursive);
+        return findItems(MinioUtils.NULL(), recursive);
     }
 
     @NonNull
-    default Stream<MinioItem> getItems() throws MinioOperationException
+    default Stream<MinioItem> findItems() throws MinioOperationException
     {
-        return getItems(true);
+        return findItems(true);
     }
 
     @NonNull
-    default Optional<MinioItem> getItem(@NonNull final String name) throws MinioOperationException
+    default Optional<MinioItem> findItem(@NonNull final String name) throws MinioOperationException
     {
-        return getItems(MinioUtils.requireNonNull(name), false).findFirst();
+        return findItems(MinioUtils.requireNonNull(name), false).findFirst();
     }
 
     @NonNull
@@ -206,7 +206,7 @@ public interface MinioBucketOperations extends WithSelf<MinioBucket>, WithServer
     @NonNull
     Stream<MinioUpload> getIncompleteUploads(@Nullable String prefix, boolean recursive) throws MinioOperationException;
 
-    boolean setUserMetaData(@NonNull String name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+    void setUserMetaData(@NonNull String name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
 
-    boolean addUserMetaData(@NonNull String name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
+    void addUserMetaData(@NonNull String name, @Nullable MinioUserMetaData meta) throws MinioOperationException;
 }

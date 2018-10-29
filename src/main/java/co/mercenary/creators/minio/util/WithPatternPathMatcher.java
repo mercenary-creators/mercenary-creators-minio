@@ -34,6 +34,11 @@ public interface WithPatternPathMatcher
         return MinioUtils.GLOBAL_PATH_MATCHER;
     }
 
+    default boolean isPattern()
+    {
+        return isPattern(getPattern());
+    }
+
     default boolean isPattern(@NonNull final String path)
     {
         return getPathMatcher().isPattern(MinioUtils.requireNonNull(path));

@@ -26,11 +26,11 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasBeanTestTika extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test()
     {
         final String name = MinioContentTypeProbeTikaAdapter.class.getName();
 
-        final String prop = getMinioOperations().getContentTypeProbe().getClass().getName();
+        final String prop = getOperations().getContentTypeProbe().getClass().getName();
 
         info(() -> prop);
 

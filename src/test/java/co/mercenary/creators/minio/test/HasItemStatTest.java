@@ -24,11 +24,11 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasItemStatTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "MinioProperties.java");
+        final MinioObjectStatus stat = getOperations().getObjectStatus("root", "MinioProperties.java");
 
-        info(() -> toJSONString(stat));
+        info(() -> stat);
 
         assertEquals(stat.getContentType(), "text/x-java-source", () -> "not text/x-java-source");
     }

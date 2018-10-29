@@ -21,23 +21,34 @@ import org.junit.jupiter.api.Test;
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
+import co.mercenary.creators.minio.util.Ticker;
 
 public class AddItemMetaData extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        if (false == getMinioOperations().isObject("root", "file.json"))
-        {
-            getMinioOperations().putObject("root", "file.json", getResource());
-        }
-        getMinioOperations().setUserMetaData("root", "file.json", new MinioUserMetaData("test-meta", uuid()));
+        final Ticker tick = getTicker();
 
-        getMinioOperations().addUserMetaData("root", "file.json", new MinioUserMetaData("test-uuid", uuid()));
+        getOperations().setUserMetaData("root", "file.json", new MinioUserMetaData("test-meta", uuid()));
 
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "file.json");
+        info(() -> tick);
 
-        info(() -> toJSONString(stat));
+        tick.reset();
+
+        getOperations().addUserMetaData("root", "file.json", new MinioUserMetaData("test-uuid", uuid()));
+
+        info(() -> tick);
+
+        tick.reset();
+
+        final MinioObjectStatus stat = getOperations().getObjectStatus("root", "file.json");
+
+        info(() -> tick);
+
+        tick.reset();
+
+        info(() -> stat);
 
         assertEquals(stat.getContentType(), "application/json", () -> "not application/json");
     }

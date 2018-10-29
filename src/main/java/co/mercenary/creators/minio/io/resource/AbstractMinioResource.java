@@ -49,7 +49,7 @@ public abstract class AbstractMinioResource<T> extends AbstractResource implemen
 
     protected AbstractMinioResource(@NonNull final T with, @NonNull final String format, @NonNull final Object... args)
     {
-        this(with, MinioUtils.format(format, args));
+        this(with, String.format(format, args));
     }
 
     @NonNull

@@ -15,10 +15,16 @@
  */
 
 buildscript {
+	ext {
+        kotlinVersion = '1.2.71'
+    }
     repositories {
         mavenCentral()
         maven {
         	url 'https://oss.sonatype.org/content/repositories/snapshots/'
+    	}
+    	maven {
+      		url "https://plugins.gradle.org/m2/"
     	}
     }
     dependencies {
@@ -28,6 +34,9 @@ buildscript {
         classpath(group: 'org.owasp', name: 'dependency-check-gradle', version: '3.3.2')
         classpath(group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6')
         classpath(group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '2.6.2')
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-noarg:${kotlinVersion}"
     }
 }
 
@@ -37,7 +46,6 @@ import java.net.InetAddress
 import org.ajoberstar.grgit.Grgit
 
 apply plugin: 'pmd'
-apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'jacoco'
 apply plugin: 'signing'
@@ -46,6 +54,8 @@ apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
 apply plugin: 'org.sonarqube'
 apply plugin: 'org.owasp.dependencycheck'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-spring'
 
 sourceCompatibility = 1.8
 
@@ -53,7 +63,7 @@ targetCompatibility = 1.8
 
 group = 'co.mercenary-creators'
 
-version = '1.0.11-SNAPSHOT'
+version = '1.0.12-SNAPSHOT'
 
 task doJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -70,6 +80,20 @@ task doJavaDocs(type: Javadoc) {
         links = getJavaDocLinks()
         stylesheetFile = project.file('config/javadoc/mercenary.css')
         bottom = "<div><h4 class=\"footer\"><a href=\"${getBuildGITHomeURL()}\" target=\"_blank\">${getProjectCommonName()} - Copyright &copy; 2018, Mercenary Creators Company</a> - <a href=\"${getBuildGITCommitHash()}\" target=\"_blank\">${getBuildModuleVersion()}</a> - <a href=\"mailto:deansjones@gmail.com\">Author: Dean S. Jones</a></h4></div>"
+    }
+}
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjsr305=strict', '-Xjvm-default=compatibility']
+        jvmTarget = '1.8'
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjsr305=strict', '-Xjvm-default=compatibility']
+        jvmTarget = '1.8'
     }
 }
 
@@ -166,18 +190,22 @@ dependencies {
     springCorePackages().each { String name ->
         compile(group: 'org.springframework', name: name, version: "${SPRING_CORE_VERSION}")
     }
-    compile(group: 'com.google.http-client', name: 'google-http-client-xml', version: '1.25.0')
-    compile(group: 'io.minio', name: 'minio', version: '5.0.1')
+    compile(group: 'com.google.http-client', name: 'google-http-client-xml', version: '1.26.0')
+    compile(group: 'io.minio', name: 'minio', version: '5.0.2')
     compile(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0')
     compile(group: 'com.squareup.okio', name: 'okio', version: '1.15.0')
-    compile(group: 'joda-time', name: 'joda-time', version: '2.10')
+    compile(group: 'joda-time', name: 'joda-time', version: '2.10.1')
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    compileOnly("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     compileOnly(group: 'org.apache.tika', name: 'tika-core', version: '1.19.1')
+    testCompile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    testCompile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     testCompile(group: 'org.apache.tika', name: 'tika-core', version: '1.19.1')
     testCompile(group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25')
     testCompile(group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25')

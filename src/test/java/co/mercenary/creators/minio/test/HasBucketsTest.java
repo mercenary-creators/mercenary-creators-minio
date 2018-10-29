@@ -26,11 +26,9 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasBucketsTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final List<MinioBucket> list = toList(getMinioOperations().getBuckets());
-
-        list.forEach(value -> info(() -> toJSONString(value)));
+        final List<MinioBucket> list = forInfo(getOperations().findBuckets());
 
         assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
     }

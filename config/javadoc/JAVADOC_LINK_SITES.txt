@@ -1,4 +1,4 @@
 https://docs.oracle.com/javase/8/docs/api
-https://docs.spring.io/spring/docs/5.1.1.RELEASE/javadoc-api
+https://docs.spring.io/spring/docs/5.1.2.RELEASE/javadoc-api
 https://tika.apache.org/1.19/api
 http://minio.github.io/minio-java

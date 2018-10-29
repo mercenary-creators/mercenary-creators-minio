@@ -20,19 +20,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.BaseStream;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
-import co.mercenary.creators.minio.util.MinioUtils;
 
 public final class JSONUtils
 {
@@ -120,67 +113,5 @@ public final class JSONUtils
     public static <T> T convert(@Nullable final Object object, @NonNull final Class<T> type) throws MinioDataException
     {
         return NORMAL.convert(object, type);
-    }
-
-    @NonNull
-    public static JSONType toJSONType(@Nullable final Object object)
-    {
-        if (null == object)
-        {
-            return JSONType.NULL;
-        }
-        if (object instanceof CharSequence)
-        {
-            return JSONType.STRING;
-        }
-        if (object instanceof Number)
-        {
-            return JSONType.NUMBER;
-        }
-        if (object instanceof Date)
-        {
-            return JSONType.DATE;
-        }
-        if (object instanceof Map)
-        {
-            return JSONType.OBJECT;
-        }
-        if (object instanceof Iterable)
-        {
-            return JSONType.ARRAY;
-        }
-        if (object instanceof BaseStream)
-        {
-            return JSONType.ARRAY;
-        }
-        if (object.getClass().isArray())
-        {
-            return JSONType.ARRAY;
-        }
-        if (object instanceof Optional)
-        {
-            final Optional<?> value = MinioUtils.CAST(object, Optional.class);
-
-            if (value.isPresent())
-            {
-                return toJSONType(value.get());
-            }
-            return JSONType.NULL;
-        }
-        try
-        {
-            return toJSONType(convert(object, LinkedHashMap.class));
-        }
-        catch (final MinioDataException e)
-        {
-            try
-            {
-                return toJSONType(convert(object, ArrayList.class));
-            }
-            catch (final MinioDataException t)
-            {
-                return JSONType.UNDEFINED;
-            }
-        }
     }
 }

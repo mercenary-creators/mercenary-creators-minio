@@ -25,17 +25,23 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class PutItemMetaDataEmpty extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        if (false == getMinioOperations().isObject("root", "jones.json"))
+        if (false == getOperations().isObject("root", "jones.json"))
         {
-            getMinioOperations().putObject("root", "jones.json", getResource());
+            getOperations().putObject("root", "jones.json", getResource());
         }
-        getMinioOperations().setUserMetaData("root", "jones.json", new MinioUserMetaData());
+        getOperations().setUserMetaData("root", "jones.json", new MinioUserMetaData("name", "dean"));
 
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "jones.json");
+        final MinioObjectStatus stat = getOperations().getObjectStatus("root", "jones.json");
 
-        info(() -> toJSONString(stat));
+        info(() -> stat);
+
+        getOperations().deleteUserMetaData("root", "jones.json");
+
+        final MinioObjectStatus next = getOperations().getObjectStatus("root", "jones.json");
+
+        info(() -> next);
 
         assertEquals(stat.getContentType(), "application/json", () -> "not application/json");
     }

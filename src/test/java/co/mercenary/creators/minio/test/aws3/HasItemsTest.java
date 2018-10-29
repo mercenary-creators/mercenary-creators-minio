@@ -28,11 +28,9 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasItemsTest extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final List<MinioItem> list = toList(getMinioOperations().getItems("www.mercenary-creators.io", false));
-
-        list.forEach(item -> info(() -> toJSONString(item)));
+        final List<MinioItem> list = forInfo(getOperations().findItems("www.mercenary-creators.io", false));
 
         assertFalse(list.isEmpty(), isEmptyMessage("items"));
     }

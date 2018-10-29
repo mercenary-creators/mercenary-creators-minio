@@ -42,9 +42,9 @@ public abstract class MinioCommon extends AbstractCommon
 
         this.size = size;
 
-        this.buck = MinioUtils.fixBucketString(buck);
+        this.buck = MinioUtils.requireNonNull(buck);
 
-        this.etag = MinioUtils.getETagSequence(etag);
+        this.etag = MinioUtils.toETagSequence(etag);
     }
 
     public long getSize()
@@ -70,7 +70,7 @@ public abstract class MinioCommon extends AbstractCommon
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s).", getName(), getBucket(), getEtag(), getSize());
+        return String.format("name=(%s), bucket=(%s), etag=(%s), size=(%s).", getName(), getBucket(), getEtag(), getSize());
     }
 
     @Override

@@ -21,14 +21,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +130,7 @@ public class MinioTemplate implements MinioOperations
                 }
             }
         }
-        return MinioUtils.requireNonNull(client, () -> MinioUtils.format("could not create MinioClient server=(%s), region=(%s).", getServer(), getRegion()));
+        return MinioUtils.requireNonNull(client, () -> String.format("could not create MinioClient server=(%s), region=(%s).", getServer(), getRegion()));
     }
 
     public void setContentTypeProbe(@Nullable final MinioContentTypeProbe type_probe)
@@ -155,7 +163,7 @@ public class MinioTemplate implements MinioOperations
     @Override
     public String toDescription()
     {
-        return MinioUtils.format("server=(%s), region=(%s).", getServer(), getRegion());
+        return String.format("server=(%s), region=(%s).", getServer(), getRegion());
     }
 
     @NonNull
@@ -280,7 +288,7 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public Stream<MinioBucket> getBuckets() throws MinioOperationException
+    public Stream<MinioBucket> findBuckets() throws MinioOperationException
     {
         try
         {
@@ -294,7 +302,7 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public Stream<MinioBucket> getBucketsNamed(@NonNull final Predicate<String> filter) throws MinioOperationException
+    public Stream<MinioBucket> findBuckets(@NonNull final Predicate<String> filter) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(filter);
 
@@ -306,6 +314,15 @@ public class MinioTemplate implements MinioOperations
         {
             throw new MinioOperationException(e);
         }
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioBucket> findBuckets(@NonNull final Collection<String> filter) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(filter);
+
+        return findBuckets(filter::contains);
     }
 
     @NonNull
@@ -442,7 +459,7 @@ public class MinioTemplate implements MinioOperations
 
     @NonNull
     @Override
-    public Stream<MinioItem> getItems(@NonNull final String bucket, @Nullable final String prefix, final boolean recursive) throws MinioOperationException
+    public Stream<MinioItem> findItems(@NonNull final String bucket, @Nullable final String prefix, final boolean recursive) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket);
 
@@ -512,7 +529,7 @@ public class MinioTemplate implements MinioOperations
             {
                 return getMinioClient().presignedPutObject(bucket, name);
             }
-            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
+            throw new MinioOperationException(String.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -536,7 +553,7 @@ public class MinioTemplate implements MinioOperations
             {
                 return getMinioClient().presignedPutObject(bucket, name, MinioUtils.getDuration(seconds));
             }
-            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
+            throw new MinioOperationException(String.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -560,7 +577,7 @@ public class MinioTemplate implements MinioOperations
             {
                 return getMinioClient().presignedPutObject(bucket, name, MinioUtils.getDuration(seconds));
             }
-            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
+            throw new MinioOperationException(String.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -584,7 +601,7 @@ public class MinioTemplate implements MinioOperations
             {
                 return getMinioClient().presignedPutObject(bucket, name, MinioUtils.getDuration(time, unit));
             }
-            throw new MinioOperationException(MinioUtils.format("invalid method %s", method));
+            throw new MinioOperationException(String.format("invalid method %s", method));
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -727,15 +744,13 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public boolean setUserMetaData(@NonNull final String bucket, @NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    public void setUserMetaData(@NonNull final String bucket, @NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket, name);
 
         try
         {
             getMinioClient().copyObject(bucket, name, bucket, MinioUtils.NULL(), COPY_CONDS, (null == meta) ? MinioUtils.NULL() : meta.getUserMetaData());
-
-            return true;
         }
         catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
         {
@@ -744,15 +759,14 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public boolean addUserMetaData(@NonNull final String bucket, @NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    public void addUserMetaData(@NonNull final String bucket, @NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket, name);
 
-        if ((null == meta) || (meta.isEmpty()))
+        if ((null != meta) && (false == meta.isEmpty()))
         {
-            return false;
+            setUserMetaData(bucket, name, getUserMetaData(bucket, name).add(meta));
         }
-        return setUserMetaData(bucket, name, getUserMetaData(bucket, name).plus(meta));
     }
 
     @Override
@@ -786,19 +800,11 @@ public class MinioTemplate implements MinioOperations
     {
         MinioUtils.isEachNonNull(bucket, name, input);
 
-        final Map<String, String> head = MinioUtils.toHeaderMap(meta);
-
-        head.put("Content-Type", getContentTypeProbe().getContentType(type, name));
-
-        try
+        try (ByteArrayInputStream is = new ByteArrayInputStream(input))
         {
-            ensureBucket(bucket);
-
-            final ByteArrayInputStream baos = new ByteArrayInputStream(input);
-
-            getMinioClient().putObject(bucket, name, baos, baos.available(), head);
+            putObjectInputStream(bucket, name, is, new Long(is.available()), type, meta);
         }
-        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        catch (final IOException e)
         {
             throw new MinioOperationException(e);
         }
@@ -808,5 +814,339 @@ public class MinioTemplate implements MinioOperations
     public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final byte[] input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    protected void putObjectInputStream(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final Long size, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
+        try
+        {
+            ensureBucket(bucket);
+
+            if (null != size)
+            {
+                final Map<String, String> head = MinioUtils.toHeaderMap(meta);
+
+                head.put("Content-Type", getContentTypeProbe().getContentType(type, name));
+
+                getMinioClient().putObject(bucket, name, input, size, head);
+            }
+            else
+            {
+                getMinioClient().putObject(bucket, name, input, getContentTypeProbe().getContentType(type, name));
+
+                if ((null != meta) && (false == meta.isEmpty()))
+                {
+                    final Map<String, String> data = meta.getUserMetaData();
+
+                    if (false == data.isEmpty())
+                    {
+                        getMinioClient().copyObject(bucket, name, bucket, MinioUtils.NULL(), COPY_CONDS, data);
+                    }
+                }
+            }
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioBucket> findBuckets(@NonNull final Pattern regex) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(regex);
+
+        return findBuckets(named -> regex.matcher(named).matches());
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioBucket> findBuckets(@NonNull final String regex) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(regex);
+
+        return findBuckets(Pattern.compile(regex));
+    }
+
+    @NonNull
+    @Override
+    public Optional<MinioBucket> findBucket(@NonNull final String bucket) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket);
+
+        return findBuckets(named -> bucket.equals(named)).findFirst();
+    }
+
+    @NonNull
+    @Override
+    public String getSignedObjectUrl(@NonNull final String bucket, @NonNull final String name) throws MinioOperationException
+    {
+        return getSignedObjectUrl(Method.GET, bucket, name);
+    }
+
+    @NonNull
+    @Override
+    public String getSignedObjectUrl(@NonNull final String bucket, @NonNull final String name, @NonNull final Long seconds) throws MinioOperationException
+    {
+        return getSignedObjectUrl(Method.GET, bucket, name, seconds);
+    }
+
+    @NonNull
+    @Override
+    public String getSignedObjectUrl(@NonNull final String bucket, @NonNull final String name, @NonNull final Duration seconds) throws MinioOperationException
+    {
+        return getSignedObjectUrl(Method.GET, bucket, name, seconds);
+    }
+
+    @NonNull
+    @Override
+    public String getSignedObjectUrl(@NonNull final String bucket, @NonNull final String name, @NonNull final Long time, @NonNull final TimeUnit unit) throws MinioOperationException
+    {
+        return getSignedObjectUrl(Method.GET, bucket, name, time, unit);
+    }
+
+    @Override
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final byte[] input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Resource input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final File input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public boolean copyObject(@NonNull final String bucket, @NonNull final String name, @NonNull final String target) throws MinioOperationException
+    {
+        return copyObject(bucket, name, target, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public boolean copyObject(@NonNull final String bucket, @NonNull final String name, @NonNull final String target, @Nullable final String object) throws MinioOperationException
+    {
+        return copyObject(bucket, name, target, object, MinioUtils.NULL());
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioItem> findItems(@NonNull final String bucket) throws MinioOperationException
+    {
+        return findItems(bucket, MinioUtils.NULL());
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioItem> findItems(@NonNull final String bucket, final boolean recursive) throws MinioOperationException
+    {
+        return findItems(bucket, MinioUtils.NULL(), recursive);
+    }
+
+    @NonNull
+    @Override
+    public Optional<MinioItem> findItem(@NonNull final String bucket, @NonNull final String name) throws MinioOperationException
+    {
+        return findItems(bucket, name, false).findFirst();
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioItem> findItems(@NonNull final String bucket, @Nullable final String prefix) throws MinioOperationException
+    {
+        return findItems(bucket, prefix, true);
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioUpload> getIncompleteUploads(@NonNull final String bucket) throws MinioOperationException
+    {
+        return getIncompleteUploads(bucket, MinioUtils.NULL());
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioUpload> getIncompleteUploads(@NonNull final String bucket, final boolean recursive) throws MinioOperationException
+    {
+        return getIncompleteUploads(bucket, MinioUtils.NULL(), recursive);
+    }
+
+    @NonNull
+    @Override
+    public Stream<MinioUpload> getIncompleteUploads(@NonNull final String bucket, @Nullable final String prefix) throws MinioOperationException
+    {
+        return getIncompleteUploads(bucket, prefix, true);
+    }
+
+    @Override
+    public void deleteUserMetaData(@NonNull final String bucket, @NonNull final String name) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name);
+
+        try
+        {
+            getMinioClient().copyObject(bucket, name, bucket, MinioUtils.NULL(), COPY_CONDS, MinioUtils.NULL());
+        }
+        catch (final MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException | XmlPullParserException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @Override
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final InputStream input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObjectInputStream(bucket, name, input, MinioUtils.NULL(), type, meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final Resource input, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final Resource input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        if (input.isFile())
+        {
+            try
+            {
+                putObject(bucket, name, input.getFile(), type, meta);
+            }
+            catch (final IOException e)
+            {
+                throw new MinioOperationException(e);
+            }
+        }
+        else
+        {
+            try (final InputStream is = input.getInputStream())
+            {
+                putObjectInputStream(bucket, name, is, MinioUtils.NULL(), type, meta);
+            }
+            catch (final IOException e)
+            {
+                throw new MinioOperationException(e);
+            }
+        }
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final File input, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final File input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
+        try (final InputStream is = MinioUtils.getInputStream(input))
+        {
+            putObjectInputStream(bucket, name, is, input.length(), type, meta);
+        }
+        catch (final IOException e)
+        {
+            throw new MinioOperationException(e);
+        }
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final Path input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final Path input, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final Path input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input.toFile(), type, meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final URL input) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final URL input, final String type) throws MinioOperationException
+    {
+        putObject(bucket, name, input, type, MinioUtils.NULL());
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final URL input, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        putObject(bucket, name, input, MinioUtils.NULL(), meta);
+    }
+
+    @Override
+    public void putObject(final String bucket, final String name, final URL input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    {
+        MinioUtils.isEachNonNull(bucket, name, input);
+
+        if ("file".equalsIgnoreCase(input.getProtocol()))
+        {
+            try
+            {
+                putObject(bucket, name, Paths.get(input.toURI()), type, meta);
+            }
+            catch (final URISyntaxException e)
+            {
+                throw new MinioOperationException(e);
+            }
+        }
+        else
+        {
+            try
+            {
+                final URLConnection conn = input.openConnection();
+
+                final int size = conn.getContentLength();
+
+                try (InputStream is = conn.getInputStream())
+                {
+                    putObjectInputStream(bucket, name, is, new Long(size), type, meta);
+                }
+                if (conn instanceof HttpURLConnection)
+                {
+                    MinioUtils.CAST(conn, HttpURLConnection.class).disconnect();
+                }
+            }
+            catch (final IOException e)
+            {
+                throw new MinioOperationException(e);
+            }
+        }
     }
 }

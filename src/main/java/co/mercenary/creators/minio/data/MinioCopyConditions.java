@@ -107,7 +107,7 @@ public class MinioCopyConditions
     {
         try
         {
-            getCopyConditions().setMatchETag(MinioUtils.getETagSequence(etag));
+            getCopyConditions().setMatchETag(MinioUtils.toETagSequence(etag));
         }
         catch (final InvalidArgumentException e)
         {
@@ -121,7 +121,7 @@ public class MinioCopyConditions
     {
         try
         {
-            getCopyConditions().setMatchETagNone(MinioUtils.getETagSequence(etag));
+            getCopyConditions().setMatchETagNone(MinioUtils.toETagSequence(etag));
         }
         catch (final InvalidArgumentException e)
         {

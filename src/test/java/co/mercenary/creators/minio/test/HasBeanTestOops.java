@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Mercenary Creators Company. All rights reserved.
+ * Copyright (c) 2018, Mercenary Creators Company. All rights reservd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,9 @@ import co.mercenary.creators.minio.util.AbstractMinioTests;
 public class HasBeanTestOops extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final List<MinioBucket> list = toList(getMinioOperations().getBucketsNamed(value -> value.equals("root")));
-
-        list.forEach(value -> info(() -> toJSONString(value)));
+        final List<MinioBucket> list = forInfo(getOperations().findBuckets(value -> value.equals("root")));
 
         assertFalse(list.isEmpty(), isEmptyMessage("buckets"));
     }

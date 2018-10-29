@@ -80,7 +80,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), creationTime=(%s).", getName(), MinioUtils.format(time));
+        return String.format("name=(%s), creationTime=(%s).", getName(), toDateString(time));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
     }
 
     @NonNull
-    protected static MinioBucketOperations buildWithOperations(@NonNull final MinioBucket self, @NonNull final MinioOperations oper)
+    private static MinioBucketOperations buildWithOperations(@NonNull final MinioBucket self, @NonNull final MinioOperations oper)
     {
         MinioUtils.isEachNonNull(self, oper);
 
@@ -244,9 +244,9 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
 
             @NonNull
             @Override
-            public Stream<MinioItem> getItems(@Nullable final String prefix, final boolean recursive) throws MinioOperationException
+            public Stream<MinioItem> findItems(@Nullable final String prefix, final boolean recursive) throws MinioOperationException
             {
-                return oper.getItems(self().getName(), prefix, recursive);
+                return oper.findItems(self().getName(), prefix, recursive);
             }
 
             @NonNull
@@ -303,15 +303,15 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             }
 
             @Override
-            public boolean setUserMetaData(@NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+            public void setUserMetaData(@NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                return oper.setUserMetaData(self().getName(), name, meta);
+                oper.setUserMetaData(self().getName(), name, meta);
             }
 
             @Override
-            public boolean addUserMetaData(@NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+            public void addUserMetaData(@NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
-                return oper.addUserMetaData(self().getName(), name, meta);
+                oper.addUserMetaData(self().getName(), name, meta);
             }
         };
     }

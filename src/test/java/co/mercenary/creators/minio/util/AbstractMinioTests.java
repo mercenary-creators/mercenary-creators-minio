@@ -44,14 +44,11 @@ import co.mercenary.creators.minio.json.JSONUtils;
 public abstract class AbstractMinioTests
 {
     @NonNull
-    private final NanoTicker ticker = new NanoTicker();
-
-    @NonNull
-    private final Logger     logger = LoggingOps.getLogger(getClass());
+    private final Logger  logger = LoggingOps.getLogger(getClass());
 
     @Nullable
     @Autowired
-    private MinioTemplate    minioTemplate;
+    private MinioTemplate minioTemplate;
 
     @Nullable
     protected MinioTemplate getMinioTemplate()
@@ -59,8 +56,14 @@ public abstract class AbstractMinioTests
         return minioTemplate;
     }
 
-    @Nullable
-    protected MinioOperations getMinioOperations()
+    @NonNull
+    protected MinioOperations getOperations()
+    {
+        return getMinioTemplate();
+    }
+
+    @NonNull
+    protected MinioOperations getMinio()
     {
         return getMinioTemplate();
     }
@@ -78,6 +81,12 @@ public abstract class AbstractMinioTests
     }
 
     @NonNull
+    protected Ticker getTicker()
+    {
+        return new NanoTicker();
+    }
+
+    @NonNull
     protected String uuid()
     {
         return UUID.randomUUID().toString();
@@ -86,19 +95,12 @@ public abstract class AbstractMinioTests
     @BeforeEach
     protected void doBeforeEachTest()
     {
-        info(() -> getMinioOperations().getContentTypeProbe().getClass().getName());
-
-        ticker.reset();
+        info(() -> getOperations().getContentTypeProbe().getClass().getName());
     }
 
     @AfterEach
     protected void doAfterEachTest()
     {
-        final String value = ticker.toString();
-
-        info(() -> value);
-
-        ticker.reset();
     }
 
     @NonNull
@@ -175,6 +177,37 @@ public abstract class AbstractMinioTests
         {
             getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
         }
+    }
+
+    @NonNull
+    protected <T> List<T> forInfo(@NonNull final List<T> list)
+    {
+        if (list.size() > 0)
+        {
+            final Logger logs = getLogger();
+
+            if (logs.isInfoEnabled())
+            {
+                list.forEach(value -> logs.info(LoggingOps.MERCENARY_MARKER, safe(value)));
+            }
+        }
+        return list;
+    }
+
+    @NonNull
+    protected <T> List<T> forInfo(@NonNull final Stream<T> source)
+    {
+        return forInfo(toList(source.filter(MinioUtils::isNonNull)));
+    }
+
+    @NonNull
+    protected String safe(@Nullable final Object value)
+    {
+        if (null == value)
+        {
+            return MinioUtils.NULLS_STRING_VALUED;
+        }
+        return value.toString();
     }
 
     @NonNull

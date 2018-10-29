@@ -1,0 +1,30 @@
+{
+  "management": {
+    "system": {
+      "name": "Linux",
+      "version": "4.15.0-36-generic",
+      "architecture": "amd64",
+      "processors": 4,
+      "load": 2.5
+    },
+    "runtime": {
+      "pid": "16",
+      "started": 1538809428447,
+      "elapsed": 147223964
+    },
+    "memory": [
+      {
+        "type": "HEAP",
+        "used": 148297024,
+        "maximum": 366477312,
+        "initial": 402653184
+      },
+      {
+        "type": "OTHER",
+        "used": 110673576,
+        "maximum": 537477120,
+        "initial": 2555904
+      }
+    ]
+  }
+}

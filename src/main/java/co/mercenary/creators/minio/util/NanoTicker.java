@@ -33,6 +33,12 @@ public class NanoTicker extends AbstractTicker
         super(time);
     }
 
+    @Override
+    public long clock()
+    {
+        return MinioUtils.getCurrentNanos();
+    }
+
     @NonNull
     @Override
     public String toString()
@@ -45,7 +51,7 @@ public class NanoTicker extends AbstractTicker
         }
         else
         {
-            return "(" + MinioUtils.DECIMAL_FORMAT_TO_3.get().format(1.0E-6 * diff) + ") ms.";
+            return String.format("(%.3f) ms.", 1.0E-6 * diff);
         }
     }
 }

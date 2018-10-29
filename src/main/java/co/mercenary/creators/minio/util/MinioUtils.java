@@ -25,18 +25,16 @@ import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -59,52 +57,49 @@ import io.minio.errors.MinioException;
 public final class MinioUtils
 {
     @NonNull
-    public static final Long                      MINIMUM_EXPIRY_TIME = 1L;
+    public static final Long                    MINIMUM_EXPIRY_TIME = 1L;
 
     @NonNull
-    public static final Long                      MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
+    public static final Long                    MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
 
     @NonNull
-    public static final Long                      MAXINUM_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
+    public static final Long                    MAXINUM_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
 
     @NonNull
-    public static final String                    EMPTY_STRING_VALUED = "";
+    public static final String                  EMPTY_STRING_VALUED = "";
 
     @NonNull
-    public static final String                    SPACE_STRING_VALUED = " ";
+    public static final String                  SPACE_STRING_VALUED = " ";
 
     @NonNull
-    public static final String                    PATH_SEPARATOR_CHAR = "/";
+    public static final String                  PATH_SEPARATOR_CHAR = "/";
 
     @NonNull
-    public static final String                    QUOTE_STRING_VALUED = "\"";
+    public static final String                  QUOTE_STRING_VALUED = "\"";
 
     @NonNull
-    public static final String                    NULLS_STRING_VALUED = "null";
+    public static final String                  NULLS_STRING_VALUED = "null";
 
     @NonNull
-    public static final String                    FALSE_STRING_VALUED = "false";
+    public static final String                  FALSE_STRING_VALUED = "false";
 
     @NonNull
-    public static final String                    DEFAULT_REGION_EAST = "us-east-1";
+    public static final String                  DEFAULT_REGION_EAST = "us-east-1";
 
     @NonNull
-    public static final String                    X_AMAZON_META_START = "x-amz-meta-";
+    public static final String                  X_AMAZON_META_START = "x-amz-meta-";
 
     @NonNull
-    public static final String                    AMAZON_S3_END_POINT = "s3.amazonaws.com";
+    public static final String                  AMAZON_S3_END_POINT = "s3.amazonaws.com";
 
     @NonNull
-    public static final TimeZone                  MINIO_TIME_ZONE_UTC = TimeZone.getTimeZone("UTC");
+    public static final TimeZone                MINIO_TIME_ZONE_UTC = TimeZone.getTimeZone("UTC");
 
     @NonNull
-    public static final PathMatcher               GLOBAL_PATH_MATCHER = new AntPathMatcher(PATH_SEPARATOR_CHAR);
+    public static final PathMatcher             GLOBAL_PATH_MATCHER = new AntPathMatcher(PATH_SEPARATOR_CHAR);
 
     @NonNull
-    public static final ThreadLocal<DateFormat>   DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
-
-    @NonNull
-    public static final ThreadLocal<NumberFormat> DECIMAL_FORMAT_TO_3 = ThreadLocal.withInitial(() -> new DecimalFormat("#.000"));
+    public static final ThreadLocal<DateFormat> DEFAULT_DATE_FORMAT = ThreadLocal.withInitial(MinioUtils::getDefaultDateFormat);
 
     private MinioUtils()
     {
@@ -235,16 +230,6 @@ public final class MinioUtils
         return toOptional(toValueNonNull(supplier));
     }
 
-    @Nullable
-    public static String getCharSequence(@Nullable final CharSequence value)
-    {
-        if (null != value)
-        {
-            return value.toString();
-        }
-        return NULL();
-    }
-
     @NonNull
     public static <T> Optional<T> toOptional(@Nullable final T value)
     {
@@ -271,22 +256,6 @@ public final class MinioUtils
         return format;
     }
 
-    @Nullable
-    public static String format(@NonNull final Optional<Date> date)
-    {
-        if (date.isPresent())
-        {
-            return DEFAULT_DATE_FORMAT.get().format(date.get());
-        }
-        return NULL();
-    }
-
-    @NonNull
-    public static String format(@NonNull final String format, @NonNull final Object... args)
-    {
-        return String.format(format, args);
-    }
-
     @NonNull
     public static byte[] getBytes(@NonNull final String value)
     {
@@ -302,35 +271,31 @@ public final class MinioUtils
     @NonNull
     public static String toStringOrElse(final String value, @NonNull final String otherwise)
     {
-        final String chars = getCharSequence(value);
-
-        if (null != chars)
+        if (null != value)
         {
-            return chars;
+            return value;
         }
         return otherwise;
     }
 
     @NonNull
-    public static String toStringOrElse(final CharSequence value, @NonNull final Supplier<String> otherwise)
+    public static String toStringOrElse(final String value, @NonNull final Supplier<String> otherwise)
     {
-        final String chars = getCharSequence(value);
-
-        if (null != chars)
+        if (null != value)
         {
-            return chars;
+            return value;
         }
-        return requireNonNull(otherwise.get());
+        return otherwise.get();
     }
 
     @Nullable
-    public static String getETagSequence(@Nullable final String value)
+    public static String toETagSequence(@Nullable final String value)
     {
         if (null != value)
         {
             return value.replace(QUOTE_STRING_VALUED, EMPTY_STRING_VALUED);
         }
-        return value;
+        return NULL();
     }
 
     @Nullable
@@ -340,7 +305,7 @@ public final class MinioUtils
         {
             return value.toUpperCase();
         }
-        return value;
+        return NULL();
     }
 
     @NonNull
@@ -447,6 +412,12 @@ public final class MinioUtils
         return X_AMAZON_META_START + noAmazonMetaPrefix(value);
     }
 
+    @NonNull
+    public static String escape(@NonNull final String value)
+    {
+        return X_AMAZON_META_START + noAmazonMetaPrefix(value);
+    }
+
     @Nullable
     public static String failIfNullBytePresent(@Nullable final String value)
     {
@@ -506,6 +477,33 @@ public final class MinioUtils
     public static <T> List<T> toList(@NonNull final Stream<T> source)
     {
         return source.collect(Collectors.toList());
+    }
+
+    @NonNull
+    public static <T> List<T> toList(@NonNull final Iterable<T> iterable)
+    {
+        return toList(StreamSupport.stream(iterable.spliterator(), false));
+    }
+
+    @NonNull
+    public static <T> Set<T> toSet(@NonNull final Iterable<T> iterable)
+    {
+        return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toSet());
+    }
+
+    @NonNull
+    @SafeVarargs
+    public static <T> Stream<T> toStream(@Nullable final T... source)
+    {
+        if ((null == source) || (source.length == 0))
+        {
+            return Stream.empty();
+        }
+        if (source.length == 1)
+        {
+            return Stream.of(source[0]);
+        }
+        return Stream.of(source);
     }
 
     @NonNull
@@ -708,7 +706,7 @@ public final class MinioUtils
 
         if ((time < MINIMUM_EXPIRY_TIME) || (time > MAXIMUM_EXPIRY_TIME))
         {
-            throw new IllegalArgumentException(format("bad duration %s", time));
+            throw new IllegalArgumentException(String.format("bad duration %s", time));
         }
         return time.intValue();
     }

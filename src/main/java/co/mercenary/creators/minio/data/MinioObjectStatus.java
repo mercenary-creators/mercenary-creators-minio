@@ -83,7 +83,7 @@ public class MinioObjectStatus extends MinioCommon implements WithUserMetaData
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getName(), getBucket(), getEtag(), getSize(), getContentType(), MinioUtils.format(time));
+        return String.format("name=(%s), bucket=(%s), etag=(%s), size=(%s), contentType=(%s), creationTime=(%s).", getName(), getBucket(), getEtag(), getSize(), getContentType(), toDateString(time));
     }
 
     @Override

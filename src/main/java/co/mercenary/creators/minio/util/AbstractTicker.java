@@ -19,13 +19,13 @@ package co.mercenary.creators.minio.util;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 @JsonIgnoreType
-public abstract class AbstractTicker implements ITicker
+public abstract class AbstractTicker implements Ticker
 {
     private volatile long time;
 
     protected AbstractTicker()
     {
-        this.time = nanos();
+        this.time = clock();
     }
 
     protected AbstractTicker(final long time)
@@ -36,12 +36,12 @@ public abstract class AbstractTicker implements ITicker
     @Override
     public synchronized void reset()
     {
-        time = clock();
+        this.time = clock();
     }
 
     @Override
     public long start()
     {
-        return time;
+        return this.time;
     }
 }

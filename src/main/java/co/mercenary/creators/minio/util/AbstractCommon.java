@@ -24,6 +24,9 @@ import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.json.JSONUtils;
 import co.mercenary.creators.minio.json.WithJSONOperations;
 
+import java.util.Date;
+import java.util.Optional;
+
 public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
 {
     protected AbstractCommon(@NonNull final String name)
@@ -36,7 +39,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s).", getName());
+        return String.format("name=(%s).", getName());
     }
 
     @NonNull
@@ -75,8 +78,16 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
 
     @NonNull
     @Override
+    @JsonIgnore
     public String toJSONString(final boolean pretty) throws MinioDataException
     {
         return JSONUtils.toJSONString(this, pretty);
+    }
+
+    @NonNull
+    @JsonIgnore
+    protected String toDateString(@NonNull Optional<Date> time)
+    {
+        return time.map(date -> MinioUtils.DEFAULT_DATE_FORMAT.get().format(date)).orElse(MinioUtils.NULLS_STRING_VALUED);
     }
 }

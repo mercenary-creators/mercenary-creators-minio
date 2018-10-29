@@ -62,7 +62,7 @@ public class MinioUpload extends AbstractCommon implements WithOperations<MinioU
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s), bucket=(%s).", getName(), getBucket());
+        return String.format("name=(%s), bucket=(%s).", getName(), getBucket());
     }
 
     @Override
@@ -86,7 +86,7 @@ public class MinioUpload extends AbstractCommon implements WithOperations<MinioU
     }
 
     @NonNull
-    protected static MinioUploadOperations buildWithOperations(@NonNull final MinioUpload self, @NonNull final MinioOperations oper)
+    private static MinioUploadOperations buildWithOperations(@NonNull final MinioUpload self, @NonNull final MinioOperations oper)
     {
         MinioUtils.isEachNonNull(self, oper);
 

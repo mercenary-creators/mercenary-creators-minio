@@ -42,7 +42,7 @@ public abstract class AbstractNamed implements WithName, WithDescription
     @JsonIgnore
     public String toDescription()
     {
-        return MinioUtils.format("name=(%s).", getName());
+        return String.format("name=(%s).", getName());
     }
 
     @NonNull

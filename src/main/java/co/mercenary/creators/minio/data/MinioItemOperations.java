@@ -38,10 +38,15 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
 {
     boolean isFile();
 
+    boolean isObject() throws MinioOperationException;
+
     boolean deleteObject() throws MinioOperationException;
 
     @NonNull
     Resource getItemResource() throws MinioOperationException;
+
+    @NonNull
+    Optional<MinioBucket> findBucket() throws MinioOperationException;
 
     @NonNull
     Optional<MinioItem> getItemRelative(@NonNull String path) throws MinioOperationException;
@@ -99,7 +104,9 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
 
     boolean copyObject(@NonNull String bucket, @Nullable String name, @Nullable MinioCopyConditions conditions) throws MinioOperationException;
 
-    boolean setUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
+    void deleteUserMetaData() throws MinioOperationException;
 
-    boolean addUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
+    void setUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
+
+    void addUserMetaData(@Nullable MinioUserMetaData meta) throws MinioOperationException;
 }

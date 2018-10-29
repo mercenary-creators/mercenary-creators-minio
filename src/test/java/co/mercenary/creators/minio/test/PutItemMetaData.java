@@ -20,23 +20,23 @@ import org.junit.jupiter.api.Test;
 
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
-import co.mercenary.creators.minio.json.JSONObject;
+import co.mercenary.creators.minio.json.JSONNode;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 public class PutItemMetaData extends AbstractMinioTests
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        final JSONObject json = new JSONObject().plus("name", "Dean Jones").plus("year", 1963);
+        final JSONNode json = new JSONNode().add("name", "Dean Jones").add("year", 1963);
 
-        getMinioOperations().putObject("root", "zips.json", json.toByteArray(), new MinioUserMetaData("zips-meta", uuid()).plus("zips-name", "Dean Jones"));
+        getOperations().putObject("root", "zips.json", json.toByteArray(), new MinioUserMetaData("zips-meta", uuid()).add("zips-name", "Dean Jones  "));
 
-        final MinioObjectStatus stat = getMinioOperations().getObjectStatus("root", "zips.json");
+        final MinioObjectStatus stat = getOperations().getObjectStatus("root", "zips.json");
 
-        info(() -> toJSONString(stat));
+        info(() -> stat);
 
-        final MinioUserMetaData meta = getMinioOperations().getUserMetaData("root", "zips.json");
+        final MinioUserMetaData meta = getOperations().getUserMetaData("root", "zips.json");
 
         info(() -> meta);
 

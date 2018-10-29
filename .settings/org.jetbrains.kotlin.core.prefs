@@ -1,4 +1,6 @@
-compilerPlugins/spring/active=false
+compilerPlugins/jpa/active=true
+compilerPlugins/sam-with-receiver/active=true
+compilerPlugins/spring/active=true
 eclipse.preferences.version=1
 globalsOverridden=true
 jvmTarget=JVM_1_8
