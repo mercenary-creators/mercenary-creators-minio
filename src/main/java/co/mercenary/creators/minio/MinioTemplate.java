@@ -802,7 +802,7 @@ public class MinioTemplate implements MinioOperations
 
         try (ByteArrayInputStream is = new ByteArrayInputStream(input))
         {
-            putObjectInputStream(bucket, name, is, new Long(is.available()), type, meta);
+            putObjectInputStream(bucket, name, is, Long.valueOf(is.available()), type, meta);
         }
         catch (final IOException e)
         {
@@ -1136,7 +1136,7 @@ public class MinioTemplate implements MinioOperations
 
                 try (InputStream is = conn.getInputStream())
                 {
-                    putObjectInputStream(bucket, name, is, new Long(size), type, meta);
+                    putObjectInputStream(bucket, name, is, Long.valueOf(size), type, meta);
                 }
                 if (conn instanceof HttpURLConnection)
                 {

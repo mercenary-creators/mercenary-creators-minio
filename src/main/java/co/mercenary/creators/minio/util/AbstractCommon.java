@@ -16,6 +16,9 @@
 
 package co.mercenary.creators.minio.util;
 
+import java.util.Date;
+import java.util.Optional;
+
 import org.springframework.lang.NonNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,9 +26,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.json.JSONUtils;
 import co.mercenary.creators.minio.json.WithJSONOperations;
-
-import java.util.Date;
-import java.util.Optional;
 
 public abstract class AbstractCommon extends AbstractNamed implements WithJSONOperations
 {
@@ -86,7 +86,7 @@ public abstract class AbstractCommon extends AbstractNamed implements WithJSONOp
 
     @NonNull
     @JsonIgnore
-    protected String toDateString(@NonNull Optional<Date> time)
+    protected String toDateString(@NonNull final Optional<Date> time)
     {
         return time.map(date -> MinioUtils.DEFAULT_DATE_FORMAT.get().format(date)).orElse(MinioUtils.NULLS_STRING_VALUED);
     }
