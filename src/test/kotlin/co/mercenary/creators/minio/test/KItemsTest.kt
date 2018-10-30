@@ -27,9 +27,9 @@ class KItemsTest : KAbstractMinioTests() {
 		val items: Sequence<MinioItem> = minio.items("root", false)
 		items.forEach { item ->
 			info { item }
-            if (item.exists()) {
-                info { item.meta() }
-            }
-        }
+			if (item.exists()) {
+				info { item.meta() }
+			}
+		}
 	}
 }

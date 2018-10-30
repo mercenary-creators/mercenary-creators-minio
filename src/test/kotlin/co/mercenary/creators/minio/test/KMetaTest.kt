@@ -25,9 +25,9 @@ class KMetaTest : KAbstractMinioTests() {
 	fun test() {
 		val meta: Meta = minio.meta("root", "file.json")
 		info { meta }
-		meta + metaDataOf("plus-meta", uuid())
+		meta + metaDataOf("plus-meta" to uuid())
 		info { meta }
-		meta (metaDataOf("junk-meta", uuid()))
+		meta (metaDataOf("junk-meta" to uuid()))
 		info { meta }
 	}
 }

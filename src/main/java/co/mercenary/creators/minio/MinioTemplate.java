@@ -1015,25 +1015,25 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final InputStream input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObjectInputStream(bucket, name, input, MinioUtils.NULL(), type, meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final Resource input, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Resource input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final Resource input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Resource input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         if (input.isFile())
         {
             try
             {
-                putObject(bucket, name, input.getFile(), type, meta);
+                putObject(bucket, name, MinioUtils.requireNonNull(input.getFile()), type, meta);
             }
             catch (final IOException e)
             {
@@ -1054,13 +1054,13 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final File input, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final File input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final File input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final File input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket, name, input);
 
@@ -1075,43 +1075,43 @@ public class MinioTemplate implements MinioOperations
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final Path input) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Path input) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final Path input, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Path input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final Path input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final Path input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input.toFile(), type, meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final URL input) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final URL input) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), MinioUtils.NULL());
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final URL input, final String type) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final URL input, @Nullable final String type) throws MinioOperationException
     {
         putObject(bucket, name, input, type, MinioUtils.NULL());
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final URL input, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final URL input, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
     }
 
     @Override
-    public void putObject(final String bucket, final String name, final URL input, final String type, final MinioUserMetaData meta) throws MinioOperationException
+    public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final URL input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket, name, input);
 
