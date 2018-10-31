@@ -34,9 +34,9 @@ buildscript {
         classpath(group: 'org.owasp', name: 'dependency-check-gradle', version: '3.3.2')
         classpath(group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6')
         classpath(group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '2.6.2')
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
-        classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
-        classpath "org.jetbrains.kotlin:kotlin-noarg:${kotlinVersion}"
+        classpath(group: 'org.jetbrains.kotlin', name: 'kotlin-noarg', version: "${kotlinVersion}")
+        classpath(group: 'org.jetbrains.kotlin', name: 'kotlin-allopen', version: "${kotlinVersion}")
+        classpath(group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: "${kotlinVersion}")
     }
 }
 
@@ -201,11 +201,11 @@ dependencies {
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${JACKSON_DATABIND_VERSION}")
     compile(group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: "${JACKSON_DATABIND_VERSION}")
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-    compileOnly("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    compileOnly(group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: "${kotlinVersion}")
+    compileOnly(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "${kotlinVersion}")
     compileOnly(group: 'org.apache.tika', name: 'tika-core', version: '1.19.1')
-    testCompile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-    testCompile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    testCompile(group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: "${kotlinVersion}")
+    testCompile(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "${kotlinVersion}")
     testCompile(group: 'org.apache.tika', name: 'tika-core', version: '1.19.1')
     testCompile(group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25')
     testCompile(group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25')
