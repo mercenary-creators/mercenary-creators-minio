@@ -177,7 +177,7 @@ public class MinioItem extends MinioCommon implements WithOperations<MinioItemOp
 
             @NonNull
             @Override
-            public Resource getItemResource() throws MinioOperationException
+            public Resource getResource() throws MinioOperationException
             {
                 return new MinioItemResource(self());
             }

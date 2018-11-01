@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import co.mercenary.creators.minio.data.MinioObjectStatus;
 import co.mercenary.creators.minio.data.MinioUserMetaData;
-import co.mercenary.creators.minio.json.JSONNode;
+import co.mercenary.creators.minio.json.JSON;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
 public class PutItemMetaData extends AbstractMinioTests
@@ -28,7 +28,7 @@ public class PutItemMetaData extends AbstractMinioTests
     @Test
     void test() throws Exception
     {
-        final JSONNode json = new JSONNode().add("name", "Dean Jones").add("year", 1963);
+        final JSON json = new JSON().add("name", "Dean Jones").add("year", 1963);
 
         getOperations().putObject("root", "zips.json", json.toByteArray(), new MinioUserMetaData("zips-meta", uuid()).add("zips-name", "Dean Jones  "));
 

@@ -19,7 +19,6 @@ package co.mercenary.creators.minio.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -28,15 +27,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -46,7 +42,6 @@ import java.util.stream.StreamSupport;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
 import org.xmlpull.v1.XmlPullParserException;
@@ -61,9 +56,6 @@ public final class MinioUtils
 
     @NonNull
     public static final Long                    MAXIMUM_EXPIRY_TIME = 7L * 24L * 3600L;
-
-    @NonNull
-    public static final Long                    MAXINUM_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
 
     @NonNull
     public static final String                  EMPTY_STRING_VALUED = "";
@@ -114,6 +106,8 @@ public final class MinioUtils
     @Nullable
     public static <T> T NULL(@NonNull final Class<T> type)
     {
+        requireNonNull(type);
+
         return NULL();
     }
 
@@ -128,37 +122,14 @@ public final class MinioUtils
     @SuppressWarnings("unchecked")
     public static <T> T CAST(@NonNull final Object value, @NonNull final Class<T> type)
     {
+        requireNonNull(type);
+
         return ((T) requireNonNull(value));
-    }
-
-    @Nullable
-    public static <T> T SAFE(@Nullable final Object value, @NonNull final Class<T> type)
-    {
-        if ((null != value) && (ClassUtils.isAssignableValue(type, value)))
-        {
-            return type.cast(value);
-        }
-        return NULL();
-    }
-
-    public static boolean isNull(@Nullable final Object value)
-    {
-        return (null == value);
     }
 
     public static boolean isNonNull(@Nullable final Object value)
     {
         return (null != value);
-    }
-
-    public static boolean isPresent(@NonNull final String name)
-    {
-        return isPresent(name, NULL());
-    }
-
-    public static boolean isPresent(@NonNull final String name, @Nullable final ClassLoader loader)
-    {
-        return ClassUtils.isPresent(requireNonNull(name), loader);
     }
 
     @NonNull
@@ -175,9 +146,15 @@ public final class MinioUtils
 
     public static void isEachNonNull(@NonNull final Object... values)
     {
+        requireNonNull(values, "values is null.");
+
+        int i = 0;
+
         for (final Object value : values)
         {
-            requireNonNull(value);
+            final int a = i++;
+
+            requireNonNull(value, () -> String.format("isEachNonNull(): values[%s] is null.", a));
         }
     }
 
@@ -257,25 +234,9 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static byte[] getBytes(@NonNull final String value)
-    {
-        return value.getBytes(StandardCharsets.UTF_8);
-    }
-
-    @NonNull
-    public static String uuid()
-    {
-        return UUID.randomUUID().toString();
-    }
-
-    @NonNull
     public static String toStringOrElse(final String value, @NonNull final String otherwise)
     {
-        if (null != value)
-        {
-            return value;
-        }
-        return otherwise;
+        return toStringOrElse(value, () -> otherwise);
     }
 
     @NonNull
@@ -306,12 +267,6 @@ public final class MinioUtils
             return value.toUpperCase();
         }
         return NULL();
-    }
-
-    @NonNull
-    public static String fixBucketString(@NonNull final String buck)
-    {
-        return requireNonNull(buck);
     }
 
     @NonNull
@@ -370,22 +325,6 @@ public final class MinioUtils
         return string;
     }
 
-    @Nullable
-    public static String fixRegionString(@Nullable final String value)
-    {
-        if ((null == value) || (value.length() < 1))
-        {
-            return NULL();
-        }
-        final String string = value.trim();
-
-        if ((string.isEmpty()) || (DEFAULT_REGION_EAST.equalsIgnoreCase(string)))
-        {
-            return NULL();
-        }
-        return string;
-    }
-
     public static boolean isAmazonEndpoint(@NonNull final String value)
     {
         return value.toLowerCase().indexOf(AMAZON_S3_END_POINT) >= 0;
@@ -410,31 +349,6 @@ public final class MinioUtils
     public static String toAmazonMetaPrefix(@NonNull final String value)
     {
         return X_AMAZON_META_START + noAmazonMetaPrefix(value);
-    }
-
-    @NonNull
-    public static String escape(@NonNull final String value)
-    {
-        return X_AMAZON_META_START + noAmazonMetaPrefix(value);
-    }
-
-    @Nullable
-    public static String failIfNullBytePresent(@Nullable final String value)
-    {
-        if (null != value)
-        {
-            final int size = value.length();
-
-            for (int i = 0; i < size; i++)
-            {
-                if (value.charAt(i) == 0)
-                {
-                    throw new IllegalArgumentException("null byte present in string, there are no known legitimate use cases for such data, but several injection attacks may use it.");
-                }
-            }
-            return value;
-        }
-        return NULL();
     }
 
     @Nullable
@@ -480,45 +394,6 @@ public final class MinioUtils
     }
 
     @NonNull
-    public static <T> List<T> toList(@NonNull final Iterable<T> iterable)
-    {
-        return toList(StreamSupport.stream(iterable.spliterator(), false));
-    }
-
-    @NonNull
-    public static <T> Set<T> toSet(@NonNull final Iterable<T> iterable)
-    {
-        return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toSet());
-    }
-
-    @NonNull
-    @SafeVarargs
-    public static <T> Stream<T> toStream(@Nullable final T... source)
-    {
-        if ((null == source) || (source.length == 0))
-        {
-            return Stream.empty();
-        }
-        if (source.length == 1)
-        {
-            return Stream.of(source[0]);
-        }
-        return Stream.of(source);
-    }
-
-    @NonNull
-    public static <T> List<T> emptyList()
-    {
-        return Collections.emptyList();
-    }
-
-    @NonNull
-    public static <T> List<T> emptyList(final Class<T> type)
-    {
-        return Collections.emptyList();
-    }
-
-    @NonNull
     public static <K, V> Map<K, V> emptyMap()
     {
         return Collections.emptyMap();
@@ -532,6 +407,16 @@ public final class MinioUtils
             return emptyMap();
         }
         return Collections.unmodifiableMap(map);
+    }
+
+    @NonNull
+    public static <K, V> LinkedHashMap<K, V> toLinkedHashMap(@Nullable final Map<K, V> map)
+    {
+        if (null == map)
+        {
+            return new LinkedHashMap<>();
+        }
+        return new LinkedHashMap<>(map);
     }
 
     @NonNull
@@ -561,12 +446,6 @@ public final class MinioUtils
             return new LinkedHashMap<>();
         }
         return new LinkedHashMap<>(meta.getUserMetaData());
-    }
-
-    @NonNull
-    public static <T> Collection<T> keys(@NonNull final Map<T, ?> map)
-    {
-        return Collections.unmodifiableCollection(map.keySet());
     }
 
     @NonNull
@@ -671,11 +550,6 @@ public final class MinioUtils
         return builder.toString();
     }
 
-    public static boolean isValidToRead(@NonNull final File file) throws IOException
-    {
-        return isValidToRead(file.toPath());
-    }
-
     public static boolean isValidToRead(@NonNull final Path path) throws IOException
     {
         requireNonNull(path);
@@ -721,11 +595,6 @@ public final class MinioUtils
     public static Integer getDuration(@NonNull final Long time, @NonNull final TimeUnit unit)
     {
         return getDuration(unit.toSeconds(time.longValue()));
-    }
-
-    public static long getCurrentMills()
-    {
-        return System.currentTimeMillis();
     }
 
     public static long getCurrentNanos()

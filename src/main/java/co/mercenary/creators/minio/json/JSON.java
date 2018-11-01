@@ -26,26 +26,26 @@ import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.errors.MinioRuntimeException;
 import co.mercenary.creators.minio.util.MinioUtils;
 
-public class JSONNode extends LinkedHashMap<String, Object> implements WithJSONOperations
+public class JSON extends LinkedHashMap<String, Object> implements WithJSONOperations
 {
     private static final long serialVersionUID = 3248651885486937763L;
 
-    public JSONNode()
+    public JSON()
     {
         super();
     }
 
-    public JSONNode(final int size)
+    public JSON(final int size)
     {
         super(size);
     }
 
-    public JSONNode(@NonNull final Map<String, ?> map)
+    public JSON(@Nullable final Map<String, ?> map)
     {
-        super(MinioUtils.requireNonNull(map));
+        super(MinioUtils.toLinkedHashMap(map));
     }
 
-    public JSONNode(@NonNull final String key, @Nullable final Object val)
+    public JSON(@NonNull final String key, @Nullable final Object val)
     {
         put(key, val);
     }
@@ -72,10 +72,20 @@ public class JSONNode extends LinkedHashMap<String, Object> implements WithJSONO
     }
 
     @NonNull
-    public JSONNode add(@NonNull final String key, @Nullable final Object val)
+    public JSON add(@NonNull final String key, @Nullable final Object val)
     {
         put(key, val);
 
+        return this;
+    }
+
+    @NonNull
+    public JSON add(@Nullable final Map<String, ?> map)
+    {
+        if ((null != map) && (false == map.isEmpty()))
+        {
+            super.putAll(map);
+        }
         return this;
     }
 
@@ -98,7 +108,7 @@ public class JSONNode extends LinkedHashMap<String, Object> implements WithJSONO
         {
             return true;
         }
-        if (other instanceof JSONNode)
+        if (other instanceof JSON)
         {
             return toString().equals(other.toString());
         }

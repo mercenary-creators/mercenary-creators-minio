@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
+@file:kotlin.jvm.JvmName("MinioKt")
+
 package co.mercenary.creators.minio.kotlin
 
 import co.mercenary.creators.minio.MinioOperations
+import co.mercenary.creators.minio.MinioTemplate
 import co.mercenary.creators.minio.data.MinioBucket
 import co.mercenary.creators.minio.data.MinioItem
 import co.mercenary.creators.minio.data.MinioObjectStatus
 import co.mercenary.creators.minio.data.MinioUserMetaData
+import co.mercenary.creators.minio.json.JSON
+import co.mercenary.creators.minio.json.JSONUtils
 import co.mercenary.creators.minio.util.MinioUtils
+import org.springframework.core.io.Resource
 import java.io.InputStream
 import java.util.Optional
 import java.util.function.Predicate
 import java.util.regex.Pattern
 import java.util.stream.Stream
 
-fun <T> Stream<T>.sequence(): Sequence<T> = Sequence { iterator() }
+internal fun <T> Stream<T>.sequence(): Sequence<T> = Sequence { iterator() }
 
-data class Meta(val getFunction: () -> MinioUserMetaData, val setFunction: (MinioUserMetaData?) -> Unit, val addFunction: (MinioUserMetaData?) -> Unit) {
+class Meta(private val getFunction: () -> MinioUserMetaData, private val setFunction: (MinioUserMetaData?) -> Unit, private val addFunction: (MinioUserMetaData?) -> Unit) {
 	var data: MinioUserMetaData
 		get() = getFunction()
 		set(meta) = setFunction(meta)
@@ -64,19 +70,45 @@ fun metaDataOf(vararg list: Pair<String, String>): MinioUserMetaData = MinioUser
 
 fun metaDataOf(list: Collection<Pair<String, String>>): MinioUserMetaData = MinioUserMetaData().add(hashMapOf(*(list.toTypedArray())))
 
-operator fun MinioUserMetaData.plus(meta: Meta): MinioUserMetaData = MinioUserMetaData().add(meta())
+operator fun MinioUserMetaData.plus(meta: Meta): MinioUserMetaData = add(meta())
 
-operator fun MinioUserMetaData.plus(meta: Map<String, String>?): MinioUserMetaData = MinioUserMetaData().add(meta)
+operator fun MinioUserMetaData.plus(meta: Map<String, String>?): MinioUserMetaData = add(meta)
 
-operator fun MinioUserMetaData.plus(pair: Pair<String, String>): MinioUserMetaData = MinioUserMetaData(pair.first, pair.second)
+operator fun MinioUserMetaData.plus(pair: Pair<String, String>): MinioUserMetaData = add(pair.first, pair.second)
 
-operator fun MinioUserMetaData.plus(list: Array<Pair<String, String>>): MinioUserMetaData = MinioUserMetaData().add(hashMapOf(*list))
+operator fun MinioUserMetaData.plus(list: Array<Pair<String, String>>): MinioUserMetaData = add(hashMapOf(*list))
 
-operator fun MinioUserMetaData.plus(list: Collection<Pair<String, String>>): MinioUserMetaData = MinioUserMetaData().add(hashMapOf(*(list.toTypedArray())))
+operator fun MinioUserMetaData.plus(list: Collection<Pair<String, String>>): MinioUserMetaData = add(hashMapOf(*(list.toTypedArray())))
+
+fun json(): JSON = JSON()
+
+fun json(data: Resource): JSON = JSONUtils.toJSON(data)
+
+fun json(data: MinioItem): JSON = json(data.resource())
+
+fun json(k: String, v: Any?): JSON = JSON(k, v)
+
+fun json(data: Map<String, Any?>?): JSON = JSON(data)
+
+fun json(pair: Pair<String, Any?>): JSON = JSON(pair.first, pair.second)
+
+fun json(vararg list: Pair<String, Any?>): JSON = JSON(hashMapOf(*list))
+
+fun json(list: Collection<Pair<String, Any?>>): JSON = JSON(hashMapOf(*(list.toTypedArray())))
+
+operator fun JSON.plus(data: Map<String, Any?>?): JSON = add(data)
+
+operator fun JSON.plus(pair: Pair<String, Any?>): JSON = add(pair.first, pair.second)
+
+operator fun JSON.plus(list: Array<Pair<String, Any?>>): JSON = add(hashMapOf(*list))
+
+operator fun JSON.plus(list: Collection<Pair<String, Any?>>): JSON = add(hashMapOf(*(list.toTypedArray())))
 
 fun MinioItem.remove(): Boolean = withOperations().deleteObject()
 
 fun MinioItem.exists(): Boolean = isFile || withOperations().isObject
+
+fun MinioItem.resource(): Resource = withOperations().resource
 
 fun MinioItem.stream(): InputStream = withOperations().objectInputStream
 
@@ -84,7 +116,7 @@ fun MinioItem.status(): MinioObjectStatus = withOperations().objectStatus
 
 fun MinioItem.bucket(): Optional<MinioBucket> = withOperations().findBucket()
 
-fun MinioItem.meta(): Meta = with(withOperations()) { Meta(::getUserMetaData, ::setUserMetaData, ::addUserMetaData) }
+fun MinioItem.metaDataOf(): Meta = with(withOperations()) { Meta(::getUserMetaData, ::setUserMetaData, ::addUserMetaData) }
 
 fun MinioBucket.remove(): Boolean = withOperations().deleteBucket()
 
@@ -100,7 +132,7 @@ fun MinioBucket.items(prefix: String? = MinioUtils.NULL(), recursive: Boolean = 
 
 fun MinioBucket.item(name: String): Optional<MinioItem> = withOperations().findItem(name)
 
-fun MinioBucket.meta(name: String): Meta = with(withOperations()) { Meta({ getUserMetaData(name) }, { meta -> setUserMetaData(name, meta) }, { meta -> addUserMetaData(name, meta) }) }
+fun MinioBucket.metaDataOf(name: String): Meta = with(withOperations()) { Meta({ getUserMetaData(name) }, { meta -> setUserMetaData(name, meta) }, { meta -> addUserMetaData(name, meta) }) }
 
 fun MinioOperations.buckets(): Sequence<MinioBucket> = findBuckets().sequence()
 
@@ -138,4 +170,42 @@ fun MinioOperations.status(bucket: String, name: String): MinioObjectStatus = ge
 
 fun MinioOperations.stream(bucket: String, name: String): InputStream = getObjectInputStream(bucket, name)
 
-fun MinioOperations.meta(bucket: String, name: String): Meta = Meta({ getUserMetaData(bucket, name) }, { meta -> setUserMetaData(bucket, name, meta) }, { meta -> addUserMetaData(bucket, name, meta) })
+fun MinioOperations.metaDataOf(bucket: String, name: String): Meta = Meta({ getUserMetaData(bucket, name) }, { meta -> setUserMetaData(bucket, name, meta) }, { meta -> addUserMetaData(bucket, name, meta) })
+
+fun MinioTemplate.buckets(): Sequence<MinioBucket> = findBuckets().sequence()
+
+fun MinioTemplate.buckets(filter: String): Sequence<MinioBucket> = findBuckets(filter).sequence()
+
+fun MinioTemplate.buckets(filter: Pattern): Sequence<MinioBucket> = findBuckets(filter).sequence()
+
+fun MinioTemplate.buckets(filter: Predicate<String>): Sequence<MinioBucket> = findBuckets(filter).sequence()
+
+fun MinioTemplate.buckets(filter: Collection<String>): Sequence<MinioBucket> = findBuckets(filter).sequence()
+
+fun MinioTemplate.buckets(filter: Sequence<String>): Sequence<MinioBucket> = findBuckets(filter.toSet()).sequence()
+
+fun MinioTemplate.bucket(bucket: String): Optional<MinioBucket> = findBucket(bucket)
+
+fun MinioTemplate.exists(bucket: String): Boolean = isBucket(bucket)
+
+fun MinioTemplate.remove(bucket: String): Boolean = deleteBucket(bucket)
+
+fun MinioTemplate.ensure(bucket: String): Boolean = ensureBucket(bucket)
+
+fun MinioTemplate.policy(bucket: String): String = getBucketPolicy(bucket)
+
+fun MinioTemplate.items(bucket: String, recursive: Boolean = true): Sequence<MinioItem> = findItems(bucket, MinioUtils.NULL(), recursive).sequence()
+
+fun MinioTemplate.items(bucket: String, prefix: String? = MinioUtils.NULL(), recursive: Boolean = true): Sequence<MinioItem> = findItems(bucket, prefix, recursive).sequence()
+
+fun MinioTemplate.item(bucket: String, name: String): Optional<MinioItem> = findItem(bucket, name)
+
+fun MinioTemplate.exists(bucket: String, name: String): Boolean = isObject(bucket, name)
+
+fun MinioTemplate.remove(bucket: String, name: String): Boolean = deleteObject(bucket, name)
+
+fun MinioTemplate.status(bucket: String, name: String): MinioObjectStatus = getObjectStatus(bucket, name)
+
+fun MinioTemplate.stream(bucket: String, name: String): InputStream = getObjectInputStream(bucket, name)
+
+fun MinioTemplate.metaDataOf(bucket: String, name: String): Meta = Meta({ getUserMetaData(bucket, name) }, { meta -> setUserMetaData(bucket, name, meta) }, { meta -> addUserMetaData(bucket, name, meta) })

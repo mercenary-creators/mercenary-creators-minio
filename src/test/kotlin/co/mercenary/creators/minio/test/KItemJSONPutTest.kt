@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.util;
+package co.mercenary.creators.minio.test
 
-import org.springframework.lang.NonNull;
+import org.junit.jupiter.api.Test
+import co.mercenary.creators.minio.kotlin.*
+import co.mercenary.creators.minio.test.util.KAbstractMinioTests
 
-@FunctionalInterface
-public interface WithStringValue
-{
-    @NonNull
-    String toStringValue();
+class KItemJSONPutTest : KAbstractMinioTests() {
+	@Test
+	fun test() {
+		val data = json("name" to "Dean S. Jones", "year" to 55)
+		info { data }
+		minio.putObject("root", "data.json", data.toByteArray(), metaDataOf("data-meta" to uuid()))
+		val item = minio.item("root", "data.json").get()
+		val valu = json(item)
+		info { valu }
+		info { item }
+		info { item.metaDataOf() }
+	}
 }

@@ -43,7 +43,7 @@ public interface MinioItemOperations extends WithSelf<MinioItem>, WithServerData
     boolean deleteObject() throws MinioOperationException;
 
     @NonNull
-    Resource getItemResource() throws MinioOperationException;
+    Resource getResource() throws MinioOperationException;
 
     @NonNull
     Optional<MinioBucket> findBucket() throws MinioOperationException;

@@ -45,6 +45,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.util.MinioUtils;
@@ -57,10 +59,7 @@ public class JSONMapper extends ObjectMapper
     private static final PrettyPrinter TO_PRETTY_PRINTS = toDefaultPrettyPrints(MinioUtils.repeat(MinioUtils.SPACE_STRING_VALUED, 4));
 
     @NonNull
-    private static final List<Module>  EXTENDED_MODULES = MinioUtils.toList(new JodaModule(), new Jdk8Module(), new JavaTimeModule());
-
-    @NonNull
-    private static PrettyPrinter toDefaultPrettyPrints(final String indent)
+    private static PrettyPrinter toDefaultPrettyPrints(@NonNull final String indent)
     {
         return new DefaultPrettyPrinter().withArrayIndenter(new DefaultIndenter().withIndent(indent)).withObjectIndenter(new DefaultIndenter().withIndent(indent));
     }
@@ -72,7 +71,7 @@ public class JSONMapper extends ObjectMapper
 
     public JSONMapper(final boolean pretty)
     {
-        registerModules(EXTENDED_MODULES).enable(ALLOW_COMMENTS).enable(ESCAPE_NON_ASCII).disable(AUTO_CLOSE_SOURCE).disable(AUTO_CLOSE_TARGET).disable(FAIL_ON_UNKNOWN_PROPERTIES).enable(WRITE_BIGDECIMAL_AS_PLAIN);
+        registerModules(JSONMapperModules.EXTENDED_MODULES).enable(ALLOW_COMMENTS).enable(ESCAPE_NON_ASCII).disable(AUTO_CLOSE_SOURCE).disable(AUTO_CLOSE_TARGET).disable(FAIL_ON_UNKNOWN_PROPERTIES).enable(WRITE_BIGDECIMAL_AS_PLAIN);
 
         setDateFormat(MinioUtils.getDefaultDateFormat()).setTimeZone(MinioUtils.getDefaultTimeZone());
 
@@ -276,5 +275,11 @@ public class JSONMapper extends ObjectMapper
         _checkInvalidCopy(JSONMapper.class);
 
         return new JSONMapper(this);
+    }
+
+    private static final class JSONMapperModules
+    {
+        @NonNull
+        private static final List<Module> EXTENDED_MODULES = MinioUtils.toList(new ParameterNamesModule(), new JodaModule(), new Jdk8Module(), new JavaTimeModule(), new KotlinModule());
     }
 }

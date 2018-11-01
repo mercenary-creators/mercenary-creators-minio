@@ -303,6 +303,12 @@ public class MinioBucket extends AbstractCommon implements WithOperations<MinioB
             }
 
             @Override
+            public void deleteUserMetaData(@NonNull final String name) throws MinioOperationException
+            {
+                oper.deleteUserMetaData(self().getName(), name);
+            }
+
+            @Override
             public void setUserMetaData(@NonNull final String name, @Nullable final MinioUserMetaData meta) throws MinioOperationException
             {
                 oper.setUserMetaData(self().getName(), name, meta);

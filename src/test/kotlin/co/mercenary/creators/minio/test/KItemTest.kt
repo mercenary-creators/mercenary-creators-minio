@@ -19,13 +19,12 @@ package co.mercenary.creators.minio.test
 import org.junit.jupiter.api.Test
 import co.mercenary.creators.minio.kotlin.*
 import co.mercenary.creators.minio.test.util.KAbstractMinioTests
-import co.mercenary.creators.minio.data.MinioItem
 
 class KItemTest : KAbstractMinioTests() {
 	@Test
 	fun test() {
-		val item: MinioItem = minio.item("root", "zips.json").get()
+		val item = minio.item("root", "zips.json").get()
 		info { item }
-		info { item.meta() }
+		info { item.metaDataOf() }
 	}
 }

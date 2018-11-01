@@ -802,7 +802,7 @@ public class MinioTemplate implements MinioOperations
 
         try (ByteArrayInputStream is = new ByteArrayInputStream(input))
         {
-            putObjectInputStream(bucket, name, is, Long.valueOf(is.available()), type, meta);
+            putObjectInputStream(bucket, name, is, Long.valueOf(is.available()), type, meta, MinioUtils.NULL());
         }
         catch (final IOException e)
         {
@@ -816,7 +816,7 @@ public class MinioTemplate implements MinioOperations
         putObject(bucket, name, input, MinioUtils.NULL(), meta);
     }
 
-    protected void putObjectInputStream(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final Long size, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
+    protected void putObjectInputStream(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final Long size, @Nullable final String type, @Nullable final MinioUserMetaData meta, @Nullable final ServerSideEncryption keys) throws MinioOperationException
     {
         MinioUtils.isEachNonNull(bucket, name, input);
 
@@ -1017,7 +1017,7 @@ public class MinioTemplate implements MinioOperations
     @Override
     public void putObject(@NonNull final String bucket, @NonNull final String name, @NonNull final InputStream input, @Nullable final String type, @Nullable final MinioUserMetaData meta) throws MinioOperationException
     {
-        putObjectInputStream(bucket, name, input, MinioUtils.NULL(), type, meta);
+        putObjectInputStream(bucket, name, input, MinioUtils.NULL(), type, meta, MinioUtils.NULL());
     }
 
     @Override
@@ -1044,7 +1044,7 @@ public class MinioTemplate implements MinioOperations
         {
             try (final InputStream is = input.getInputStream())
             {
-                putObjectInputStream(bucket, name, is, MinioUtils.NULL(), type, meta);
+                putObjectInputStream(bucket, name, is, MinioUtils.NULL(), type, meta, MinioUtils.NULL());
             }
             catch (final IOException e)
             {
@@ -1066,7 +1066,7 @@ public class MinioTemplate implements MinioOperations
 
         try (final InputStream is = MinioUtils.getInputStream(input))
         {
-            putObjectInputStream(bucket, name, is, input.length(), type, meta);
+            putObjectInputStream(bucket, name, is, input.length(), type, meta, MinioUtils.NULL());
         }
         catch (final IOException e)
         {
@@ -1134,9 +1134,9 @@ public class MinioTemplate implements MinioOperations
 
                 final int size = conn.getContentLength();
 
-                try (InputStream is = conn.getInputStream())
+                try (final InputStream is = conn.getInputStream())
                 {
-                    putObjectInputStream(bucket, name, is, Long.valueOf(size), type, meta);
+                    putObjectInputStream(bucket, name, is, Long.valueOf(size), type, meta, MinioUtils.NULL());
                 }
                 if (conn instanceof HttpURLConnection)
                 {

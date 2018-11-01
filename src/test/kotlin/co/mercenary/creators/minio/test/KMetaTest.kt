@@ -23,7 +23,7 @@ import co.mercenary.creators.minio.test.util.KAbstractMinioTests
 class KMetaTest : KAbstractMinioTests() {
 	@Test
 	fun test() {
-		val meta: Meta = minio.meta("root", "file.json")
+		val meta = minio.metaDataOf("root", "file.json")
 		info { meta }
 		meta + metaDataOf("plus-meta" to uuid())
 		info { meta }

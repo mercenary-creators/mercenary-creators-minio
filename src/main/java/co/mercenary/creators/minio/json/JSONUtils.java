@@ -114,4 +114,16 @@ public final class JSONUtils
     {
         return NORMAL.convert(object, type);
     }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final Resource data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final InputStream data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
 }
