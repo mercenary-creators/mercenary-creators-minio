@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -439,6 +440,12 @@ public final class MinioUtils
     }
 
     @NonNull
+    public static <K, V> Map<K, V> toMap(@NonNull final K key, @Nullable final V val)
+    {
+        return new LinkedHashMap<>(Collections.singletonMap(requireNonNull(key), val));
+    }
+
+    @NonNull
     public static Map<String, String> toHeaderMap(@Nullable final WithUserMetaData meta)
     {
         if (null == meta)
@@ -548,6 +555,12 @@ public final class MinioUtils
             builder.append(string);
         }
         return builder.toString();
+    }
+
+    @NonNull
+    public static String uuid()
+    {
+        return UUID.randomUUID().toString();
     }
 
     public static boolean isValidToRead(@NonNull final Path path) throws IOException

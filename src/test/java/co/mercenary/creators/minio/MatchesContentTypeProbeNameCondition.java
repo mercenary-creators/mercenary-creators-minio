@@ -36,7 +36,7 @@ public class MatchesContentTypeProbeNameCondition implements Condition
 
         if (attr != null)
         {
-            if (getAttributeString(attr.getFirst("value"), "file").equalsIgnoreCase(ctxt.getEnvironment().getProperty("minio.content-type-probe.name", "file")))
+            if (getAttributeString(attr.getFirst("value"), "file").equalsIgnoreCase(ctxt.getEnvironment().getProperty("co.mercenary.creators.minio.content-type-probe.name", "file")))
             {
                 return true;
             }

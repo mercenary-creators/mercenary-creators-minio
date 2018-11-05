@@ -27,12 +27,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggerContextListener;
 import ch.qos.logback.classic.turbo.TurboFilter;
-import co.mercenary.creators.minio.util.MinioUtils;
 
 public final class LoggingOps
 {
     @NonNull
-    public static final Marker MERCENARY_MARKER;
+    private static final Marker MERCENARY_MARKER;
 
     static
     {
@@ -43,6 +42,12 @@ public final class LoggingOps
 
     private LoggingOps()
     {
+    }
+
+    @NonNull
+    public static Marker getMarker()
+    {
+        return MERCENARY_MARKER;
     }
 
     @NonNull

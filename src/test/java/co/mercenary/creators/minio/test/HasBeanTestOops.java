@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Mercenary Creators Company. All rights reservd.
+ * Copyright (c) 2018, Mercenary Creators Company. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import co.mercenary.creators.minio.data.MinioBucket;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@TestPropertySource(properties = "minio.content-type-probe.name=oops")
+@TestPropertySource(properties = "co.mercenary.creators.minio.content-type-probe.name=oops")
 public class HasBeanTestOops extends AbstractMinioTests
 {
     @Test

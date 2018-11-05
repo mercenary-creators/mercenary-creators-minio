@@ -17,7 +17,7 @@
 package co.mercenary.creators.minio.util;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -38,11 +39,18 @@ import co.mercenary.creators.minio.MinioTemplate;
 import co.mercenary.creators.minio.MinioTestConfig;
 import co.mercenary.creators.minio.errors.MinioDataException;
 import co.mercenary.creators.minio.json.JSONUtils;
+import co.mercenary.creators.minio.json.WithJSONOperations;
 
 @SpringJUnitConfig(MinioTestConfig.class)
 @TestPropertySource("file:/opt/development/properties/mercenary-creators-minio/minio-test.properties")
 public abstract class AbstractMinioTests
 {
+    @NonNull
+    private final Ticker  ticker;
+
+    @NonNull
+    private final Marker  marker = LoggingOps.getMarker();
+
     @NonNull
     private final Logger  logger = LoggingOps.getLogger(getClass());
 
@@ -50,28 +58,29 @@ public abstract class AbstractMinioTests
     @Autowired
     private MinioTemplate minioTemplate;
 
-    @Nullable
-    protected MinioTemplate getMinioTemplate()
+    protected AbstractMinioTests()
     {
-        return minioTemplate;
+        super();
+
+        ticker = getTimer();
     }
 
     @NonNull
-    protected MinioOperations getOperations()
+    protected Optional<MinioTemplate> getTemplate()
     {
-        return getMinioTemplate();
+        return MinioUtils.toOptional(minioTemplate);
     }
 
     @NonNull
     protected MinioOperations getMinio()
     {
-        return getMinioTemplate();
+        return getTemplate().orElseThrow(() -> new AssertionError("getTemplate() null template."));
     }
 
     @NonNull
-    protected Resource getResource()
+    protected MinioOperations getOperations()
     {
-        return new ClassPathResource("management.json", AbstractMinioTests.class);
+        return getTemplate().orElseThrow(() -> new AssertionError("getTemplate() null template."));
     }
 
     @NonNull
@@ -81,26 +90,39 @@ public abstract class AbstractMinioTests
     }
 
     @NonNull
-    protected Ticker getTicker()
+    protected Marker getMarker()
     {
-        return new NanoTicker();
+        return marker;
     }
 
     @NonNull
-    protected String uuid()
+    protected Ticker getTimer()
     {
-        return UUID.randomUUID().toString();
+        return new NanoTicker();
     }
 
     @BeforeEach
     protected void doBeforeEachTest()
     {
-        info(() -> getOperations().getContentTypeProbe().getClass().getName());
+        info(() -> getMinio().getContentTypeProbe().getClass().getName());
+
+        ticker.reset();
     }
 
     @AfterEach
     protected void doAfterEachTest()
     {
+        final String tick = ticker.toString();
+
+        info(() -> tick);
+
+        ticker.reset();
+    }
+
+    @NonNull
+    protected Supplier<String> getMessage(@NonNull final String message)
+    {
+        return () -> message;
     }
 
     @NonNull
@@ -119,7 +141,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString());
+            getLogger().info(getMarker(), safe(message.get()));
         }
     }
 
@@ -127,7 +149,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isInfoEnabled())
         {
-            getLogger().info(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+            getLogger().info(getMarker(), safe(message.get()), cause);
         }
     }
 
@@ -135,7 +157,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString());
+            getLogger().warn(getMarker(), safe(message.get()));
         }
     }
 
@@ -143,7 +165,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isWarnEnabled())
         {
-            getLogger().warn(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+            getLogger().warn(getMarker(), safe(message.get()), cause);
         }
     }
 
@@ -151,7 +173,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString());
+            getLogger().debug(getMarker(), safe(message.get()));
         }
     }
 
@@ -159,7 +181,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isDebugEnabled())
         {
-            getLogger().debug(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+            getLogger().debug(getMarker(), safe(message.get()), cause);
         }
     }
 
@@ -167,7 +189,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString());
+            getLogger().error(getMarker(), safe(message.get()));
         }
     }
 
@@ -175,7 +197,7 @@ public abstract class AbstractMinioTests
     {
         if (getLogger().isErrorEnabled())
         {
-            getLogger().error(LoggingOps.MERCENARY_MARKER, message.get().toString(), cause);
+            getLogger().error(getMarker(), safe(message.get()), cause);
         }
     }
 
@@ -188,7 +210,9 @@ public abstract class AbstractMinioTests
 
             if (logs.isInfoEnabled())
             {
-                list.forEach(value -> logs.info(LoggingOps.MERCENARY_MARKER, safe(value)));
+                final Marker mark = getMarker();
+
+                list.forEach(value -> logs.info(mark, safe(value)));
             }
         }
         return list;
@@ -203,11 +227,11 @@ public abstract class AbstractMinioTests
     @NonNull
     protected String safe(@Nullable final Object value)
     {
-        if (null == value)
+        if (value instanceof WithJSONOperations)
         {
-            return MinioUtils.NULLS_STRING_VALUED;
+            return toJSONString(value, true);
         }
-        return value.toString();
+        return MinioUtils.requireNonNullOrElse(((null == value) ? MinioUtils.NULLS_STRING_VALUED : value.toString()), MinioUtils.NULLS_STRING_VALUED);
     }
 
     @NonNull
@@ -255,18 +279,30 @@ public abstract class AbstractMinioTests
         }
     }
 
-    protected void assertEquals(@Nullable final Object expected, @Nullable final Object actual, @NonNull final Supplier<?> message)
+    @NonNull
+    protected String uuid()
     {
-        Assertions.assertEquals(expected, actual, () -> message.get().toString());
+        return MinioUtils.uuid();
     }
 
-    protected void assertTrue(final boolean condition, @NonNull final Supplier<?> message)
+    protected void assertTrue(final boolean condition, @NonNull final Supplier<String> message)
     {
-        Assertions.assertTrue(condition, () -> message.get().toString());
+        Assertions.assertTrue(condition, message);
     }
 
-    protected void assertFalse(final boolean condition, @NonNull final Supplier<?> message)
+    protected void assertFalse(final boolean condition, @NonNull final Supplier<String> message)
     {
-        Assertions.assertFalse(condition, () -> message.get().toString());
+        Assertions.assertFalse(condition, message);
+    }
+
+    protected void assertEquals(@Nullable final Object expected, @Nullable final Object actual, @NonNull final Supplier<String> message)
+    {
+        Assertions.assertEquals(expected, actual, message);
+    }
+
+    @NonNull
+    protected Resource getResource()
+    {
+        return new ClassPathResource("management.json", AbstractMinioTests.class);
     }
 }

@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.util;
+package co.mercenary.creators.minio.kotlin.json
 
-import org.springframework.lang.Nullable;
+import co.mercenary.creators.minio.util.WithName
+import com.fasterxml.jackson.core.Version
+import com.fasterxml.jackson.core.Versioned
+import com.fasterxml.jackson.core.util.VersionUtil
 
-@FunctionalInterface
-public interface ConditionalSupplier<T>
-{
-    @Nullable
-    T get(boolean cond);
+internal class PackageVersion : Versioned, WithName {
+	
+	override fun version(): Version = VERSION
+
+	override fun getName(): String = "MinioKotlinModule"
+
+	companion object {
+		
+		private val VERSION = VersionUtil.parseVersion("1.0.15-SNAPSHOT", "co.mercenary-creators", "mercenary-creators-minio")
+	}
 }

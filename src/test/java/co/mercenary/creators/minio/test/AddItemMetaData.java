@@ -28,7 +28,7 @@ public class AddItemMetaData extends AbstractMinioTests
     @Test
     void test() throws Exception
     {
-        final Ticker tick = getTicker();
+        final Ticker tick = getTimer();
 
         getOperations().setUserMetaData("root", "file.json", new MinioUserMetaData("test-meta", uuid()));
 

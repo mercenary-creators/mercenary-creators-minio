@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test.util
+package co.mercenary.creators.minio.kotlin.json
 
-import co.mercenary.creators.minio.util.AbstractMinioTests
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
-abstract class KAbstractMinioTests : AbstractMinioTests() {
+internal class SequenceSerializer() : StdSerializer<Sequence<*>>(Sequence::class.java) {
+
+	override fun serialize(sequence: Sequence<*>, generator: JsonGenerator, provider: SerializerProvider): Unit = provider.defaultSerializeValue(sequence.toList(), generator)
 }

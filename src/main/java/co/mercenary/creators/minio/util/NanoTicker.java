@@ -36,7 +36,7 @@ public class NanoTicker extends AbstractTicker
     @Override
     public long clock()
     {
-        return MinioUtils.getCurrentNanos();
+        return System.nanoTime();
     }
 
     @NonNull

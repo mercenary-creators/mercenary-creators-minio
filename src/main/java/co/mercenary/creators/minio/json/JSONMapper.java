@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import co.mercenary.creators.minio.errors.MinioDataException;
+import co.mercenary.creators.minio.kotlin.json.MinioKotlinModule;
 import co.mercenary.creators.minio.util.MinioUtils;
 
 public class JSONMapper extends ObjectMapper
@@ -138,6 +140,21 @@ public class JSONMapper extends ObjectMapper
     }
 
     @NonNull
+    public <T> T toJSONObject(@NonNull final URL value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        MinioUtils.isEachNonNull(value, type);
+
+        try
+        {
+            return MinioUtils.requireNonNull(readerFor(type).readValue(value));
+        }
+        catch (final IOException e)
+        {
+            throw new MinioDataException(e);
+        }
+    }
+
+    @NonNull
     public <T> T toJSONObject(@NonNull final byte[] value, @NonNull final Class<T> type) throws MinioDataException
     {
         MinioUtils.isEachNonNull(value, type);
@@ -202,6 +219,17 @@ public class JSONMapper extends ObjectMapper
     {
         MinioUtils.isEachNonNull(value, type);
 
+        if (value.isFile())
+        {
+            try
+            {
+                return toJSONObject(value.getFile(), type);
+            }
+            catch (final IOException e)
+            {
+                throw new MinioDataException(e);
+            }
+        }
         try (final InputStream stream = value.getInputStream())
         {
             return MinioUtils.requireNonNull(readerFor(type).readValue(stream));
@@ -280,6 +308,6 @@ public class JSONMapper extends ObjectMapper
     private static final class JSONMapperModules
     {
         @NonNull
-        private static final List<Module> EXTENDED_MODULES = MinioUtils.toList(new ParameterNamesModule(), new JodaModule(), new Jdk8Module(), new JavaTimeModule(), new KotlinModule());
+        private static final List<Module> EXTENDED_MODULES = MinioUtils.toList(new ParameterNamesModule(), new JodaModule(), new Jdk8Module(), new JavaTimeModule(), new KotlinModule(), new MinioKotlinModule());
     }
 }

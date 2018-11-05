@@ -14,9 +14,21 @@
  * limitations under the License.
  */
 
-package co.mercenary.creators.minio.test.util
+package co.mercenary.creators.minio.kotlin.json
 
-import co.mercenary.creators.minio.util.AbstractMinioTests
+import com.fasterxml.jackson.core.Version
+import com.fasterxml.jackson.databind.Module
 
-abstract class KAbstractMinioTests : AbstractMinioTests() {
+class MinioKotlinModule : Module() {
+
+	override fun version(): Version = PACKAGE_VERSION.version()
+
+	override fun getModuleName(): String = PACKAGE_VERSION.name
+
+	override fun setupModule(context: Module.SetupContext): Unit = context.addSerializers(MinioKotlinSerializers())
+
+	companion object {
+
+		private val PACKAGE_VERSION = PackageVersion()
+	}
 }

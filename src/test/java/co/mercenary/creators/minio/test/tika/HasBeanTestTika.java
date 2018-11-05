@@ -22,7 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import co.mercenary.creators.minio.content.tika.MinioContentTypeProbeTikaAdapter;
 import co.mercenary.creators.minio.util.AbstractMinioTests;
 
-@TestPropertySource(properties = "minio.content-type-probe.name=tika")
+@TestPropertySource(properties = "co.mercenary.creators.minio.content-type-probe.name=tika")
 public class HasBeanTestTika extends AbstractMinioTests
 {
     @Test

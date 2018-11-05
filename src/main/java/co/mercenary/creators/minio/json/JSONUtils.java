@@ -17,8 +17,10 @@
 package co.mercenary.creators.minio.json;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.file.Path;
 
 import org.springframework.core.io.Resource;
@@ -55,6 +57,12 @@ public final class JSONUtils
     public static String toJSONString(@NonNull final Object value, final boolean pretty) throws MinioDataException
     {
         return (pretty ? PRETTY : NORMAL).toJSONString(value);
+    }
+
+    @NonNull
+    public static <T> T toJSONObject(@NonNull final URL value, @NonNull final Class<T> type) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(value, type);
     }
 
     @NonNull
@@ -116,6 +124,59 @@ public final class JSONUtils
     }
 
     @NonNull
+    public static JSON toJSON(@NonNull final URL data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final File data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final Path data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final String data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final byte[] data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final Reader data) throws MinioDataException
+    {
+        return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final Reader data, final boolean done) throws MinioDataException
+    {
+        if (done)
+        {
+            try (final Reader temp = data)
+            {
+                return toJSON(temp);
+            }
+            catch (final IOException e)
+            {
+                throw new MinioDataException(e);
+            }
+        }
+        return toJSON(data);
+    }
+
+    @NonNull
     public static JSON toJSON(@NonNull final Resource data) throws MinioDataException
     {
         return NORMAL.toJSONObject(data, JSON.class);
@@ -125,5 +186,22 @@ public final class JSONUtils
     public static JSON toJSON(@NonNull final InputStream data) throws MinioDataException
     {
         return NORMAL.toJSONObject(data, JSON.class);
+    }
+
+    @NonNull
+    public static JSON toJSON(@NonNull final InputStream data, final boolean done) throws MinioDataException
+    {
+        if (done)
+        {
+            try (final InputStream temp = data)
+            {
+                return toJSON(temp);
+            }
+            catch (final IOException e)
+            {
+                throw new MinioDataException(e);
+            }
+        }
+        return toJSON(data);
     }
 }

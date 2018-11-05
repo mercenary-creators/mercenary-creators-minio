@@ -21,21 +21,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 
-import co.mercenary.creators.minio.MinioTemplate;
-
 @Configuration
 public class MinioTemplateTestConfig
 {
-    @Value("${minio.server-url}")
+    @Value("${co.mercenary.creators.minio.server-url}")
     private String server;
 
-    @Value("${minio.access-key}")
+    @Value("${co.mercenary.creators.minio.access-key}")
     private String access;
 
-    @Value("${minio.secret-key}")
+    @Value("${co.mercenary.creators.minio.secret-key}")
     private String secret;
 
-    @Value("${minio.aws-region:us-east-1}")
+    @Value("${co.mercenary.creators.minio.aws-region:us-east-1}")
     private String region;
 
     @Bean
